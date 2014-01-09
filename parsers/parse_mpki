@@ -34,25 +34,26 @@ def getStatVal(filename,regex)
     [nil,false]
 end
 
+$caches=[0,1,2,4]
 def printResults( indir, outdir )
-    ofile = File.open( outdir+"/avgmemlat_#{scheme}_#{model}.csv",'w' )
-    ofile.printf( "%s,%s\n", scheme, model )
+    ofile = File.open( outdir+"/avgmemlat_none_detailed.csv",'w' )
     $specint.each do |p0|
         ofile.printf( "%-15s,", p0 )
-        schemeFileName =
-            indir+"/none_detailed_#{p0}_c4MB_tl6_stats.txt"
-        memread, rfound = getStatVal( schemeFileName, $memread )
-        memwrite, wfound = getStatVal( schemeFileName, $memwrite )
-        if rfound && wfound
-            access = memread + memwrite
-            mpki = access * 1000 / $instructions
-            ofile.printf("%-15.9f\n",mpki)
-        else
-            ofile.printf("%-15s\n","-----")
+        $caches.each do |c|
+            schemeFileName =
+                indir+"/MEMINTENSITY_none_detailed_#{p0}_c#{c}MB_tl6_stats.txt"
+            memread, rfound = getStatVal( schemeFileName, $memread )
+            memwrite, wfound = getStatVal( schemeFileName, $memwrite )
+            if rfound && wfound
+                access = memread + memwrite
+                mpki = access * 1000 / $instructions
+                ofile.printf("%-15.9f,",mpki)
+            else
+                ofile.printf("%-15s,","-----")
+            end
         end
-
+        ofile.printf("\n")
     end
-
 end
 
 if __FILE__ == $0
