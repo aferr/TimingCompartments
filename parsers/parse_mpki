@@ -1,0 +1,68 @@
+#!/usr/bin/ruby
+
+$schemes = %w[ tp ]
+$models = %w[ timing detailed ]
+$instructions = 10**8
+
+$specint = [
+    'astar',
+    'bzip2',
+    'gcc',
+    'gobmk',
+    'h264ref',
+    'hmmer',
+    'libquantum',
+    'mcf',
+    #    'omnetpp',
+    #    'perlbench',
+    'sjeng',
+    'Xalan',
+]
+
+$memread  = /system\.physmem\.num_reads::total\s*(\d*)/
+$memwrite = /system\.physmem\.num_writes::total\s*(\d*)/
+
+def getStatVal(filename,regex)
+    file=File.open(filename,'r')
+    file.each_line do |line|
+        if line =~ regex
+            file.close()
+            return [line.match(regex)[1].to_f,true]
+        end
+    end
+    file.close()
+    [nil,false]
+end
+
+def printResults( indir, outdir )
+    ofile = File.open( outdir+"/avgmemlat_#{scheme}_#{model}.csv",'w' )
+    ofile.printf( "%s,%s\n", scheme, model )
+    $specint.each do |p0|
+        ofile.printf( "%-15s,", p0 )
+        schemeFileName =
+            indir+"/none_detailed_#{p0}_c4MB_tl6_stats.txt"
+        memread, rfound = getStatVal( schemeFileName, $memread )
+        memwrite, wfound = getStatVal( schemeFileName, $memwrite )
+        if rfound && wfound
+            access = memread + memwrite
+            mpki = access * 1000 / $instructions
+            ofile.printf("%-15.9f\n",mpki)
+        else
+            ofile.printf("%-15s\n","-----")
+        end
+
+    end
+
+end
+
+if __FILE__ == $0
+    indir = Dir.new(File.expand_path ARGV[0].to_s)
+
+    outdir = Dir.new(File.expand_path ARGV[1].to_s)
+
+    printResults( 
+        File.expand_path( indir  ),
+        File.expand_path( outdir ) 
+    )
+
+end
