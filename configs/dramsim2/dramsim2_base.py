@@ -128,7 +128,7 @@ def add_options():
         parser.add_option("--numpids", type="int", default=2,
                 help="determine the number of PIDs")
         parser.add_option("--numcpus", type="int", default=None,
-                help="set the number of cpus if different from PIDs")
+                help="set the number of cpus")
         parser.add_option("--l3tracefile", type="string", default="l3trace.txt",
                 help="Output file for l3 cache traces")
         parser.add_option("--l2tracefile", type="string", default="l2trace.txt",
@@ -171,10 +171,6 @@ def add_options():
         if '--ruby' in sys.argv:
             Ruby.define_options(parser)
 
-        # Number of CPUs
-        options.num_cpus = ( options.numpids if ( options.numcpus == None )
-                else options.numcpus )
-        
         #Allow rr_nc to apply rr to both buses
         if options.rr_nc :
             options.rr_l2l3 = True 

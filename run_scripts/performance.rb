@@ -52,6 +52,7 @@ module RunScripts
         nametag: "only_l2l3",
         addrpar: true,
         rr_l2l3: true,
+        split_rport: true,
         schemes: %w[none]
       )
 
@@ -60,6 +61,7 @@ module RunScripts
         nametag: "only_membus",
         addrpar: true,
         rr_mem: true,
+        split_mshr: true,
         schemes: %w[none]
       )
 
@@ -92,6 +94,8 @@ module RunScripts
       qsub_scaling $secure_opts.merge(
         maxinsts: 10**9,
         nametag: "double_tc",
+        benchmarks: %w[mcf libquantum],
+        otherbench: $specint - %w[mcf libquantum],
         skip2: true,
         skip3: true,
         numcpus: 4,

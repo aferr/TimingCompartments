@@ -79,7 +79,7 @@ module RunScripts
     def test_busdebug
       insecure{|opts| parallel_local_scaling opts.merge(
           config: "debug/busdebug.py",
-          threads:1,
+          threads:4,
           schemes: %w[none],
           rr_nc: true
         )
@@ -123,22 +123,23 @@ module RunScripts
     end
 
     def test_double_tc
-      parallel_local_scaling $secure_opts.merge(
+      secure{|opts| parallel_local_scaling opts.merge($secure_opts).merge(
         threads: 1,
         maxinsts: 10**7,
         fastforward: 0,
         nametag: "double_tc",
-        benchmarks: $specint - %w[bzip2],
-        numcpus: 3,
+        benchmarks: %w[astar],
+        numcpus: 4,
         numpids: 2,
         do_cache_trace: true,
         skip2: true,
-        skip4: true,
+        skip3: true,
         p0threadID: 0,
-        p1threadID: 1,
+        p1threadID: 0,
         p2threadID: 1,
+        p3threadID: 1,
         debug: true
-      )
+      )}
     end
 
 end

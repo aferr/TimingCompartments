@@ -125,9 +125,10 @@ def sav_script( cpu, scheme, p0, options = {} )
 
     filename = "#{options[:nametag]}_"+filename if options[:nametag]
     filename = options[:filename] unless options[:filename].nil?
-   
-    numpids = [p0,p1,p2,p3].inject(0){|sum,i| ( i.nil? && sum ) || sum+1}
-    numpids = options[:numpids] unless options[:numpids].nil?
+  
+    options[:numcpus] = [
+      p0,p1,p2,p3
+    ].inject(0){|sum,i| ( i.nil? && sum ) || sum+1} if options[:numcpus].nil?
 
     FileUtils.mkdir_p( result_dir ) unless File.directory?( result_dir )
 
@@ -140,6 +141,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("--debug-flags=Bus,MMU,Cache\\") if options[:memdebug]
     script.puts("    --stats-file=#{filename}_stats.txt \\")
     script.puts("    configs/#{options[:config] || "dramsim2/dramsim2_se.py"} \\")
+    script.puts("    --numcpus=#{options[:numcpus]} \\")
     script.puts("    --cpu-type=#{cpu} \\")
     script.puts("    --caches \\")
     script.puts("    --l2cache \\")
@@ -181,10 +183,14 @@ def sav_script( cpu, scheme, p0, options = {} )
     end
 
     #Security Policy
-    [:p0threadID, :p1threadID, :p2threadID, :p3threadID].each do |param|
-      unless options[param].nil?
+    options[:numpids] = options[:numcpus] if options[:numpids].nil?
+    script.puts("    --numpids=#{options[:numpids]} \\")
+    [
+      :p0threadID, :p1threadID, :p2threadID, :p3threadID
+    ].each_with_index do |param, i|
+      options[param].nil? ?
+        script.puts("    --#{param.to_s} #{i}\\") :
         script.puts("    --#{param.to_s} #{options[param]}\\") 
-      end
     end
 
     #Trace Options
@@ -212,10 +218,7 @@ def sav_script( cpu, scheme, p0, options = {} )
         script.puts("    --systemcfg=./ext/DRAMSim2/system_#{scheme}.ini \\")
     end
     script.puts("    --outputfile=/dev/null \\")
-    script.puts("    --numpids=#{numpids} \\")
-    unless options[:numcpus].nil?
-      script.puts("    --numcpus=#{options[:numcpus]} \\")
-    end
+
     script.puts("    --p0=#{invoke(p0)}\\")
     script.puts("    --p1=#{invoke(p1)}\\") unless p1.nil?
     script.puts("    --p2=#{invoke(p2)}\\") unless p2.nil?

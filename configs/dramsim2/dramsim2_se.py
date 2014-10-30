@@ -32,10 +32,7 @@ if options.fastmem and (options.caches or options.l2cache):
     fatal("You cannot use fastmem in combination with caches!")
 
 for i in xrange(options.num_cpus):
-    if len(multiprocesses) == 1:
-        system.cpu[i].workload = multiprocesses[0]
-    else:
-        system.cpu[i].workload = multiprocesses[i]
+    system.cpu[i].workload = multiprocesses[i]
 
     if options.fastmem:
         system.cpu[i].fastmem = True
