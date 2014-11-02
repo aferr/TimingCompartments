@@ -19,11 +19,11 @@ multiprocesses = setup_workloads(options)
 (CPUClass,test_mem_mode,FutureClass) = setup_cpus(options)
 systembus = setup_systembus(options)
 
-system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)],
+system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(options.numcpus)],
                 physmem = DRAM,
                 membus =  systembus,
                 mem_mode = test_mem_mode,
-                numPids = options.numpids,
+                numPids = options.numcpus,
                 fast_forward = (options.fast_forward != None),
                 fixAddr = options.fixaddr)
 
@@ -31,7 +31,7 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)],
 if options.fastmem and (options.caches or options.l2cache):
     fatal("You cannot use fastmem in combination with caches!")
 
-for i in xrange(options.num_cpus):
+for i in xrange(options.numcpus):
     system.cpu[i].workload = multiprocesses[i]
 
     if options.fastmem:
@@ -47,7 +47,7 @@ if options.ruby:
 
     options.use_map = True
     Ruby.create_system(options, system)
-    assert(options.num_cpus == len(system.ruby._cpu_ruby_ports))
+    assert(options.numcpus == len(system.ruby._cpu_ruby_ports))
 
     for i in xrange(np):
         ruby_port = system.ruby._cpu_ruby_ports[i]

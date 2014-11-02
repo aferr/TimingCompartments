@@ -186,9 +186,9 @@ def add_options():
 # DRAM
 ###############################################################################
 def setup_dramsim(options):
-    np = options.num_cpus
+    np = options.numcpus
 
-    # num_cpus rounded up to nearest power of 2
+    # numcpus rounded up to nearest power of 2
     p2cores = int(pow( 2, ceil(log(np)/log(2)) ))
     memorysize = str(1024*p2cores) + 'MB'
     
@@ -251,7 +251,7 @@ def setup_cache(options):
 def setup_workloads(options):
     multiprocesses = []
 
-    for i in range(options.num_cpus):
+    for i in range(options.numcpus):
         process = LiveProcess()
         exec( "process.cmd = options.p"+str(i)+".split()")
         exec( "process.pid = options.p"+str(i)+"threadID")
