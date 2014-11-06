@@ -15,4 +15,5 @@ class WPLRU : public LRU{
     // virtual void cleanupRefs();
 
     virtual int assoc_of_tc( int tcid );
+    virtual void flush( uint64_t tcid );
 };

@@ -30,17 +30,19 @@
 
 #include <string>
 
-#include "cpu/o3/cpu.hh"
-#include "cpu/o3/impl.hh"
+// #include "cpu/o3/cpu.hh"
+// #include "cpu/o3/impl.hh"
+// #include "cpu/o3/deriv.hh"
+#include "cpu/o3/scscpu.hh"
 #include "params/DerivO3CPU.hh"
 
-class DerivO3CPU : public FullO3CPU<O3CPUImpl>
-{
-  public:
-    DerivO3CPU(DerivO3CPUParams *p)
-        : FullO3CPU<O3CPUImpl>(p)
-    { }
-};
+// class DerivO3CPU : public FullO3CPU<O3CPUImpl>
+// {
+//   public:
+//     DerivO3CPU(DerivO3CPUParams *p)
+//         : FullO3CPU<O3CPUImpl>(p)
+//     { }
+// };
 
 DerivO3CPU *
 DerivO3CPUParams::create()
@@ -76,5 +78,6 @@ DerivO3CPUParams::create()
 
     instShiftAmt = 2;
 
-    return new DerivO3CPU(this);
+    return new SCSCPU(this);
+    //return new DerivO3CPU(this);
 }

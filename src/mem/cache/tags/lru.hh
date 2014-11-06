@@ -262,6 +262,8 @@ public:
      * Called at end of simulation to complete average block reference stats.
      */
     virtual void cleanupRefs();
+
+    virtual void flush( uint64_t tid );
 };
 
 #endif // __MEM_CACHE_TAGS_LRU_HH__

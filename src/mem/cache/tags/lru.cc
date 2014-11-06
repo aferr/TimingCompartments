@@ -234,6 +234,12 @@ LRU::invalidateBlk(BlkType *blk, uint64_t tid)
     }
 }
 
+void LRU::flush(uint64_t tid=0 ){
+  for( int i=0; i < numBlocks; i++ ){
+    invalidateBlk( &blks[i], tid );
+  }
+}
+
 void
 LRU::clearLocks()
 {

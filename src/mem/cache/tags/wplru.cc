@@ -70,3 +70,9 @@ WPLRU::init_sets(){
     }
 }
 
+void
+WPLRU::flush( uint64_t tcid = 0 ){
+  for( int i = 0; i < num_tcs; i++ ){
+    LRU::flush( i );
+  } 
+}
