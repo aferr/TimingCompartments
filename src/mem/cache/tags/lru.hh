@@ -64,8 +64,8 @@ class LRU : public BaseTags
     /** Typedef for a list of pointers to the local block class. */
     typedef std::list<BlkType*> BlkList;
 
-    Cache<LRU> *cache;
-    virtual void setCache(Cache<LRU> *_cache){ cache = _cache; }
+    // Cache<LRU> *cache;
+    // virtual void setCache(Cache<LRU> *_cache){ cache = _cache; }
 
   protected:
     /** The number of sets in the cache. */

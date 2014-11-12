@@ -235,9 +235,10 @@ LRU::invalidateBlk(BlkType *blk, uint64_t tid)
 }
 
 void LRU::flush(uint64_t tid=0 ){
+  Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
   for( int i=0; i < numBlocks; i++ ){
     if( blks[i].isDirty() && blks[i].isValid() ){
-      cache->allocateWriteBuffer(cache->writebackBlk(&blks[i], 0),
+      _cache->allocateWriteBuffer(_cache->writebackBlk(&blks[i], 0),
           curTick(), true);
     } else {
       invalidateBlk( &blks[i], tid );

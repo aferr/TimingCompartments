@@ -84,10 +84,11 @@ WPLRU::init_sets(){
 
 void
 WPLRU::flush( uint64_t tcid = 0 ){
+  Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
   for( int i=0; i < blks_in_tc(tcid); i++ ){
     BlkType* b = blks_by_tc[tcid][i];
     if( b->isDirty() && b->isValid() ){
-      cache->allocateWriteBuffer( cache->writebackBlk( b, 0 ),
+      _cache->allocateWriteBuffer( _cache->writebackBlk( b, 0 ),
           curTick(), true );
     } else {
       invalidateBlk( b, tcid );
