@@ -61,6 +61,7 @@ class L3Shared( L3Config ):
                             split_rport = options.split_rport,
                             save_trace = options.do_cache_trace,
                             cw_first = not (options.nocwf),
+                            do_flush = True,
                             l3_trace_file = options.l3tracefile)
 
         system.tol3bus = ( 

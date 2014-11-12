@@ -78,6 +78,19 @@ class MSHR;
  */
 class BaseCache : public MemObject
 {
+  private:
+
+    void flushInternal(){
+      flush(0);
+    }
+
+    void insertContextSwitches(){
+      EventWrapper<BaseCache,&BaseCache::flushInternal> *e;
+      for( int i=0; i < 10; i++ ){
+        e = new EventWrapper<BaseCache,&BaseCache::flushInternal>(this);
+        schedule( e, i*1000*1000 );
+      }
+    }
     /**
      * Indexes to enumerate the MSHR queues.
      */
@@ -87,6 +100,7 @@ class BaseCache : public MemObject
     };
 
   public:
+    virtual void flush( int tcid ){}
     /**
      * Reasons for caches to be blocked.
      */
@@ -106,6 +120,8 @@ class BaseCache : public MemObject
         Request_PF,
         NUM_REQUEST_CAUSES
     };
+
+
 
   protected:
     virtual MSHRQueue* getMSHRQueue( int threadID ){

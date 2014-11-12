@@ -102,6 +102,10 @@ class Cache : public BaseCache
 
     const Params *params;
 
+    virtual void flush( int tcid ){
+      tags->flush(tcid);
+    }
+
     virtual bool isL3(){ return params->split_mshrq; }
 
   protected:
@@ -287,6 +291,7 @@ class Cache : public BaseCache
     void handleSnoop(PacketPtr ptk, BlkType *blk,
                      bool is_timing, bool is_deferred, bool pending_inval);
 
+  public:
     /**
      * Create a writeback request for the given block.
      * @param blk The block to writeback.
@@ -294,7 +299,6 @@ class Cache : public BaseCache
      */
     PacketPtr writebackBlk(BlkType *blk, int threadID);
 
-  public:
     /** Instantiates a basic cache object. */
     Cache(const Params *p, TagStore *tags);
 

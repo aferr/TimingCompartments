@@ -38,10 +38,20 @@ WPLRU::assoc_of_tc( int tcid ){
     return a;
 }
 
+int
+WPLRU::blks_in_tc( int tcid ){
+  return numSets * assoc_of_tc( tcid );
+}
+
 void
 WPLRU::init_sets(){
     sets = new CacheSet*[num_tcs];
     for( int i=0; i< num_tcs; i++ ){ sets[i] = new CacheSet[numSets]; }
+    
+    blks_by_tc = new BlkType**[num_tcs];
+    for( int i=0; i < num_tcs; i++ ){
+      blks_by_tc[i] = new BlkType*[blks_in_tc(i)];
+    }
 
     numBlocks = numSets * assoc;
     blks = new BlkType[numBlocks];
@@ -49,6 +59,7 @@ WPLRU::init_sets(){
 
     unsigned blkIndex = 0;
     for( unsigned tc=0; tc< num_tcs; tc++ ){
+      unsigned tcIndex = 0;
         for( unsigned i = 0; i< numSets; i++ ){
             int tc_assoc = assoc_of_tc(tc);
             sets[tc][i].assoc = tc_assoc;
@@ -64,7 +75,8 @@ WPLRU::init_sets(){
                 blk->isTouched = false;
                 blk->size = blkSize;
                 blk->set = i;
-                sets[tc][i].blks[j]=blk;
+                sets[tc][i].blks[j] = blk;
+                blks_by_tc[tc][tcIndex++] = blk;
             }
         }
     }
@@ -72,7 +84,13 @@ WPLRU::init_sets(){
 
 void
 WPLRU::flush( uint64_t tcid = 0 ){
-  for( int i = 0; i < num_tcs; i++ ){
-    LRU::flush( i );
-  } 
+  for( int i=0; i < blks_in_tc(tcid); i++ ){
+    BlkType* b = blks_by_tc[tcid][i];
+    if( b->isDirty() && b->isValid() ){
+      cache->allocateWriteBuffer( cache->writebackBlk( b, 0 ),
+          curTick(), true );
+    } else {
+      invalidateBlk( b, tcid );
+    }
+  }
 }

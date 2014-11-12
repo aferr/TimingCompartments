@@ -81,6 +81,7 @@ BaseCache::BaseCache(const Params *p)
       system(p->system)
 {
     params = p;
+    //if( p->do_flush ) insertContextSwitches();
 }
 
 void

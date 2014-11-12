@@ -152,6 +152,8 @@ class BaseTags
      *Needed to clear all lock tracking at once
      */
     virtual void clearLocks() {}
+
+    virtual void flush(int tcid) {}
 };
 
 class BaseTagsCallback : public Callback
