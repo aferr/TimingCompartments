@@ -42,6 +42,7 @@
 
 #include "mem/cache/tags/base.hh"
 #include "mem/cache/blk.hh"
+#include "mem/cache/cache.hh"
 #include "mem/packet.hh"
 
 class BaseCache;
@@ -62,6 +63,9 @@ class LRU : public BaseTags
     typedef CacheBlk BlkType;
     /** Typedef for a list of pointers to the local block class. */
     typedef std::list<BlkType*> BlkList;
+
+    Cache<LRU> *cache;
+    virtual void setCache(Cache<LRU> *_cache){ cache = _cache; }
 
   protected:
     /** The number of sets in the cache. */

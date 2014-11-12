@@ -96,7 +96,7 @@ class BaseCPU : public MemObject
       EventWrapper<BaseCPU,&BaseCPU::contextSwitchInternal> *e;
       for( int i=0; i < 10; i++ ){
         e = new EventWrapper<BaseCPU,&BaseCPU::contextSwitchInternal>(this);
-        schedule( e, i*1000 );
+        schedule( e, i*1000*1000 );
       }
     }
 

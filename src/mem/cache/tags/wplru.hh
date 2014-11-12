@@ -7,6 +7,9 @@ class WPLRU : public LRU{
     WPLRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
             unsigned _hit_latency, unsigned num_tcs );
 
+    Cache<WPLRU> *cache;
+    virtual void setCache(Cache<WPLRU> *_cache){ cache = _cache; }
+
     protected:
     CacheSet **sets;
     unsigned num_tcs;
