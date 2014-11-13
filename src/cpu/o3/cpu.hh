@@ -130,7 +130,6 @@ class FullO3CPU : public BaseO3CPU
   private:
 
     virtual void fakeContextSwitch(){
-      fprintf(stderr, "Hi from O3\n");
     }
 
     /**

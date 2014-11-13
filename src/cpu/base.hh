@@ -103,7 +103,6 @@ class BaseCPU : public MemObject
   protected:
 
     virtual void fakeContextSwitch(){
-      fprintf(stderr, "hi\n");
     }
 
     // @todo remove me after debugging with legion done

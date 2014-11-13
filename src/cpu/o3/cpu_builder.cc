@@ -78,6 +78,6 @@ DerivO3CPUParams::create()
 
     instShiftAmt = 2;
 
-    return new SCSCPU(this);
-    //return new DerivO3CPU(this);
+    //return new SCSCPU(this);
+    return new DerivO3CPU(this);
 }

@@ -165,6 +165,10 @@ def add_options():
                 help="address for detailed trace")
         parser.add_option("--nocwf", action="store_true", default=False,
                 help="Enable to turn off critical word first timing")
+        parser.add_option("--do_flush", action="store_true", default=False,
+                help="Flush the cache occasionally to model context switching.")
+        parser.add_option("--context_sw_freq", type="int", default=1000,
+                help="Frequency of context switches in us.")
 
         (options, args) = parser.parse_args()
 

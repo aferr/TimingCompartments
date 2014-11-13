@@ -85,10 +85,11 @@ class BaseCache : public MemObject
     }
 
     void insertContextSwitches(){
+      int num_events = 1000 * 1000/ params->context_sw_freq;
       EventWrapper<BaseCache,&BaseCache::flushInternal> *e;
-      for( int i=0; i < 10; i++ ){
+      for( int i=0; i < num_events; i++ ){
         e = new EventWrapper<BaseCache,&BaseCache::flushInternal>(this);
-        schedule( e, i*1000*1000 );
+        schedule( e, i*params->context_sw_freq*1000*1000);
       }
     }
     /**

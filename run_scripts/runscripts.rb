@@ -164,6 +164,9 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --use_way_part \\")  if use_way_part
     script.puts("    --split_mshr \\")    if options[:split_mshr]
     script.puts("    --split_rport \\")   if options[:split_rport]
+    script.puts("    --do_flush \\")      if options[:do_flush]
+    cswf = options[:context_sw_frequency]
+    script.puts("    --context_sw_frequnecy=#{cswf}\\" ) unless cswf.nil?
 
     #Time Quanta and Offsets
     [

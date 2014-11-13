@@ -69,6 +69,6 @@ class BaseCache(MemObject):
     use_way_part   = Param.Bool(False, "Use way partitioning in L3?")
     split_mshrq    = Param.Bool(False, "Use MSHR Queue per TC?")
     split_rport    = Param.Bool(False, "Use Split Response Port Queue per TC?")
+    do_flush       = Param.Bool(False, "Flush this particular cache on context switches")
+    context_sw_freq = Param.Int(1000, "Context switch frequency in us")
     cw_first       = Param.Bool(True, "Use critical word first timing")
-    do_flush       = Param.Bool(False,
-        "Flush this particular cache on context switches")

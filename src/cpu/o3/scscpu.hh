@@ -10,6 +10,5 @@ class SCSCPU : public DerivO3CPU
 
   protected:
   virtual void fakeContextSwitch(){
-    fprintf(stderr, "hi from scscpu\n");
   }
 };

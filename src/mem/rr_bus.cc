@@ -380,8 +380,10 @@ RRBus::Layer<PortClass>::retryWaiting()
 	int threadID = bus.active_id(tl, offset);
 	//printf("enter retryWaiting %d at %llu\n", threadID, now/clock);
 	// this should never be called with an empty retry list
-    assert(!retryList[threadID].empty());
-
+  //  assert(!retryList[threadID].empty());
+  
+  if( retryList[threadID].empty() ) return;
+    
     // we always go to retrying from idle
 	if(state[threadID] != IDLE) {
 		//printf("retry failed %d at %llu\n", threadID, now/clock);

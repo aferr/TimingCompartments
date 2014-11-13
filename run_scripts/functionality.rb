@@ -18,6 +18,7 @@ module RunScripts
       fastforward: 0,
       debug: true,
       runmode: :local,
+      threads: 1
      }.merge opts)
     end
 
@@ -140,6 +141,19 @@ module RunScripts
         p3threadID: 1,
         debug: true
       )}
+    end
+
+    def test_cache_flush
+      o = { benchmarks: %w[mcf], maxinsts: 10**6, threads: 1,
+            fastforward: 0, debug: true }
+      parallel_local o
+      parallel_local o.merge(
+        nametag: "flush2ms", do_flush: true, context_sw_freq: 2*1000,
+      )
+      parallel_local $secure_opts.merge o
+      parallel_local $secure_opts.merge o.merge(
+        nametag: "flush2ms", do_flush: true, context_sw_freq: 2*1000,
+      )
     end
 
 end
