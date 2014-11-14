@@ -397,7 +397,6 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 //@todo Add back in MemDebug Calls
 //    MemDebug::cacheAccess(pkt);
 
-
     /// @todo temporary hack to deal with memory corruption issue until
     /// 4-phase transactions are complete
     for (int x = 0; x < pendingDelete.size(); x++)
@@ -1447,6 +1446,7 @@ Cache<TagStore>::getNextMSHR( int threadID )
     }
 
     if (miss_mshr && write_mshr) {
+        if(blocked) return write_mshr;
         // We have one of each... normally we favor the miss request
         // unless the write buffer is full
         if (getWriteBuffer( threadID )->isFull() && getWriteBuffer( threadID )->inServiceEntries == 0) {
@@ -1673,7 +1673,7 @@ bool
 Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
     // always let inhibited requests through even if blocked
-    if (!pkt->memInhibitAsserted() && blocked) {
+    if (!pkt->isWriteback() && !pkt->memInhibitAsserted() && blocked) {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
         return false;
@@ -1824,6 +1824,10 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
     // also considering when the next MSHR is ready
     if (!waitingOnRetry) {
         scheduleSend(cache.nextMSHRReadyTime( ID ));
+    }
+
+    if(cache.blocked && !cache.getWriteBuffer(ID)->havePending() ){
+      cache.clearBlocked(Blocked_DrainingWritebacks);
     }
 }
 

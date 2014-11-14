@@ -199,6 +199,7 @@ class MemCmd
     bool isError() const        { return testCmdAttrib(IsError); }
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
     bool isFlush() const        { return testCmdAttrib(IsFlush); }
+    bool isWriteback() const    { return cmd == Writeback; }
 
     const Command
     responseCommand() const
@@ -268,6 +269,7 @@ class Packet : public Printable
 
     /// The command field of the packet.
     MemCmd cmd;
+    bool isWriteback() const    { return cmd.isWriteback(); }
 
     /// A pointer to the original request.
     RequestPtr req;

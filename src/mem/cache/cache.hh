@@ -102,8 +102,39 @@ class Cache : public BaseCache
 
     const Params *params;
 
+    std::string printWritebacks(int tcid=0){
+      std::string s = "Writebacks:\n" +
+        getWriteBuffer(tcid)->print_allocated();
+      return s;
+    }
+
+    void to_stderr_green( std::string s ){
+      fprintf (stderr, "\x1B[32m%s\n\x1B[0m", s.c_str());
+    }
+
+    void to_stderr_yellow( std::string s ){
+      fprintf (stderr, "\x1B[33m%s\n\x1B[0m", s.c_str());
+    }
+
     virtual void flush( int tcid ){
+      // if(blocked) fprintf( stderr, "blocked at start of new flush\n" );
+      // if( tcid==0 ){ 
+      //   to_stderr_green( "Before flush " + printWritebacks(0) );
+      // }
       tags->flush(tcid);
+      // If( tcid==0 ){ 
+      //   to_stderr_yellow( "After flush " + printWritebacks(0) );
+      // }
+      if( getWriteBuffer(tcid)->havePending() ){
+        drainWritebacks(tcid);
+        setBlocked(Blocked_DrainingWritebacks);
+      }
+    }
+
+    virtual void drainWritebacks(int tcid){
+      for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
+        memSidePort->requestBus(Request_WB, nextCycle(), false);
+      }
     }
 
     virtual bool isL3(){ return params->split_mshrq; }
@@ -195,6 +226,7 @@ class Cache : public BaseCache
         Cache<TagStore> *cache;
 
       protected:
+
 
         virtual void recvTimingSnoopReq(PacketPtr pkt);
 

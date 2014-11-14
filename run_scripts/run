@@ -44,6 +44,7 @@ include RunScripts
 # check_coordination
 # debug_only_waypart
 # test_double_tc
+test_cache_flush
 
 #------------------------------------------------------------------------------
 # Performance
@@ -67,7 +68,7 @@ include RunScripts
 # membus_sweeping_qsub
 # memctl_sweeping_qsub
 # fa_sweeping_qsub
-hill_climb
+# hill_climb
 ###############################################################################
 # Memory Controller Tests
 ###############################################################################

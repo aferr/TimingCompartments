@@ -144,16 +144,16 @@ module RunScripts
     end
 
     def test_cache_flush
-      o = { benchmarks: %w[mcf], maxinsts: 10**6, threads: 1,
+      o = { schemes: %w[none], benchmarks: %w[mcf], maxinsts: 10**6, threads: 1,
             fastforward: 0, debug: true }
       parallel_local o
       parallel_local o.merge(
-        nametag: "flush2ms", do_flush: true, context_sw_freq: 2*1000,
+        nametag: "flush2ms", do_flush: true, context_sw_freq: 10**5,
       )
-      parallel_local $secure_opts.merge o
-      parallel_local $secure_opts.merge o.merge(
-        nametag: "flush2ms", do_flush: true, context_sw_freq: 2*1000,
-      )
+      parallel_local o.merge $secure_opts
+      parallel_local o.merge(
+        nametag: "flush2ms", do_flush: true, context_sw_freq: 10**5,
+      ).merge $secure_opts
     end
 
 end

@@ -76,6 +76,15 @@ class MSHRQueue
 
 
   public:
+
+    std::string print_allocated(){
+      std::string s = "Allocated MSHRs:\n";
+      for(MSHR::Iterator it=allocatedList.begin();
+          it!=allocatedList.end(); ++it){
+        s += (*it)->to_string() + '\n';
+      }
+      return s;
+    }
     /** The number of allocated entries. */
     int allocated;
     /** The number of entries that have been forwarded to the bus. */
@@ -182,6 +191,10 @@ class MSHRQueue
     bool havePending() const
     {
         return !readyList.empty();
+    }
+
+    int numReady(){
+      return readyList.size();
     }
 
     /**

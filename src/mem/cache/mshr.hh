@@ -142,19 +142,22 @@ class MSHR : public Packet::SenderState, public Printable
     /** Will we have a dirty copy after this request? */
     bool pendingDirty;
     bool isPendingDirty() const {
-        assert(inService); return pendingDirty;
+        //assert(inService);
+        return pendingDirty;
     }
 
     /** Did we snoop an invalidate while waiting for data? */
     bool postInvalidate;
     bool hasPostInvalidate() const {
-        assert(inService); return postInvalidate;
+        //assert(inService);
+        return postInvalidate;
     }
 
     /** Did we snoop a read while waiting for data? */
     bool postDowngrade;
     bool hasPostDowngrade() const {
-        assert(inService); return postDowngrade;
+        //assert(inService);
+        return postDowngrade;
     }
 
     /** Thread number of the miss. */

@@ -236,14 +236,20 @@ LRU::invalidateBlk(BlkType *blk, uint64_t tid)
 
 void LRU::flush(uint64_t tid=0 ){
   Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
+  int writebacks = 0;
+  int valid = 0;
   for( int i=0; i < numBlocks; i++ ){
     if( blks[i].isDirty() && blks[i].isValid() ){
-      _cache->allocateWriteBuffer(_cache->writebackBlk(&blks[i], 0),
+      _cache->allocateWriteBuffer(_cache->writebackBlk(&blks[i], tid),
           curTick(), true);
+      writebacks++;
     } else {
       invalidateBlk( &blks[i], tid );
+      valid++;
     }
   }
+  // fprintf(stderr, "\x1B[34m%i of %i valid blocks were dirty\n\x1B[0m",
+  //     writebacks, valid);
 }
 
 void

@@ -95,7 +95,7 @@ BaseCache::CacheSlavePort::setBlocked()
 void
 BaseCache::CacheSlavePort::clearBlocked()
 {
-    assert(blocked);
+    if(!blocked) return;
     DPRINTF(CachePort, "Cache port %s accepting new requests\n", name());
     blocked = false;
     if (mustSendRetry) {
@@ -376,6 +376,7 @@ BaseCache::regStats()
         .desc("number of cycles access was blocked")
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
+        .subname(Blocked_DrainingWritebacks, "draining_writebacks")
         ;
 
 
@@ -385,6 +386,7 @@ BaseCache::regStats()
         .desc("number of cycles access was blocked")
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
+        .subname(Blocked_DrainingWritebacks, "draining_writebacks")
         ;
 
     avg_blocked
@@ -392,6 +394,7 @@ BaseCache::regStats()
         .desc("average number of cycles each access was blocked")
         .subname(Blocked_NoMSHRs, "no_mshrs")
         .subname(Blocked_NoTargets, "no_targets")
+        .subname(Blocked_DrainingWritebacks, "draining_writebacks")
         ;
 
     avg_blocked = blocked_cycles / blocked_causes;
