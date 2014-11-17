@@ -70,6 +70,17 @@ RRBus::RRBus(const RRBusParams *p)
         fatal("Bus clock period must be positive\n");
     if (headerCycles <= 0)
         fatal("Number of header cycles must be positive\n");
+
+    req_turn_length = new int[p->num_pids];
+    resp_turn_length = new int[p->num_pids];
+    req_offset = new int[p->num_pids];
+    resp_offset = new int[p->num_pids];
+    req_reserved_cycles = new int[p->num_pids];
+    resp_reserved_cycles = new int[p->num_pids];
+
+    for( int i=0; i<p->num_pids; i++ ) req_reserved_cycles[i]=0;
+    for( int i=0; i<p->num_pids; i++ ) resp_reserved_cycles[i]=0;
+
 }
 
 RRBus::~RRBus()
@@ -140,6 +151,23 @@ RRBus::calcFinishTime(int threadID, int data_size, int tl, int offset)
 	else
 		return now + remaining_cycles * clock + num_pids * num_turns * tl * clock + 
 			(num_pids-1) * tl *clock + remaining_data*clock + offset*clock;
+}
+
+Tick
+RRBus::calcFinishTimeAlwaysReserve(int threadID, int data_size, int tl, int offset){
+  return calcFinishTime( threadID, data_size * 2, tl, offset );
+}
+
+Tick
+RRBus::calcFinishTimeReserve(int tcid , int data_size, bool is_req){
+  int tl = is_req ? req_turn_length[tcid] : resp_turn_length[tcid];
+  int offset = is_req ? req_offset[tcid] : resp_offset[tcid];
+  int reserved_cycles  = is_req ? req_reserved_cycles[tcid] :
+    resp_reserved_cycles[tcid];
+  if( nextCycle() < reserved_cycles )
+    return calcFinishTimeAlwaysReserve(tcid, data_size, tl, offset);
+  else
+    return calcFinishTime(tcid, data_size, tl, offset);
 }
 
 Tick

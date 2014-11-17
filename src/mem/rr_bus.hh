@@ -418,12 +418,33 @@ class RRBus : public MemObject
 	Tick turn_begin(int threadID, int tl, int offset);
 	
 	Tick calcFinishTime(int threadID, int data_size, int tl, int offset);
+	Tick calcFinishTimeAlwaysReserve(int threadID, int data_size, int tl, int offset);
+	Tick calcFinishTimeReserve(int threadID, int data_size, bool is_req);
+
+  int *req_turn_length;
+  int *resp_turn_length;
+  int *req_offset;
+  int *resp_offset;
+
+  int maxWritebacks;
+  int *req_reserved_cycles;
+  int *resp_reserved_cycles;
+
+  void contextSwitch( int tcid ){
+    int blockSize = 64; //bytes
+    int data = blockSize / width;
+    req_reserved_cycles[tcid] = calcFinishTime(tcid, data* maxWritebacks,
+        req_turn_length[tcid], req_offset[tcid]);
+    resp_reserved_cycles[tcid] = calcFinishTime(tcid, data* maxWritebacks,
+        resp_turn_length[tcid], resp_offset[tcid]);
+  }
+
 	/** Calculate the timing parameters for the packet.  Updates the
      * firstWordTime and finishTime fields of the packet object.
      * Returns the tick at which the packet header is completed (which
      * will be all that is sent if the target rejects the packet).
      */
-    Tick calcPacketTiming(PacketPtr pkt, int threadID, int tl, int offset);
+  Tick calcPacketTiming(PacketPtr pkt, int threadID, int tl, int offset);
 	
 	Tick calcPacketTiming(PacketPtr ptk);
 
