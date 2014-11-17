@@ -39,7 +39,7 @@ using namespace std;
 MSHRQueue::MSHRQueue(const std::string &_label,
                      int num_entries, int reserve, int _index)
     : label(_label),
-      numEntries(num_entries + reserve - 1), numReserve(reserve),
+      numEntries(num_entries + reserve - 1 +100), numReserve(reserve),
       index(_index)
 {
     allocated = 0;

@@ -444,7 +444,7 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
         if (pmemAddr)
             memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
         TRACE_PACKET("Write");
-        pkt->makeResponse();
+        if(pkt->needsResponse()) pkt->makeResponse();
     } else if (pkt->isPrint()) {
         Packet::PrintReqState *prs =
             dynamic_cast<Packet::PrintReqState*>(pkt->senderState);

@@ -218,6 +218,11 @@ class MSHRQueue
         return readyList.front();
     }
 
+    MSHR *getNextMSHRFunctional() const
+    {
+      return readyList.front();
+    }
+
     Tick nextMSHRReadyTime() const
     {
         return readyList.empty() ? MaxTick : readyList.front()->readyTime;

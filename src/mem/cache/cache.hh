@@ -117,23 +117,39 @@ class Cache : public BaseCache
     }
 
     virtual void flush( int tcid ){
-      // if(blocked) fprintf( stderr, "blocked at start of new flush\n" );
+      // if(blocked) fprintf( stderr, "blocked at start of new flush %i\n", blocked );
       // if( tcid==0 ){ 
       //   to_stderr_green( "Before flush " + printWritebacks(0) );
       // }
       tags->flush(tcid);
-      // If( tcid==0 ){ 
+      // if( tcid==0 ){ 
       //   to_stderr_yellow( "After flush " + printWritebacks(0) );
       // }
       if( getWriteBuffer(tcid)->havePending() ){
-        drainWritebacks(tcid);
-        setBlocked(Blocked_DrainingWritebacks);
+        //drainWritebacks(tcid);
+        //setBlocked(Blocked_DrainingWritebacks);
+        functionalDrainWritebacks(tcid);
       }
+      // if( tcid==0 ){ 
+      //   to_stderr_yellow( "After draing" + printWritebacks(0) );
+      // }
+
     }
 
     virtual void drainWritebacks(int tcid){
       for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
         memSidePort->requestBus(Request_WB, nextCycle(), false);
+      }
+    }
+
+    virtual void functionalDrainWritebacks( int tcid ){
+      for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
+        MSHR *nextMSHR = getWriteBuffer(tcid)->getNextMSHRFunctional();
+        while( nextMSHR->hasTargets() ){
+          memSidePort->sendFunctional( nextMSHR->getTarget()->pkt );
+          nextMSHR->popTarget();
+        }
+        getWriteBuffer(tcid)->deallocate(nextMSHR);
       }
     }
 
