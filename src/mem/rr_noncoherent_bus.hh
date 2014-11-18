@@ -84,6 +84,8 @@ class RR_NoncoherentBus : public RRBus
 	int resp_tl;
 	int resp_offset;
 
+    const RR_NoncoherentBusParams *params;
+
     //TraceList  * busTrace;
     TracePrinter * busTrace;
 
@@ -107,6 +109,10 @@ class RR_NoncoherentBus : public RRBus
         { }
 
       protected:
+
+        virtual void contextSwitch( int tcid ){
+          return bus.contextSwitch( tcid );
+        }
 
         /**
          * When receiving a timing request, pass it to the bus.

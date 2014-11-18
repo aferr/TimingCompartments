@@ -60,6 +60,7 @@
 #include "sim/eventq.hh"
 #include "mem/trace_printer.hh"
 #include "params/BaseCache.hh"
+#include "mem/rr_bus.hh"
 #include "stdio.h"
 
 //Forward decleration
@@ -108,41 +109,29 @@ class Cache : public BaseCache
       return s;
     }
 
-    void to_stderr_green( std::string s ){
-      fprintf (stderr, "\x1B[32m%s\n\x1B[0m", s.c_str());
-    }
-
-    void to_stderr_yellow( std::string s ){
-      fprintf (stderr, "\x1B[33m%s\n\x1B[0m", s.c_str());
-    }
-
     virtual void flush( int tcid ){
-      // if(blocked) fprintf( stderr, "blocked at start of new flush %i\n", blocked );
-      // if( tcid==0 ){ 
-      //   to_stderr_green( "Before flush " + printWritebacks(0) );
-      // }
       tags->flush(tcid);
-      // if( tcid==0 ){ 
-      //   to_stderr_yellow( "After flush " + printWritebacks(0) );
-      // }
-      if( getWriteBuffer(tcid)->havePending() ){
-        //drainWritebacks(tcid);
-        //setBlocked(Blocked_DrainingWritebacks);
-        functionalDrainWritebacks(tcid);
+      memSidePort->contextSwitch(tcid);
+      if( params->reserve_flush ){
+        if( getWriteBuffer(tcid)->havePending() ){
+          functionalDrainWritebacks(tcid);
+        }
+      } else {
+        if( getWriteBuffer(tcid)->havePending() ){
+          drainWritebacks(tcid);
+          setBlocked(Blocked_DrainingWritebacks);
+        }
       }
-      // if( tcid==0 ){ 
-      //   to_stderr_yellow( "After draing" + printWritebacks(0) );
-      // }
-
     }
 
-    virtual void drainWritebacks(int tcid){
+
+    void drainWritebacks( int tcid ){
       for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
         memSidePort->requestBus(Request_WB, nextCycle(), false);
       }
     }
 
-    virtual void functionalDrainWritebacks( int tcid ){
+    void functionalDrainWritebacks( int tcid ){
       for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
         MSHR *nextMSHR = getWriteBuffer(tcid)->getNextMSHRFunctional();
         while( nextMSHR->hasTargets() ){

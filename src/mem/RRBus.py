@@ -13,8 +13,16 @@ class RRBus(MemObject):
     offset = Param.Int(0, "initial offset for turn length")
     header_cycles = Param.Cycles(1, "cycles of overhead per transaction")
     width = Param.Int(8, "bus width (bytes)")
+    bus_trace_file = Param.String("bustrace.txt", "output file for bus trace")
     block_size = Param.Int(64, "The default block size if not set by " \
                                "any connected module")
+    
+    req_tl = Param.Int(1, "requst layer turn length")
+    req_offset = Param.Int(0, "request layer turn length offset")
+    resp_tl = Param.Int(1, "response layer turn length")
+    resp_offset = Param.Int(0, "response layer turn length offset")
+
+    reserve_flush = Param.Bool(True, "Use reserve flush or not")
 
     # The default port can be left unconnected, or be used to connect
     # a default slave port
@@ -30,15 +38,6 @@ class RRBus(MemObject):
 
 class RR_NoncoherentBus(RRBus):
     type = 'RR_NoncoherentBus'
-    req_tl = Param.Int(1, "requst layer turn length")
-    req_offset = Param.Int(0, "request layer turn length offset")
-    resp_tl = Param.Int(1, "response layer turn length")
-    resp_offset = Param.Int(0, "response layer turn length offset")
-    bus_trace_file = Param.String("bustrace.txt", "output file for bus trace")
 
 class RR_CoherentBus(RRBus):
     type = 'RR_CoherentBus'
-    req_tl = Param.Int(1, "requst layer turn length")
-    req_offset = Param.Int(0, "request layer turn length offset")
-    resp_tl = Param.Int(1, "response layer turn length")
-    resp_offset = Param.Int(0, "response layer turn length offset")

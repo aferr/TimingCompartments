@@ -365,6 +365,8 @@ class BaseBus : public MemObject
 
     virtual unsigned int drain(Event *de) = 0;
 
+    virtual void contextSwitch(int tcid){}
+
 };
 
 #endif //__MEM_BUS_HH__

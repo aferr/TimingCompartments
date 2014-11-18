@@ -174,6 +174,11 @@ MasterPort::printAddr(Addr a)
     sendFunctional(&pkt);
 }
 
+void
+MasterPort::contextSwitch(int tcid){
+  _slavePort->contextSwitch(tcid);
+}
+
 /**
  * Slave port
  */

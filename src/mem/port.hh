@@ -114,6 +114,8 @@ class Port
     /** Get the port id. */
     PortID getId() const { return id; }
 
+    virtual void contextSwitch(int tcid){}
+
 };
 
 /** Forward declaration */
@@ -145,6 +147,8 @@ class MasterPort : public Port
      * mirror action and binds the slave port to the master port.
      */
     void bind(SlavePort& slave_port);
+
+    virtual void contextSwitch(int tcid);
 
     /**
      * Unbind this master port and the associated slave port.

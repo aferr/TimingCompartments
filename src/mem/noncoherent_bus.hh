@@ -100,6 +100,10 @@ class NoncoherentBus : public BaseBus
 
       protected:
 
+        virtual void contextSwitch( int tcid ){
+          return bus.contextSwitch( tcid );
+        }
+
         /**
          * When receiving a timing request, pass it to the bus.
          */

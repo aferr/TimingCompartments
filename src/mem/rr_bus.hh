@@ -426,16 +426,16 @@ class RRBus : public MemObject
   int *req_offset;
   int *resp_offset;
 
-  int maxWritebacks;
-  int *req_reserved_cycles;
-  int *resp_reserved_cycles;
+  int maxWritebacks = 4096;
+  Tick *req_reserved_cycles;
+  Tick *resp_reserved_cycles;
 
   void contextSwitch( int tcid ){
     int blockSize = 64; //bytes
-    int data = blockSize / width;
-    req_reserved_cycles[tcid] = calcFinishTime(tcid, data* maxWritebacks,
+    int data = maxWritebacks * blockSize / width / clock;
+    req_reserved_cycles[tcid] = calcFinishTime(tcid, data,
         req_turn_length[tcid], req_offset[tcid]);
-    resp_reserved_cycles[tcid] = calcFinishTime(tcid, data* maxWritebacks,
+    resp_reserved_cycles[tcid] = calcFinishTime(tcid, data,
         resp_turn_length[tcid], resp_offset[tcid]);
   }
 
@@ -481,6 +481,8 @@ class RRBus : public MemObject
     bool cachedBlockSizeValid;
 
     RRBus(const RRBusParams *p);
+
+    const RRBusParams *params;
 
     virtual ~RRBus();
 

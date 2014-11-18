@@ -72,15 +72,20 @@ RRBus::RRBus(const RRBusParams *p)
         fatal("Number of header cycles must be positive\n");
 
     req_turn_length = new int[p->num_pids];
+    for(int i=0; i<p->num_pids; i++) req_turn_length[i] = p->req_tl;
     resp_turn_length = new int[p->num_pids];
+    for(int i=0; i<p->num_pids; i++) resp_turn_length[i] = p->resp_tl;
     req_offset = new int[p->num_pids];
+    for(int i=0; i<p->num_pids; i++) req_offset[i] = p->req_offset;
     resp_offset = new int[p->num_pids];
-    req_reserved_cycles = new int[p->num_pids];
-    resp_reserved_cycles = new int[p->num_pids];
-
+    for(int i=0; i<p->num_pids; i++) resp_offset[i] = p->resp_offset;
+    
+    req_reserved_cycles = new Tick[p->num_pids];
+    resp_reserved_cycles = new Tick[p->num_pids];
     for( int i=0; i<p->num_pids; i++ ) req_reserved_cycles[i]=0;
     for( int i=0; i<p->num_pids; i++ ) resp_reserved_cycles[i]=0;
 
+    params = p;
 }
 
 RRBus::~RRBus()
@@ -164,10 +169,12 @@ RRBus::calcFinishTimeReserve(int tcid , int data_size, bool is_req){
   int offset = is_req ? req_offset[tcid] : resp_offset[tcid];
   int reserved_cycles  = is_req ? req_reserved_cycles[tcid] :
     resp_reserved_cycles[tcid];
-  if( nextCycle() < reserved_cycles )
+  if( nextCycle() < reserved_cycles ){
     return calcFinishTimeAlwaysReserve(tcid, data_size, tl, offset);
-  else
+  } else{
+    if( tcid ==0 )
     return calcFinishTime(tcid, data_size, tl, offset);
+  }
 }
 
 Tick
@@ -178,7 +185,9 @@ RRBus::calcPacketTiming(PacketPtr pkt, int threadID, int tl, int offset)
 	//printf("enter calcPacketTiming %d at %llu\n", threadID, now/clock);
 
     // DONE: is now aligned with threadID?
-	Tick headerTime = calcFinishTime(threadID, headerCycles, tl, offset);
+	Tick headerTime = params->reserve_flush ?
+    calcFinishTimeReserve(threadID, headerCycles, pkt->isRequest()) :
+    calcFinishTime(threadID, headerCycles, tl, offset);
 
     // The packet will be sent. Figure out how long it occupies the bus, and
     // how much of that time is for the first "word", aka bus width.
@@ -194,9 +203,13 @@ RRBus::calcPacketTiming(PacketPtr pkt, int threadID, int tl, int offset)
 	//printf("%d packet size %d\n", threadID, numCycles);
     // The first word will be delivered after the current tick, the delivery
     // of the address if any, and one bus cycle to deliver the data
-    pkt->firstWordTime = calcFinishTime(threadID, headerCycles+1, tl, offset);
+    pkt->firstWordTime = params->reserve_flush ?
+      calcFinishTimeReserve(threadID, headerCycles+1, pkt->isRequest()) :
+      calcFinishTime(threadID, headerCycles+1, tl, offset);
 
-    pkt->finishTime = calcFinishTime(threadID, headerCycles+numCycles, tl, offset);
+    pkt->finishTime = params->reserve_flush ?
+      calcFinishTimeReserve(threadID, headerCycles+numCycles, pkt->isRequest()) :
+      calcFinishTime(threadID, headerCycles+numCycles, tl, offset);
 	//printf("%d packet finish time %llu\n", threadID, pkt->finishTime);
 
     return headerTime;

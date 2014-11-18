@@ -66,6 +66,7 @@ RR_NoncoherentBus::RR_NoncoherentBus(const RR_NoncoherentBusParams *p)
     for (int i = 0; i < p->port_master_connection_count; ++i) {
         std::string portName = csprintf("%s.master[%d]", name(), i);
         MasterPort* bp = new RR_NoncoherentBusMasterPort(portName, *this, i);
+        fprintf(stderr, "master: %s\n", portName.c_str());
         masterPorts.push_back(bp);
     }
 
@@ -89,6 +90,7 @@ RR_NoncoherentBus::RR_NoncoherentBus(const RR_NoncoherentBusParams *p)
     busTrace = new TracePrinter( p->bus_trace_file, p );
 
     clearPortCache();
+    params = p;
 }
 
 bool
@@ -117,7 +119,7 @@ RR_NoncoherentBus::recvTimingReq(PacketPtr pkt, PortID slave_port_id)
     // set the source port for routing of the response
     pkt->setSrc(slave_port_id);
 
-    Tick headerFinishTime = calcPacketTiming(pkt, pkt->threadID, req_tl, req_offset);
+    Tick headerFinishTime =calcPacketTiming(pkt, pkt->threadID, req_tl, req_offset);
     Tick packetFinishTime = pkt->finishTime;
 
     // since it is a normal request, determine the destination
