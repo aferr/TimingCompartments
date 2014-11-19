@@ -106,23 +106,13 @@ def add_options():
                 help="membus response layer turn length")
         parser.add_option("--membusresp_offset", type="int", default=0,
                 help="membus response layer offset")
+
+        for i in range(8):
+            parser.add_option("--p{0}".format(i), type="string",
+                    help="workload number n")
+            parser.add_option("--p{0}threadID".format(i), type="int", default=i,
+                    help="timing compartment id for p{0}".format(i))
                 
-        parser.add_option("--p0", type="string", 
-                help="workload for processor 0."),
-        parser.add_option("--p0threadID", type="int", default=0,
-                help="timing compartment id for p0")
-        parser.add_option("--p1", type="string",
-                help="workload for processor 1.")
-        parser.add_option("--p1threadID", type="int", default=1,
-                help="timing compartment id for p1")
-        parser.add_option("--p2",type="string", default="echo \"no p2!\"",
-                help="workload for processor 2, default is an echo")
-        parser.add_option("--p2threadID", type="int", default=2,
-                help="timing compartment id for p2")
-        parser.add_option("--p3",type="string", default="echo \"no p3!\"",
-                help="workload for processor 3, default is an echo")
-        parser.add_option("--p3threadID", type="int", default=3,
-                help="timing compartment id for p3")
         parser.add_option("--gentrace", action="store_true", default=False,
                 help="generate the trace for benchmarks.")
         parser.add_option("--numpids", type="int", default=2,

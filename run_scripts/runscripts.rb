@@ -55,23 +55,29 @@ def invoke( name )
     $specinvoke[name] || $synthinvoke[name]
 end
 
-def sav_script( cpu, scheme, p0, options = {} ) 
+def sav_script( options = {} ) 
 
     options = {
         cacheSize: 4,
-        tl0: 6,
-        tl1: 6,
-        tl2: 6,
-        tl3: 6,
+        tl0: 64,
+        tl1: 64,
+        tl2: 64,
+        tl3: 64,
         l3config: "shared",
         runmode: :qsub,
         maxinsts: $maxinsts,
         fastforward: $fastforward,
-        result_dir: "results"
+        result_dir: "results",
+        cpu: "detailed",
+        scheme: "none"
     }.merge options
+
+    cpu = options[:cpu]
+    scheme = options[:scheme]
 
     cacheSize  = options[:cacheSize]
     # workloads to run on p1-p3
+    p0         = options[:p0]
     p1         = options[:p1]
     p2         = options[:p2]
     p3         = options[:p3]
@@ -115,21 +121,20 @@ def sav_script( cpu, scheme, p0, options = {} )
         options[:gdb] ||
         options[:memdebug] ||
         options[:mmuDebug]
-    
 
-    filename  = "#{scheme}_#{cpu}_#{p0}tl#{tl0}"
-    filename += "_#{p1}tl#{tl1}" unless p1.nil?
-    filename += "_#{p2}tl#{tl2}" unless p2.nil?
-    filename += "_#{p3}tl#{tl3}" unless p3.nil?
-    filename += "_c#{cacheSize}MB"
+    options[:otherbench] = options[:benchmarks] if options[:otherbench].nil?
+
+    numcpus = options[:numcpus] = (
+      n = 0; until eval "options[:p#{n}].nil?"
+        n += 1
+      end; n
+    )
+
+    filename = "#{scheme}_#{numcpus}cpus_#{p0}#{tl0}_#{p1}#{tl1}"
 
     filename = "#{options[:nametag]}_"+filename if options[:nametag]
     filename = options[:filename] unless options[:filename].nil?
   
-    options[:numcpus] = [
-      p0,p1,p2,p3
-    ].inject(0){|sum,i| ( i.nil? && sum ) || sum+1} if options[:numcpus].nil?
-
     FileUtils.mkdir_p( result_dir ) unless File.directory?( result_dir )
 
     script = File.new($scriptgen_dir.path+"/run_#{filename}","w+")
@@ -165,8 +170,8 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --split_mshr \\")    if options[:split_mshr]
     script.puts("    --split_rport \\")   if options[:split_rport]
     script.puts("    --do_flush \\")      if options[:do_flush]
-    cswf = options[:context_sw_frequency]
-    script.puts("    --context_sw_frequnecy=#{cswf}\\" ) unless cswf.nil?
+    cswf = options[:context_sw_freq]
+    script.puts("    --context_sw_freq=#{cswf}\\" ) unless cswf.nil?
 
     #Time Quanta and Offsets
     [
@@ -212,7 +217,7 @@ def sav_script( cpu, scheme, p0, options = {} )
     script.puts("    --l2tracefile #{l2tracefile}\\") if options[:do_cache_trace]
 
     script.puts("    --dramsim2 \\")
-    script.puts("    --tpturnlength=#{tl0} \\") unless tl0==0 || diffperiod
+    #script.puts("    --tpturnlength=#{tl0} \\") unless tl0==0 || diffperiod
     script.puts("    --devicecfg="+
                 "./ext/DRAMSim2/ini/#{$device} \\")
     if tl0== 0
@@ -222,15 +227,14 @@ def sav_script( cpu, scheme, p0, options = {} )
     end
     script.puts("    --outputfile=/dev/null \\")
 
-    script.puts("    --p0=#{invoke(p0)}\\")
-    script.puts("    --p1=#{invoke(p1)}\\") unless p1.nil?
-    script.puts("    --p2=#{invoke(p2)}\\") unless p2.nil?
-    script.puts("    --p3=#{invoke(p3)}\\") unless p3.nil?
-    if diffperiod
-        script.puts("    --diffperiod \\")
-        script.puts("    --p0period=#{tl0} \\")
-        script.puts("    --p1period=#{tl1} \\")
+    numcpus.times do |n|
+      script.puts "    --p#{n}=#{invoke(options[eval ":p#{n}"])} \\"
     end
+
+    script.puts("   --diffperiod \\")
+    script.puts("   --p0period=#{tl0} \\")
+    script.puts("   --p1period=#{tl1} \\")
+
     script.puts("    > #{result_dir}/stdout_#{filename}.out")
     script_abspath = File.expand_path(script.path)
     script.close
@@ -264,8 +268,8 @@ def iterate_and_submit opts={}, &block
 
     submit = block_given? ?
       block :
-      ( lambda do |cpu, scheme, param, p0, other|
-          r = sav_script(cpu, scheme, p0, param.merge(p1: other))
+      ( lambda do |param, p0, other|
+          r = sav_script(param.merge(p0: p0, p1: other))
           (r[0] && [] ) || r[1]
         end
       )
@@ -274,7 +278,7 @@ def iterate_and_submit opts={}, &block
       o[:benchmarks].product(o[:otherbench]).each_slice(o[:threads]) do |i|
         threads=[]
         i.each do |p0,other|
-          threads << Thread.new { f << submit.call(cpu, scheme, o, p0, other).flatten }
+          threads << Thread.new { f << submit.call(o, p0, other).flatten }
         end
         threads.each { |t| t.join }
       end
@@ -287,12 +291,12 @@ def parallel_local opts={}
 end
 
 def qsub_fast opts={}
-  iterate_and_submit ({runmode: :qsub}).merge(opts)
+  iterate_and_submit ({runmode: :qsub, threads: 1}).merge(opts)
 end
 
 def single opts={}
     o = {
-        cpus: %w[detailed],
+        cpu: %w[detailed],
         schemes: $schemes,
         benchmarks: $specint,
         runmode: :local,
@@ -301,11 +305,11 @@ def single opts={}
 
     f = []
 
-    o[:cpus].product(o[:schemes], o[:benchmarks]).each_slice(o[:threads]) do |i|
+    o[:schemes].product(o[:benchmarks]).each_slice(o[:threads]) do |i|
       t={}
-      i.each do |cpu,scheme,p0|
+      i.each do |scheme,p0|
         t[i] = Thread.new do
-          r=sav_script(cpu, scheme, p0, o)
+          r=sav_script(p0, o)
           f << r[1] unless r[0]
         end
       end
@@ -319,25 +323,40 @@ def single_qsub opts={}
 end
 
 def parallel_local_scaling opts={}
-  opts = {otherbench: %w[astar]}.merge opts
-  iterate_and_submit(opts) do |cpu, scheme, param, p0, other|
+  iterate_and_submit(opts) do |param, p0, other|
     f = []
+    p = param.merge(p0: p0)
     #2
-    p = param.merge(p1: other)
+    p = p.merge(p1: other)
     p = p.merge coordinate(n:2) if opts[:coordination]
-    r = opts[:skip2]? [true,""] : sav_script(cpu, scheme, p0, p)
+    r = opts[:skip2]? [true,""] : sav_script(p)
     f << r[1] unless r[0]
     #3
     p = p.merge(p2: other)
     p = p.merge coordinate(n:3) if opts[:coordination]
-    r = opts[:skip3]? [true,""] : sav_script(cpu, scheme, p0, p)
+    r = opts[:skip3]? [true,""] : sav_script(p)
     f << r[1] unless r[0]
     #4
     p = p.merge(p3: other)
     p = p.merge coordinate(n:4) if opts[:coordination]
-    r = opts[:skip4]? [true,""] : sav_script(cpu, scheme, p0, p)
+    r = opts[:skip4]? [true,""] : sav_script(p)
     f << r[1] unless r[0]
     f
+  end
+end
+
+def scale_to opts={}
+  opts = { num_wl: 2 }.merge opts
+  iterate_and_submit(opts) do |param, p0, other|
+    f = []
+    p = param.merge(p0: p0)
+
+    1.upto(opts[:num_wl]) do |n|
+      p = p.merge( "p#{n}".to_sym => other ) 
+      r = (eval "opts[:skip#{n+1}]") ? [true,""] : sav_script(p)
+      f << r[1] unless r[0]
+    end
+
   end
 end
 
