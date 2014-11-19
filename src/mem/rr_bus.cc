@@ -171,8 +171,7 @@ RRBus::calcFinishTimeReserve(int tcid , int data_size, bool is_req){
     resp_reserved_cycles[tcid];
   if( nextCycle() < reserved_cycles ){
     return calcFinishTimeAlwaysReserve(tcid, data_size, tl, offset);
-  } else{
-    if( tcid ==0 )
+  }else{
     return calcFinishTime(tcid, data_size, tl, offset);
   }
 }
