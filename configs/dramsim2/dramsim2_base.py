@@ -170,6 +170,9 @@ def add_options():
             options.rr_l2l3 = True 
             options.rr_mem  = True
 
+        options.num_cpus = ( options.numpids if (options.numcpus == None)
+            else options.numcpus )
+
         if args:
             print "Error: script doesn't take any positional arguments"
             sys.exit(1)
