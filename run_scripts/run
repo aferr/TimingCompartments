@@ -44,7 +44,8 @@ include RunScripts
 # check_coordination
 # debug_only_waypart
 # test_double_tc
-test_cache_flush
+# test_cache_flush
+# test_scale_to
 
 #------------------------------------------------------------------------------
 # Performance
@@ -54,6 +55,8 @@ test_cache_flush
 # scalability_qsub
 # breakdown
 # coordination
+ scalability_local
+flush_overhead
 
 #----------------------------------------------------------------------------
 # Parameter Sweeping

@@ -41,7 +41,9 @@ module RunScripts
 
     def scalability_local
      parallel_local_scaling $secure_opts.merge(
-       maxinsts: 10**9
+       maxinsts: 10**3,
+       fastforward: 100,
+       debug: true
      ) 
     end
 
@@ -107,6 +109,24 @@ module RunScripts
         p3threadID: 1
       )
     end
+
+    def flush_overhead
+      [$secure_opts, $insecure_opts].each do |opt|
+        o = opt.merge(
+          maxinsts: 10**3,
+          fastforward: 100,
+          do_flush: true,
+          debug: true
+        )
+        puts o.to_s.green
+        #1 ms
+        parallel_local o.merge(nametag: "flush1ms", context_sw_freq: 10**6)
+        #10 ms
+        parallel_local o.merge(nametag: "flush10ms", context_sw_freq: 10**7)
+        #100 ms
+        parallel_local o.merge(nametag: "flush100ms", context_sw_freq: 10**8)
+      end
+    end 
 
 ##############################################################################
 # Coordination

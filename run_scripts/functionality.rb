@@ -157,13 +157,13 @@ module RunScripts
     end
 
     def test_scale_to
-      scale_to $secure_opts.merge(
+      scale_to $insecure_opts.merge(
         #addrpar: false,
         # schemes: %w[tp],
         fastforward: 0,
         maxinsts: 10**3,
         debug: true,
-        num_wl: 5,
+        num_wl: 8,
         # skip2: true,
         # skip3: true,
         # skip4: true,

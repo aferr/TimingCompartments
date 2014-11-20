@@ -279,7 +279,7 @@ def iterate_and_submit opts={}, &block
         threads=[]
         o.merge!(scheme: scheme, cpu: cpu)
         i.each do |p0,other|
-          threads << Thread.new { f << submit.call(o, p0, other).flatten }
+          threads << Thread.new { f << submit.call(o, p0, other) }
         end
         threads.each { |t| t.join }
       end
