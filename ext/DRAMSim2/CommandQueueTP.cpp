@@ -140,7 +140,6 @@ void CommandQueueTP::refreshPopClosePage(BusPacket **busPacket, bool &
 bool CommandQueueTP::normalPopClosePage(BusPacket **busPacket, bool 
         &sendingREF)
 {
-
     bool foundIssuable = false;
     unsigned startingRank = nextRank;
     unsigned startingBank = nextBank;
@@ -277,57 +276,38 @@ void CommandQueueTP::print()
 }
 
 unsigned CommandQueueTP::getCurrentPID(){
-    int _currentClockCycle = currentClockCycle - offset;
-	if ( diffPeriod ) {
-    	if(num_pids == 2)
-    		return (_currentClockCycle%(p0Period+p1Period)/p0Period);
-    	else if (num_pids == 3) {
-    		uint64_t remainder = _currentClockCycle%(p0Period+2*p1Period);
-    		if( remainder < p0Period ) return 0;
-    		else if (remainder < p0Period + p1Period ) return 1;
-    		else return 2;
-    	}
-    	else if (num_pids == 4) {
-    		uint64_t remainder = _currentClockCycle%(p0Period+3*p1Period);
-    		if( remainder < p0Period ) return 0;
-    		else if (remainder < p0Period + p1Period ) return 1;
-    		else if (remainder < p0Period + 2*p1Period ) return 2;
-    		else return 3;
-    	}
-    }
-    else {
-    	return (_currentClockCycle >> tpTurnLength) % num_pids;
-    }
+  unsigned ccc_ = currentClockCycle - offset;
+  unsigned schedule_time = ccc_ % (p0Period + (num_pids-1) * p1Period);
+  if( schedule_time < p0Period ) return 0;
+  return (schedule_time - p0Period) / p1Period + 1;
 }
 
 bool CommandQueueTP::isBufferTime(){
-	int _currentClockCycle = currentClockCycle - offset;
-    unsigned tlength = 1<<tpTurnLength;
-    uint64_t turnBegin = _currentClockCycle & (-1<<tpTurnLength);
-    if ( diffPeriod ) {
-    	unsigned pid = getCurrentPID();
-    	if ( pid == 0 ) tlength = p0Period;
-    	else tlength = p1Period;
-    	if (pid == 0 )
-    		turnBegin = _currentClockCycle - (_currentClockCycle%(p0Period+(num_pids-1)*p1Period));
-    	else
-    		turnBegin = _currentClockCycle - (_currentClockCycle%(p0Period+(num_pids-1)*p1Period)-(p0Period+(pid-1)*p1Period));
-    }
-    uint64_t dead_time;
-	  uint64_t _turnBegin = turnBegin + offset;
-    int anyr_refresh = REFRESH_PERIOD/NUM_RANKS/tCK;
+  unsigned ccc_ = currentClockCycle - offset;
+  unsigned current_tc = getCurrentPID();
+  unsigned schedule_length = p0Period + p1Period * (num_pids - 1);
+  unsigned schedule_start = ccc_ - ( ccc_ % schedule_length );
 
-    // Set the dead time based on whether or not there will be a refresh during
-    // this turn.
-		dead_time = (int(_turnBegin / anyr_refresh ) < 
-				int((_turnBegin+tlength-1) / anyr_refresh )) ?
-      refresh_deadtime( tlength ) :
-      normal_deadtime( tlength );
+  unsigned turn_start = current_tc == 0 ?
+    schedule_start :
+    schedule_start + p0Period + p1Period * (current_tc-1);
+  unsigned turn_end = current_tc == 0 ?
+    turn_start + p0Period :
+    turn_start + p1Period;
 
-    if ( diffPeriod )
-    	return (tlength - (_currentClockCycle - turnBegin)) <= dead_time;
-    else
-    	return (tlength - (_currentClockCycle & (tlength - 1))) <= dead_time;
+  // Time between refreshes to ANY rank.
+  unsigned refresh_period = REFRESH_PERIOD/NUM_RANKS/tCK;
+  unsigned next_refresh = ccc_ + refresh_period - (ccc_ % refresh_period);
+ 
+  unsigned tlength = current_tc == 0 ? p0Period : p1Period;
+
+  //TODO It returns a bool you tool
+  unsigned deadtime = (turn_start <= next_refresh && next_refresh < turn_end) ?
+    refresh_deadtime( tlength ) :
+    normal_deadtime( tlength );
+
+  return ccc_ >= (turn_end - deadtime);
+
 }
 
 #ifdef DEBUG_TP
