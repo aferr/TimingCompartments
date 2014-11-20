@@ -80,7 +80,7 @@ class L3Shared( L3Config ):
         system.l3.mem_side = system.membus.slave
 
     def connect_l2( self ):
-        for i in xrange( self.options.numcpus ):
+        for i in xrange( self.options.num_cpus ):
             self.system.l2[i].mem_side = self.system.tol3bus.slave
 
 
@@ -100,17 +100,17 @@ class L3Private( L3Config ):
                     cw_first = not (options.nocfw),
                     l3_trace_file = options.l3tracefile
                 )
-                for i in xrange( options.numcpus )
+                for i in xrange( options.num_cpus )
             ]
 
-        system.tol3bus = [NoncoherentBus() for i in xrange( options.numcpus ) ]
+        system.tol3bus = [NoncoherentBus() for i in xrange( options.num_cpus ) ]
 
-        for i in xrange( options.numcpus ):
+        for i in xrange( options.num_cpus ):
             system.l3[i].cpu_side = system.tol3bus[i].master
             system.l3[i].mem_side = system.membus.slave
 
     def connect_l2( self ):
-        for i in xrange( self.options.numcpus ):
+        for i in xrange( self.options.num_cpus ):
             self.system.l2[i].mem_side = self.system.tol3bus[i].slave
 
 
@@ -119,7 +119,7 @@ class L3Private( L3Config ):
 #------------------------------------------------------------------------------
 # Add private L1 i/d caches to each cpu
 def config_l1( options, system ):
-    for i in xrange(options.numcpus):
+    for i in xrange(options.num_cpus):
         if options.caches:
             icache = L1Cache(size = options.l1i_size,
                              assoc = options.l1i_assoc,
@@ -155,14 +155,14 @@ def config_l2( options, system ):
                 do_flush = options.do_flush,
                 context_sw_freq = options.context_sw_freq,
             ) 
-            for i in xrange( options.numcpus )
+            for i in xrange( options.num_cpus )
         ]
-    system.tol2bus = [NoncoherentBus() for i in xrange( options.numcpus )]
+    system.tol2bus = [NoncoherentBus() for i in xrange( options.num_cpus )]
 
 # Connect private L2 caches to the cached ports of each cpu (usually l1)
 # through system.tol2bus
 def connect_l2( options, system ):
-    for i in xrange(options.numcpus):
+    for i in xrange(options.num_cpus):
         if options.l2cache:
             system.cpu[i].connectAllPorts(system.tol2bus[i])
             system.l2[i].cpu_side = system.tol2bus[i].master
