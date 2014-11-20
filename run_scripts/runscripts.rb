@@ -277,6 +277,7 @@ def iterate_and_submit opts={}, &block
     o[:cpus].product(o[:schemes]).each do |cpu, scheme|
       o[:benchmarks].product(o[:otherbench]).each_slice(o[:threads]) do |i|
         threads=[]
+        o.merge!(scheme: scheme, cpu: cpu)
         i.each do |p0,other|
           threads << Thread.new { f << submit.call(o, p0, other).flatten }
         end
@@ -350,13 +351,12 @@ def scale_to opts={}
   iterate_and_submit(opts) do |param, p0, other|
     f = []
     p = param.merge(p0: p0)
-
-    1.upto(opts[:num_wl]) do |n|
+    1.upto(opts[:num_wl]-1) do |n|
       p = p.merge( "p#{n}".to_sym => other ) 
       r = (eval "opts[:skip#{n+1}]") ? [true,""] : sav_script(p)
       f << r[1] unless r[0]
     end
-
+    f
   end
 end
 

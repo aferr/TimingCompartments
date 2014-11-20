@@ -96,11 +96,16 @@ System::System(Params *p)
     systemList.push_back(this);
 
     is_fast_forward = p->fast_forward;
+
+    int mem_end = physmem.totalSize() >> LogVMPageSize;
+    //int partition_size = (mem_end + p->numPids - 1) / p->numPids;
+    int partition_size = mem_end / p->numPids;
+
+    pagePtr = new Addr[p->numPids];
+    for( int i=0; i < p->numPids; i++ ){
+      pagePtr[i] = i * partition_size;
+    }
     
-    pagePtr[0] = 0;
-    pagePtr[2] = (physmem.totalSize() >> (LogVMPageSize + 1));
-    pagePtr[1] = pagePtr[2] >> 1;
-    pagePtr[3] = pagePtr[1] + pagePtr[2];
     fixAddr = p->fixAddr;
 
     if (FullSystem) {
@@ -316,7 +321,7 @@ System::allocPhysPages(int npages, int pid)
 	if( fixAddr ) {
 		Addr return_addr = pagePtr[pid] << LogVMPageSize;
 		pagePtr[pid] += npages;
-		if ((pagePtr[pid] << LogVMPageSize) > (physmem.totalSize()*(pid+1)/4))
+		if ((pagePtr[pid] << LogVMPageSize) > (physmem.totalSize()*(pid+1)/_params->numPids))
 			fatal("Out of memory, please increase size of physical memory.");
 		return return_addr;
 	}

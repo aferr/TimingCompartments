@@ -18,7 +18,7 @@ module RunScripts
       fastforward: 0,
       debug: true,
       runmode: :local,
-      threads: 1
+      threads: 4
      }.merge opts)
     end
 
@@ -88,7 +88,7 @@ module RunScripts
     end
 
     def secure_sanity
-      secure{|opts| parallel_local opts}
+      secure{|opts| parallel_local opts.merge(threads: 1)}
     end
 
     def insecure_sanity
@@ -144,16 +144,34 @@ module RunScripts
     end
 
     def test_cache_flush
-      o = { schemes: %w[none], benchmarks: %w[mcf], maxinsts: 10**6, threads: 1,
+      o = { schemes: %w[none], benchmarks: %w[mcf], maxinsts: 10**7, threads: 1,
             fastforward: 0, debug: true }
-      parallel_local o
+      # parallel_local o
+      # parallel_local o.merge(
+      #   nametag: "flush2ms", do_flush: true, context_sw_freq: 10**5,
+      # )
+      # parallel_local o.merge $secure_opts
       parallel_local o.merge(
-        nametag: "flush2ms", do_flush: true, context_sw_freq: 10**5,
-      )
-      parallel_local o.merge $secure_opts
-      parallel_local o.merge(
-        nametag: "flush2ms", do_flush: true, context_sw_freq: 10**5,
+        nametag: "flush2ms", do_flush: true, context_sw_freq: 10**7,
       ).merge $secure_opts
+    end
+
+    def test_scale_to
+      scale_to $secure_opts.merge(
+        #addrpar: false,
+        # schemes: %w[tp],
+        fastforward: 0,
+        maxinsts: 10**3,
+        debug: true,
+        num_wl: 5,
+        # skip2: true,
+        # skip3: true,
+        # skip4: true,
+        # skip5: true,
+        # skip6: true,
+        # skip7: true,
+        threads: 1
+      )
     end
 
 end
