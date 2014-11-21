@@ -426,7 +426,7 @@ class RRBus : public MemObject
   int *req_offset;
   int *resp_offset;
 
-  int maxWritebacks = 4096;
+  int maxWritebacks;
   Tick *req_reserved_cycles;
   Tick *resp_reserved_cycles;
 
