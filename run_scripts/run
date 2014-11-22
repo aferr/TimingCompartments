@@ -50,12 +50,12 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Performance
 #----------------------------------------------------------------------------
-# baseline
-# ncore_ntc
-# ncore_2tc
-# breakdown
+  baseline
+  ncore_ntc
+  ncore_2tc
+  breakdown
+  flush_overhead
 # coordination
-# flush_overhead
 
 #----------------------------------------------------------------------------
 # Parameter Sweeping

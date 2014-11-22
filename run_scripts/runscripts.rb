@@ -130,10 +130,16 @@ def sav_script( options = {} )
 
     options = {
         cacheSize: 4,
-        tl0: 64,
-        tl1: 64,
-        tl2: 64,
-        tl3: 64,
+        #TP Minimum: 
+        tl0: 43,
+        tl1: 43,
+        tl2: 43,
+        tl3: 43,
+        #FA Minimum:
+        # tl0: 18,
+        # tl1: 18,
+        # tl2: 18,
+        # tl3: 18,
         l3config: "shared",
         runmode: :qsub,
         maxinsts: $maxinsts,
