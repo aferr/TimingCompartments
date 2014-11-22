@@ -51,13 +51,11 @@ include RunScripts
 # Performance
 #----------------------------------------------------------------------------
 # baseline
-# scalability_local
-# scalability_qsub
+# ncore_ntc
+# ncore_2tc
 # breakdown
 # coordination
-# scalability_local
 # flush_overhead
-breakdown 
 
 #----------------------------------------------------------------------------
 # Parameter Sweeping

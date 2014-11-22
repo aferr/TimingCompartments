@@ -6,7 +6,6 @@ require_relative 'performance'
 require 'colored'
 include RunScripts
 
-
 module RunScripts
 
     def insecure opts={}

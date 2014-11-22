@@ -11,7 +11,7 @@ $specint_dir = (Dir.pwd+"/benchmarks/spec2k6bin/specint")
 $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
 #Gem5 options
-$fastforward = 10**9
+$fastforward = 10**8
 $maxinsts = 10**8
 $maxtick = 2*10**15 
 $cpus = %w[detailed] #timing is also available
@@ -140,7 +140,7 @@ def sav_script( options = {} )
         fastforward: $fastforward,
         result_dir: "results",
         cpu: "detailed",
-        scheme: "none"
+        scheme: "none",
     }.merge options
 
     cpu = options[:cpu]
@@ -267,9 +267,8 @@ def sav_script( options = {} )
     #Security Policy
     options[:numpids] = options[:numcpus] if options[:numpids].nil?
     script.puts("    --numpids=#{options[:numpids]} \\")
-    [
-      :p0threadID, :p1threadID, :p2threadID, :p3threadID
-    ].each_with_index do |param, i|
+    (0..7).each do |i|
+      param = "p#{i}threadID".to_sym
       options[param].nil? ?
         script.puts("    --#{param.to_s} #{i}\\") :
         script.puts("    --#{param.to_s} #{options[param]}\\") 
@@ -317,10 +316,10 @@ def sav_script( options = {} )
     FileUtils.mkdir_p( "stderr" ) unless File.directory?( "stderr" )
     FileUtils.mkdir_p( "stdout" ) unless File.directory?( "stdout" )
     
-    sleep(1)
 
     if runmode == :qsub
-        success = system "qsub -wd #{$gem5home.path} -e stderr/ -o stdout/ #{script_abspath}"
+      sleep(1)
+      success = system "qsub -wd #{$gem5home.path} -e stderr/ -o stdout/ #{script_abspath}"
     end
     puts "#{filename}".magenta
     success = system "sh #{script_abspath}" if runmode == :local
