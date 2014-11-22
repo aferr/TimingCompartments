@@ -50,13 +50,12 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Performance
 #----------------------------------------------------------------------------
-# baseline
-# scalability_local
-# scalability_qsub
+  baseline
+  ncore_ntc
+  ncore_2tc
   breakdown
+  flush_overhead
 # coordination
-# scalability_local
-# flush_overhead
 
 #----------------------------------------------------------------------------
 # Parameter Sweeping

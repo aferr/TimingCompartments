@@ -6,123 +6,103 @@ include RunScripts
 
 module RunScripts
 
-    $secure_opts = {
-      schemes: %w[tp],
-      addrpar: true,
-      rr_nc: true,
-      use_way_part: true,
-      split_mshr: true,
-      split_rport: true
-    }
-
     def baseline
-      qsub_scaling(
-        schemes: %w[none],
-        cpus: %w[detailed],
-        otherbench: $specint,
-        maxinsts: 10**9
+      iterate_mp(
+        scheme: "none",
       )
     end
-
-    def baseline_nocwf
-      qsub_scaling(
-        schemes: %w[none],
-        cpus: %w[detailed],
-        otherbench: %w[astar mcf],
-        nocwf: true
+    
+    def ncore_ntc
+      puts $secure_opts
+      iterate_mp $secure_opts.merge(
+        num_wl: 8,
       )
-    end
-
-    def scalability_qsub
-        qsub_scaling $secure_opts.merge(
-          maxinsts: 10**9
-        )
-    end
-
-    def scalability_local
-     parallel_local_scaling $secure_opts.merge(
-       maxinsts: 10**3,
-       fastforward: 100,
-       debug: true
-     ) 
     end
 
     def breakdown
 
-      qsub_fast(
-        maxinsts: 10**9,
-        nametag: "only_l2l3",
+      o = {
+        schemes: %w[none],
+        scheme: "none",
         addrpar: true,
-        rr_l2l3: true,
+        num_wl: 2,
+      }
+
+      iterate_mp o.merge(
+        nametag: "only_rrbus",
+        rr_nc: true,
         split_rport: true,
-        schemes: %w[none]
       )
 
-      qsub_fast(
-        maxinsts: 10**9,
-        nametag: "only_membus",
-        addrpar: true,
-        rr_mem: true,
-        split_mshr: true,
-        schemes: %w[none]
-      )
-
-      qsub_fast(
-        maxinsts: 10**9,
+      # parallel_local o.merge(
+      iterate_mp o.merge(
         nametag: "only_waypart",
-        addrpar: true,
         waypart: true,
-        schemes: %w[none]
       )
 
-      qsub_fast(
-        maxinsts: 10**9,
+      iterate_mp o.merge(
         nametag: "only_mc",
-        addrpar: true,
-        schemes: %w[tp]
+        schemes: %w[tp],
+        scheme: "tp"
       )
 
     end
 
-    # Obselete
-    ## def coordination
-    ##   qsub_scaling $secure_opts.merge(
-    ##     maxinsts: 10**9,
-    ##     coordination: true,
-    ##     nametag: "coordinated",
-    ##   )
-    ## end
+    def ncore_2tc
+      o = $secure_opts.merge(
+        nametag: "2tc"
+      )
 
-    def double_tc
-      qsub_scaling $secure_opts.merge(
-        maxinsts: 10**9,
-        nametag: "double_tc",
-        benchmarks: %w[mcf libquantum],
-        otherbench: $specint - %w[mcf libquantum],
+      # 4 Cores 2 TCs
+      iterate_mp o.merge(
+        num_wl: 4,
         skip2: true,
-        skip3: true,
-        numcpus: 4,
-        numpids: 2,
         p0threadID: 0,
         p1threadID: 0,
         p2threadID: 1,
         p3threadID: 1
       )
+
+      # 6 Cores 2 TCs
+      iterate_mp o.merge(
+        num_wl: 6,
+        skip2: true,
+        skip4: true,
+        p0threadID: 0,
+        p1threadID: 0,
+        p2threadID: 0,
+        p3threadID: 1,
+        p4threadID: 1,
+        p5threadID: 1
+      )
+
+      # 8 Cores 2 TCs
+      iterate_mp o.merge(
+        num_wl: 8,
+        skip2: true,
+        skip4: true,
+        skip6: true,
+        p0threadID: 0,
+        p1threadID: 0,
+        p2threadID: 0,
+        p3threadID: 0,
+        p4threadID: 1,
+        p5threadID: 1,
+        p6threadID: 1,
+        p7threadID: 1
+      )
+
     end
 
     def flush_overhead
-      [$secure_opts, $insecure_opts].each do |opt|
+      [$secure_opts].each do |opt|
         o = opt.merge(
-          maxinsts: 10**3,
-          fastforward: 100,
           do_flush: true,
-          debug: true
         )
-        puts o.to_s.green
-        #1 ms
-        parallel_local o.merge(nametag: "flush1ms", context_sw_freq: 10**6)
         #10 ms
-        parallel_local o.merge(nametag: "flush10ms", context_sw_freq: 10**7)
+        parallel_local o.merge(nametag: "flush1ms", context_sw_freq: 10**7)
+        #50 ms
+        parallel_local o.merge(nametag: "flush10ms", context_sw_freq: 5*10**7)
         #100 ms
         parallel_local o.merge(nametag: "flush100ms", context_sw_freq: 10**8)
       end

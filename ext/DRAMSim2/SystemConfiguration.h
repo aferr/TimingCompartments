@@ -87,6 +87,7 @@ extern unsigned CL;
 extern unsigned AL;
 #define RL (CL+AL)
 #define WL (RL-1)
+#define tBURST
 extern unsigned BL;
 extern unsigned tRAS;
 extern unsigned tRCD;
@@ -117,11 +118,12 @@ extern unsigned NUM_DEVICES;
 #define WRITE_AUTOPRE_DELAY (WL+BL/2+tWR+tRP)
 #define WRITE_TO_READ_DELAY_B (WL+BL/2+tWTR) //interbank
 #define WRITE_TO_READ_DELAY_R (WL+BL/2+tRTRS-RL) //interrank
-#define WORST_CASE_DELAY (WL+BL/2+tWR+tRP+tRCD)
+#define WORST_CASE_DELAY (WL+BL/2+tWR+tRP+tRCD) //43
 //#define WORST_CASE_DELAY 62
-#define TP_BUFFER_TIME (WL+BL/2+tWR+tRP+tRCD+tRFC)
-#define FIX_WORST_CASE_DELAY (tFAW-3*tRRD)
-#define FIX_TP_BUFFER_TIME (tFAW-3*tRRD+tRFC)
+#define TP_BUFFER_TIME (WL+BL/2+tWR+tRP+tRCD+tRFC) //117
+// #define FIX_WORST_CASE_DELAY (tFAW-3*tRRD) max of this and below
+#define FIX_WORST_CASE_DELAY (WL + BL +tWTR) //18
+#define FIX_TP_BUFFER_TIME (tFAW-3*tRRD+tRFC) //
 
 extern unsigned JEDEC_DATA_BUS_BITS;
 

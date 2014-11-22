@@ -6,7 +6,6 @@ require_relative 'performance'
 require 'colored'
 include RunScripts
 
-
 module RunScripts
 
     def insecure opts={}
@@ -157,13 +156,14 @@ module RunScripts
     end
 
     def test_scale_to
-      scale_to $insecure_opts.merge(
+      iterate_mp $secure_opts.merge(
         #addrpar: false,
-        # schemes: %w[tp],
+        scheme: "tp",
         fastforward: 0,
         maxinsts: 10**3,
         debug: true,
         num_wl: 8,
+        runmode: :local,
         # skip2: true,
         # skip3: true,
         # skip4: true,
