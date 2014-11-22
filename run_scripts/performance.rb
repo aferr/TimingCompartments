@@ -40,38 +40,36 @@ module RunScripts
 
     def breakdown
 
-      qsub_fast(
-        maxinsts: 10**9,
-        nametag: "only_l2l3",
+      o = {
+        maxinsts: 10**3,
+        fastforward: 100,
+        schemes: %w[none],
+        debug: true,
         addrpar: true,
-        rr_l2l3: true,
-        split_rport: true,
-        schemes: %w[none]
-      )
+      }
 
-      qsub_fast(
-        maxinsts: 10**9,
-        nametag: "only_membus",
-        addrpar: true,
-        rr_mem: true,
-        split_mshr: true,
-        schemes: %w[none]
-      )
+      # parallel_local o.merge(
+      #   nametag: "only_l2l3",
+      #   rr_l2l3: true,
+      #   split_rport: true,
+      # )
 
-      qsub_fast(
-        maxinsts: 10**9,
+      # parallel_local o.merge(
+      #   nametag: "only_membus",
+      #   rr_mem: true,
+      #   split_mshr: true,
+      # )
+
+      parallel_local o.merge(
         nametag: "only_waypart",
-        addrpar: true,
         waypart: true,
-        schemes: %w[none]
       )
 
-      qsub_fast(
-        maxinsts: 10**9,
-        nametag: "only_mc",
-        addrpar: true,
-        schemes: %w[tp]
-      )
+      # parallel_local o.merge(
+      #   maxinsts: 10**3,
+      #   nametag: "only_mc",
+      #   schemes: %w[tp]
+      # )
 
     end
 
