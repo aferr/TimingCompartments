@@ -6,15 +6,6 @@ include RunScripts
 
 module RunScripts
 
-    $secure_opts = {
-      schemes: %w[tp],
-      addrpar: true,
-      rr_nc: true,
-      use_way_part: true,
-      split_mshr: true,
-      split_rport: true
-    }
-
     def baseline
       qsub_scaling(
         schemes: %w[none],

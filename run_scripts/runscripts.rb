@@ -25,6 +25,77 @@ $schemes = %w[tp none fa]
 $turnlengths = [0] + (7..9).to_a
 $p0periods = [64,96,128,192,256]
 
+# Workload Characterization
+# Have phases: bzip2, gcc, gobmk, h264ref
+# No phases: mcf, xalan
+# Cache independent: astar, libquantum, sjeng
+# L2 misses over 2B instructions
+
+# MP2BI
+# mcf
+# 8.368790e+07
+# xalan
+# 2.199928e+07
+# bzip2
+# 2.120806e+07
+# libquantum
+# 1.454017e+07
+# sjeng
+# 8.992062e+06
+# gcc
+# 7.115132e+06
+# gobmk
+# 5.433310e+06
+# hmmer
+# 4.309481e+06
+# h264ref
+# 1.235817e+06
+# astar
+# 9.910000e+02
+
+
+#Multiprogram Workloads
+$mpworkloads = {
+  hhd: %w[ mcf bzip2 ],
+  hhn: %w[ mcf xalan ],
+  hhi: %w[ libquantum libquantum],
+  hli: %w[ libquantum astar ],
+  hld: %w[ mcf h264ref ],
+  hmi: %w[ libquantum sjeng ],
+  hmd: %w[ xalan gcc ],
+  mmi: %w[ gcc gobmk ],
+  mmd: %w[ sjeng sjeng ],
+  llp: %w[ astar h264ref ],
+  lld: %w[ h264ref hmmer ],
+  lli: %w[ astar astar]
+}
+
+def workloads_of_size n, wl2=$mpworkloads
+  wl2.keys.inject({}) do |hash, name|
+    hash[name] = n.times.inject([]) { |wl, i| wl << wl2[name][i%2]; wl }
+    hash
+  end
+end
+
+def rotated_workloads wls
+  wls.keys.inject({}) do |rwls,wl|
+    b = wls[wl]
+    rwls[(wl.to_s+'r').to_sym] = [b[1],b[0],b[2..b.size-1]].flatten
+    rwls
+  end
+end
+
+# Full Protection Options
+$secure_opts = {
+  schemes: %w[tp],
+  scheme: "tp", 
+  addrpar: true,
+  rr_nc: true,
+  use_way_part: true,
+  split_mshr: true,
+  split_rport: true
+}
+
 #benchmarks
 $specinvoke = { 
    #"perlbench"  => "'#{$specint_dir}/perlbench -I#{$specint_dir}/perldepends -I#{$specint_dir}/lib #{$specint_dir} pack.pl'",
@@ -130,7 +201,10 @@ def sav_script( options = {} )
       end; n
     )
 
+    o = options
+
     filename = "#{scheme}_#{numcpus}cpus_#{p0}#{tl0}_#{p1}#{tl1}"
+    filename = "#{scheme}_#{numcpus}cpus_#{o[:wl_name]}" unless o[:wl_name].nil?
 
     filename = "#{options[:nametag]}_"+filename if options[:nametag]
     filename = options[:filename] unless options[:filename].nil?
@@ -248,7 +322,7 @@ def sav_script( options = {} )
     if runmode == :qsub
         success = system "qsub -wd #{$gem5home.path} -e stderr/ -o stdout/ #{script_abspath}"
     end
-    puts "#{filename}".magenta if runmode == :local
+    puts "#{filename}".magenta
     success = system "sh #{script_abspath}" if runmode == :local
     [success,filename]
 end
@@ -358,6 +432,29 @@ def scale_to opts={}
     end
     f
   end
+end
+
+def iterate_mp o={}
+  o = {
+    num_wl: 2,
+    workloads: $mpworkloads,
+    skip3: true,
+    skip5: true,
+    skip7: true
+  }.merge o
+
+  2.upto(o[:num_wl]) do |n|
+    wls = workloads_of_size n, o[:workloads]
+    wls = wls.merge(rotated_workloads wls)
+    wls.keys.each do |wl|
+      p = o.merge(wl_name: wl)
+      wls[wl].each_with_index do |benchmark,i|
+        p = p.merge( "p#{i}".to_sym => benchmark )
+      end
+      sav_script p unless eval("o[:skip#{n}]")
+    end
+  end
+
 end
 
 def qsub_scaling opts = {}
