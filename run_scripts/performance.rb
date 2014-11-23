@@ -101,11 +101,11 @@ module RunScripts
           do_flush: true,
         )
         #10 ms
-        iterate_mp o.merge(nametag: "flush1ms", context_sw_freq: 10**7)
+        iterate_mp o.merge(nametag: "flush1ms", context_sw_freq: 10**10)
         #50 ms
-        iterate_mp o.merge(nametag: "flush10ms", context_sw_freq: 5*10**7)
+        iterate_mp o.merge(nametag: "flush10ms", context_sw_freq: 5*10**10)
         #100 ms
-        iterate_mp o.merge(nametag: "flush100ms", context_sw_freq: 10**8)
+        iterate_mp o.merge(nametag: "flush100ms", context_sw_freq: 10**11)
       end
     end 
 
