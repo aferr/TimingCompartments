@@ -89,7 +89,8 @@ def grouped_bar data, o={}
     # h: 200,
     # w: 400 
     h: COLUMN_H,
-    w: COLUMN_W
+    w: COLUMN_W,
+    legend_space: 20
   }.merge(o)
 
   data_max = data.inject(data[0][0]) do |max, i|
@@ -99,7 +100,7 @@ def grouped_bar data, o={}
 
   h = o[:h]
   w = o[:w]
-  scale_w = o[:legend].nil? ? w : w-20
+  scale_w = o[:legend].nil? ? w : w-o[:legend_space]
   x = pv.Scale.ordinal(pv.range(o[:x_num_outer])).
         split_banded(0, scale_w, 5/6.0)
   y = pv.Scale.linear(0, data_max*1.1).range(0, h-20)
@@ -167,7 +168,7 @@ def grouped_bar data, o={}
       bottom(lambda { |_| 35 + self.index * 10 }).
       shape_size(20).
       fillStyle(lambda { |_| colors.scale(self.index) }).
-      left(w-18).
+      left(w-o[:legend_space]+2).
       anchor("left").
     add(pv.Label).
       text(lambda { |d| d.to_s }).

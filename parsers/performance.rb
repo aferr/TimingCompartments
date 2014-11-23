@@ -4,111 +4,136 @@ require_relative 'parsers'
 require_relative 'graph'
 include Parsers
 
-def perf_compare_prelim opts
-    perf_compare( opts ){|p0,other| {p0: p0, p1: other } }
-end
+$mpworkloads = {
+  hhd: %w[ mcf bzip2 ],
+  hhn: %w[ mcf xalan ],
+  hhi: %w[ libquantum libquantum],
+  hli: %w[ libquantum astar ],
+  hld: %w[ mcf h264ref ],
+  hmi: %w[ libquantum sjeng ],
+  hmd: %w[ xalan gcc ],
+  mmi: %w[ gcc gobmk ],
+  mmd: %w[ sjeng sjeng ],
+  llp: %w[ astar h264ref ],
+  lld: %w[ h264ref hmmer ],
+  lli: %w[ astar astar]
+}
 
-def perf_compare_scalability opts
-    two_tcs   = perf_compare( opts ){|p0,other| { p0: p0, p1: other } }
-    three_tcs = perf_compare( opts ){|p0,other|
-        { p0: p0, p1: other, p2: other }
-    }
-    four_tcs  = perf_compare( opts ){|p0,other|
-        { p0: p0, p1: other, p2: other, p3: other}
-    }
-    [
-        two_tcs,
-        three_tcs,
-        four_tcs
-    ]
-end
-
-def scalability_wmean opts
-  r = perf_compare_scalability opts
-  r_full = perf_compare_scalability opts.merge(
-    bench: $specint
-  )
-  r.map.with_index { |i,index|
-    #puts avg_arr( r_full[index].values )
-    i.values << avg_arr(r_full[index].values)
-  }
-end
-
-def perf_compare_breakdown opts
-    l2l3    = perf_compare( opts ){|p0,other|
-        {p0: p0, p1: other, nametag: "only_l2l3" }
-    }
-    waypart = perf_compare( opts ){|p0,other|
-        {p0: p0, p1: other, nametag: "only_waypart" }
-    }
-    membus = perf_compare( opts ){|p0,other|
-        {p0: p0, p1: other, nametag: "only_membus" }
-    }
-    mc     = perf_compare( opts ){|p0,other|
-        {p0: p0, p1: other, nametag: "only_mc" }
-    }
-    [
-      # l2l3,
-      # membus,
-      #waypart,
-      (1..10).inject({}){|h,i| h[i]=1;h},
-      (1..10).inject({}){|h,i| h[i]=1;h},
-      (1..10).inject({}){|h,i| h[i]=3;h},
-      mc
-    ]
-end
-
-def results_to_stdout results
-    results.each do |k,v|
-        puts "#{k}, #{v}"
+def data_of p={}
+  p[:core_set].inject([]) do |a1,cores|
+    a1 << $mpworkloads.keys.inject([]) do |a2,wl|
+      a2 << yield(p.merge(numcpus: cores, workload: wl))
+      a2
     end
+    a1
+  end
 end
+
+def stp_data_of(p={}) data_of(p){|o| stp o} end
+
+def antt_data_of(p={}) data_of(p){|o| antt o} end
 
 if __FILE__ == $0
   in_dir  = ARGV[0].to_s
   out_dir = ARGV[1].to_s
   FileUtils.mkdir_p(out_dir) unless File.directory?(out_dir)
 
-  # Scalability Results
-  r = scalability_wmean(
-    dir: in_dir,
-    #otherbench: %w[ astar ],
-    use_base_avg: true,
+  o = { core_set: [2], dir: in_dir, numcpus: 2, scheme: "none" }
+ 
+  gb_graph_fake = lambda do |r,name|
+    d = 1.upto(4).map{ |i| r[0].map{|j|j*i} }
+    gb = grouped_bar d.transpose, legend: [2,4,6,8], x_labels: $mpworkloads.keys
+    string_to_f gb, "#{out_dir}/#{name}.svg"
+  end
+
+#------------------------------------------------------------------------------
+# Experiments
+#------------------------------------------------------------------------------
+graphs = lambda do |fun|  
+  # baseline
+  puts "Baseline #{fun}".green
+  r = (method fun).call o.merge(
+    o
   )
-  gb = grouped_bar r.transpose, legend: [2,3,4], x_labels: $specint + %w[mean]
-  string_to_f gb, "#{out_dir}/scalability.svg"
+  puts r.to_s
+  gb_graph_fake.call r, "baseline_#{fun}"
 
-  # Scalability w/o libquantum
-  r = scalability_wmean(
-    dir: in_dir,
-    bench: $specint - %w[libquantum],
-    otherbench: $specint,
-    use_base_avg: true,
+  #n_core_ntc
+  puts "N Core N TC #{fun}".green
+  r = (method fun).call o.merge(
+    scheme: "tp"
   )
-  gb = grouped_bar r.transpose, legend: [2,3,4],
-    x_labels: $specint - %w[libquantum] + %w[mean],
-    w: COLUMN_W * 10/11.0
-  string_to_f gb, "#{out_dir}/scalability_nolibq.svg"
+  puts r.to_s
+  gb_graph_fake.call r, "n_core_n_tc_#{fun}"
+  
+  # n_core_2tc
+  puts "N Core 2 TC ".green
+  r = (method fun).call o.merge(
+    scheme: "tp",
+    nametag: "2tc",
+    core_set: [4,6,8]
+  )
+  puts r.to_s
+  gb = grouped_bar r.transpose, legend: [4,6,8], x_labels: $mpworkloads.keys
+  string_to_f gb, "#{out_dir}/n_core_2_tc_#{fun}.svg"
 
-  # Scalability libquantum
-  r = perf_compare_scalability(
-    dir: in_dir,
-    bench: %w[libquantum],
-    otherbench: $specint,
-    use_base_avg: true,
-  ).map { |i| i.values }
-  gb = grouped_bar r.transpose,
-    x_labels: %w[libquantum],
-    w: COLUMN_W * 1/11.0
-  string_to_f gb, "#{out_dir}/scalability_libq.svg"
+  # breakdown
+  puts "Breakdown #{fun}".green
+  [
+    ((method fun).call o.merge(
+      scheme: "none",
+      nametag: "only_waypart",
+      cores: 2
+    )).flatten,
+    ((method fun).call o.merge(
+      scheme: "none",
+      nametag: "only_rrbus",
+      cores: 2
+    )).flatten,
+    ((method fun).call o.merge(
+      scheme: "none",
+      nametag: "only_tp",
+      cores: 2
+    )).flatten,
+  ]
+  puts r.to_s
+  gb = grouped_bar(r.transpose, legend: %w[cache bus mem], x_labels: $mpworkloads.keys,
+                    legend_space: 40)
+  string_to_f gb, "#{out_dir}/breakdown_#{fun}.svg"
 
-  #Breakdown Results
-  r = perf_compare_breakdown(
-    dir: in_dir,
-    use_base_avg: true
-  ).map { |i| i.values }
-  sb = stacked_bar r, legend: %w[l2l3 membus waypart mc],
-    x_labels: $specint, w: COLUMN_W, h: COLUMN_H
-  string_to_f sb, "#{out_dir}/breakdown.svg"
+  # Flushing overhead
+  puts "Flushing #{fun}".green
+  [
+    ((method fun).call o.merge(
+      nametag: "flush1ms",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+    ((method fun).call o.merge(
+      nametag: "flush10ms",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+    ((method fun).call o.merge(
+      nametag: "flush100ms",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+  ]
+  puts r.to_s
+  gb = grouped_bar(r.transpose, legend: %w[1ms 10ms 100ms], x_labels: $mpworkloads.keys,
+                   legend_space: 40)
+  string_to_f gb, "#{out_dir}/flushing_#{fun}.svg"
+end
+
+#------------------------------------------------------------------------------
+# STP
+#------------------------------------------------------------------------------
+graphs.call( :stp_data_of )
+
+#------------------------------------------------------------------------------
+# ANTT
+#------------------------------------------------------------------------------
+graphs.call( :antt_data_of )
 
 end
