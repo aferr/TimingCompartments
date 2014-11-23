@@ -9,6 +9,7 @@ module RunScripts
     def baseline
       iterate_mp(
         scheme: "none",
+        num_wl: 8,
       )
     end
     
@@ -100,11 +101,11 @@ module RunScripts
           do_flush: true,
         )
         #10 ms
-        parallel_local o.merge(nametag: "flush1ms", context_sw_freq: 10**7)
+        iterate_mp o.merge(nametag: "flush1ms", context_sw_freq: 10**7)
         #50 ms
-        parallel_local o.merge(nametag: "flush10ms", context_sw_freq: 5*10**7)
+        iterate_mp o.merge(nametag: "flush10ms", context_sw_freq: 5*10**7)
         #100 ms
-        parallel_local o.merge(nametag: "flush100ms", context_sw_freq: 10**8)
+        iterate_mp o.merge(nametag: "flush100ms", context_sw_freq: 10**8)
       end
     end 
 

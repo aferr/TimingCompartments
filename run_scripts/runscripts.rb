@@ -12,7 +12,7 @@ $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
 #Gem5 options
 $fastforward = 10**8
-$maxinsts = 10**8
+$maxinsts = 10**9
 $maxtick = 2*10**15 
 $cpus = %w[detailed] #timing is also available
 $cacheSizes = [0,1,2,4]
@@ -376,26 +376,30 @@ end
 
 def single opts={}
     o = {
-        cpu: %w[detailed],
-        schemes: $schemes,
+        cpu: "detailed",
+        schemes: %w[ none],
+        scheme: "none",
         benchmarks: $specint,
-        runmode: :local,
-        threads: 4
+        threads: 1
     }.merge opts
 
-    f = []
+    #f = []
 
-    o[:schemes].product(o[:benchmarks]).each_slice(o[:threads]) do |i|
-      t={}
-      i.each do |scheme,p0|
-        t[i] = Thread.new do
-          r=sav_script(p0, o)
-          f << r[1] unless r[0]
-        end
-      end
-      t.each { |_,v| v.join }
+    o[:benchmarks].each do |b|
+        sav_script o.merge(p0: b)
     end
-    puts f.flatten.to_s.red
+
+    # o[:schemes].product(o[:benchmarks]).each_slice(o[:threads]) do |i|
+    #   t={}
+    #   i.each do |scheme,p0|
+    #     t[i] = Thread.new do
+    #       r=sav_script(o.merge(p0: p0))
+    #       f << r[1] unless r[0]
+    #     end
+    #   end
+    #   t.each { |_,v| v.join }
+    # end
+    # puts f.flatten.to_s.red
 end
 
 def single_qsub opts={}
