@@ -11,8 +11,8 @@ $specint_dir = (Dir.pwd+"/benchmarks/spec2k6bin/specint")
 $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
 #Gem5 options
-$fastforward = 10**8
-$maxinsts = 10**9
+$fastforward = 10**9
+$maxinsts = 10**8
 $maxtick = 2*10**15 
 $cpus = %w[detailed] #timing is also available
 $cacheSizes = [0,1,2,4]
