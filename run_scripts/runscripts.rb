@@ -91,7 +91,7 @@ $secure_opts = {
   scheme: "tp", 
   addrpar: true,
   rr_nc: true,
-  use_way_part: true,
+  waypart: true,
   split_mshr: true,
   split_rport: true
 }
@@ -131,10 +131,10 @@ def sav_script( options = {} )
     options = {
         cacheSize: 4,
         #TP Minimum: 
-        tl0: 43,
-        tl1: 43,
-        tl2: 43,
-        tl3: 43,
+        tl0: 64,
+        tl1: 64,
+        tl2: 64,
+        tl3: 64,
         #FA Minimum:
         # tl0: 18,
         # tl1: 18,
