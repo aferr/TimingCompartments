@@ -10,7 +10,6 @@ require_relative 'memctl_unoptimized'
 require_relative 'memctl_optimized'
 require_relative 'memctl_scheduler'
 require_relative 'memctl_synthetic'
-require_relative 'optimize'
 include RunScripts
 
 #------------------------------------------------------------------------------
@@ -50,12 +49,13 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Performance
 #----------------------------------------------------------------------------
-  baseline
-  ncore_ntc
-  ncore_2tc
-  breakdown
-  flush_overhead
-# coordination
+    # single 
+    # breakdown
+    baseline
+    ncore_2tc
+    ncore_ntc
+    #flush_overhead
+    coordination
 
 #----------------------------------------------------------------------------
 # Parameter Sweeping

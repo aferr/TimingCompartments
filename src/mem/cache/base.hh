@@ -81,19 +81,12 @@ class BaseCache : public MemObject
   private:
 
     void flushInternal(){
-      flush(0);
+	  flush(0);
+      Tick time = curTick() + params->context_sw_freq;
+      schedule( flushEvent, time);
     }
 
-    void insertContextSwitches(){
-      int num_events = 1000 * 1000 * 1000/params->context_sw_freq;
-      EventWrapper<BaseCache,&BaseCache::flushInternal> *e;
-      int csw = params->context_sw_freq;
-      Tick ns = nextCycle();
-      for( int i=0; i < num_events; i++ ){
-        e = new EventWrapper<BaseCache,&BaseCache::flushInternal>(this);
-        schedule( e, ns+i*csw);
-      }
-    }
+
     /**
      * Indexes to enumerate the MSHR queues.
      */
@@ -103,6 +96,10 @@ class BaseCache : public MemObject
     };
 
   public:
+      void insertContextSwitches(){
+        if (!flushEvent.scheduled()) schedule(flushEvent, params->context_sw_freq);
+      }
+	  
     virtual void flush( int tcid ){}
     /**
      * Reasons for caches to be blocked.
@@ -238,7 +235,7 @@ class BaseCache : public MemObject
     MSHR *allocateBufferInternal(MSHRQueue *mq, Addr addr, int size,
                                  PacketPtr pkt, Tick time, bool requestBus)
     {
-        MSHR *mshr = mq->allocate(addr, size, pkt, time, order++);
+		MSHR *mshr = mq->allocate(addr, size, pkt, time, order++);
 
         if (mq->isFull()) {
             setBlocked((BlockedCause)mq->index);
@@ -317,6 +314,8 @@ class BaseCache : public MemObject
      * The address range to which the cache responds on the CPU side.
      * Normally this is all possible memory addresses. */
     AddrRangeList addrRanges;
+	
+	EventWrapper<BaseCache,&BaseCache::flushInternal> flushEvent;
 
   public:
     /** System we are currently operating in. */

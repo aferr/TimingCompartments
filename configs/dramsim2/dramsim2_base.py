@@ -157,6 +157,12 @@ def add_options():
                 help="Enable to turn off critical word first timing")
         parser.add_option("--do_flush", action="store_true", default=False,
                 help="Flush the cache occasionally to model context switching.")
+        parser.add_option("--do_flush_insecure", action="store_true", default=False,
+                help="Flush the insecure cache.")
+        parser.add_option("--flushRatio", type="float", default=1,
+                help="flusing ratio of the insecure cache.")
+        parser.add_option("--reserve_flush", action="store_true", default=False,
+                help="reserve bandwidth when flushing.")
         parser.add_option("--context_sw_freq", type="int", default=1000,
                 help="Frequency of context switches in us.")
 
@@ -309,11 +315,11 @@ def setup_cpus(options):
 
     return (CPUClass, test_mem_mode, FutureClass)
 
-
 ###############################################################################
 # System Bus
 ###############################################################################
 def setup_systembus(options):
+    L3maxWritebacks = 65536/options.numpids
     RR_NCBus = RR_NoncoherentBus(
                num_pids = options.numpids,
                save_trace = options.do_bus_trace,
@@ -321,7 +327,9 @@ def setup_systembus(options):
                req_tl = options.membusreq_tl,
                req_offset = options.membusreq_offset,
                resp_tl = options.membusresp_tl,
-               resp_offset = options.membusresp_offset)
+               resp_offset = options.membusresp_offset,
+               reserve_flush = options.reserve_flush,
+               maxWritebacks = L3maxWritebacks)
 
     return (RR_NCBus if options.rr_mem else NoncoherentBus() )
 

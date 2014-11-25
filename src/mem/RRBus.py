@@ -22,7 +22,8 @@ class RRBus(MemObject):
     resp_tl = Param.Int(1, "response layer turn length")
     resp_offset = Param.Int(0, "response layer turn length offset")
 
-    reserve_flush = Param.Bool(True, "Use reserve flush or not")
+    reserve_flush = Param.Bool(False, "Use reserve flush or not")
+    maxWritebacks = Param.Int(0, "Maximum number of write backs")
 
     # The default port can be left unconnected, or be used to connect
     # a default slave port

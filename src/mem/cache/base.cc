@@ -77,11 +77,11 @@ BaseCache::BaseCache(const Params *p)
       noTargetMSHR(NULL),
       missCount(p->max_miss_count),
       drainEvent(NULL),
-      addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()),
+      addrRanges(p->addr_ranges.begin(), p->addr_ranges.end()), flushEvent(this),
       system(p->system)
 {
     params = p;
-    if( p->do_flush ) insertContextSwitches();
+    //if( p->do_flush ) insertContextSwitches();
 }
 
 void

@@ -238,7 +238,8 @@ void LRU::flush(uint64_t tid=0 ){
   Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
   int writebacks = 0;
   int valid = 0;
-  for( int i=0; i < numBlocks; i++ ){
+  int flushNumblocks = int(_cache->params->flushRatio * numBlocks);
+  for( int i=0; i < flushNumblocks; i++ ){
     if( blks[i].isDirty() && blks[i].isValid() ){
       _cache->allocateWriteBuffer(_cache->writebackBlk(&blks[i], tid),
           curTick(), true);

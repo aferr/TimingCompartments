@@ -11,7 +11,7 @@ $specint_dir = (Dir.pwd+"/benchmarks/spec2k6bin/specint")
 $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
 #Gem5 options
-$fastforward = 10**8
+$fastforward = 10**9
 $maxinsts = 10**8
 $maxtick = 2*10**15 
 $cpus = %w[detailed] #timing is also available
@@ -131,10 +131,10 @@ def sav_script( options = {} )
     options = {
         cacheSize: 4,
         #TP Minimum: 
-        tl0: 43,
-        tl1: 43,
-        tl2: 43,
-        tl3: 43,
+        tl0: 64,
+        tl1: 64,
+        tl2: 64,
+        tl3: 64,
         #FA Minimum:
         # tl0: 18,
         # tl1: 18,
@@ -376,26 +376,30 @@ end
 
 def single opts={}
     o = {
-        cpu: %w[detailed],
-        schemes: $schemes,
+        cpu: "detailed",
+        schemes: %w[ none],
+        scheme: "none",
         benchmarks: $specint,
-        runmode: :local,
-        threads: 4
+        threads: 1
     }.merge opts
 
-    f = []
+    #f = []
 
-    o[:schemes].product(o[:benchmarks]).each_slice(o[:threads]) do |i|
-      t={}
-      i.each do |scheme,p0|
-        t[i] = Thread.new do
-          r=sav_script(p0, o)
-          f << r[1] unless r[0]
-        end
-      end
-      t.each { |_,v| v.join }
+    o[:benchmarks].each do |b|
+        sav_script o.merge(p0: b)
     end
-    puts f.flatten.to_s.red
+
+    # o[:schemes].product(o[:benchmarks]).each_slice(o[:threads]) do |i|
+    #   t={}
+    #   i.each do |scheme,p0|
+    #     t[i] = Thread.new do
+    #       r=sav_script(o.merge(p0: p0))
+    #       f << r[1] unless r[0]
+    #     end
+    #   end
+    #   t.each { |_,v| v.join }
+    # end
+    # puts f.flatten.to_s.red
 end
 
 def single_qsub opts={}

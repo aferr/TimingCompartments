@@ -86,6 +86,8 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     tracePrinter = new TracePrinter( p->l3_trace_file, p );
 
     params = p;
+	
+	if(p->do_flush_insecure) this->insertContextSwitches();
 }
 
 template<class TagStore>
@@ -1870,5 +1872,6 @@ SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
 
     this->cpuSidePort = new SRCpuSidePort(p->name + ".cpu_side", this,
                                   "CpuSidePort");
+	if( p->do_flush ) this->insertContextSwitches();
 }
 
