@@ -54,7 +54,7 @@ class CacheSet;
  */
 class LRU : public BaseTags
 {
-  private:
+  public:
     /** The cache sets. */
 
   public:
