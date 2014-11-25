@@ -49,6 +49,12 @@ WPLRU::init_sets(){
   for( int i=0; i < num_tcs; i++ ){
     sets_w[i] = new CacheSet[numSets];
     std::memcpy( sets_w[i], LRU::sets, numSets * sizeof( CacheSet ) );
+    std::memcpy( sets_w[i]->blks, LRU::sets->blks,
+        numSets * assoc * sizeof( BlkType ) );
+    for(int j; j < numSets * assoc; j++){
+      std::memcpy( sets_w[i]->blks[j]->data, sets->blks[j]->data,
+          sets->blks[j]->size * sizeof( uint8_t ) );
+    }
     for( int j=0; j < numSets ; j++ ){
       sets_w[i][j].assoc = assoc_of_tc( j );
     }
@@ -58,9 +64,9 @@ WPLRU::init_sets(){
 
 // void
 // WPLRU::init_sets(){
-//     sets = new CacheSet*[num_tcs];
+//     sets_w = new CacheSet*[num_tcs];
 //     for( int i=0; i< num_tcs; i++ ){
-//       sets[i] = new CacheSet[numSets];
+//       sets_w[i] = new CacheSet[numSets];
 //     }
 //     
 //     blks_by_tc = new BlkType**[num_tcs];
@@ -77,8 +83,8 @@ WPLRU::init_sets(){
 //       unsigned tcIndex = 0;
 //         for( unsigned i = 0; i< numSets; i++ ){
 //             int tc_assoc = assoc_of_tc(tc);
-//             sets[tc][i].assoc = tc_assoc;
-//             sets[tc][i].blks  = new BlkType*[tc_assoc];
+//             sets_w[tc][i].assoc = tc_assoc;
+//             sets_w[tc][i].blks  = new BlkType*[tc_assoc];
 //             for( unsigned j = 0; j<tc_assoc; j++ ){
 //                 BlkType *blk = &blks[blkIndex];
 //                 blk->data = &dataBlks[blkSize*blkIndex];
@@ -90,7 +96,7 @@ WPLRU::init_sets(){
 //                 blk->isTouched = false;
 //                 blk->size = blkSize;
 //                 blk->set = i;
-//                 sets[tc][i].blks[j] = blk;
+//                 sets_w[tc][i].blks[j] = blk;
 //                 blks_by_tc[tc][tcIndex++] = blk;
 //             }
 //         }

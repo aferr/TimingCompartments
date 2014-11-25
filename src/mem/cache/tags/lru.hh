@@ -56,7 +56,6 @@ class LRU : public BaseTags
 {
   private:
     /** The cache sets. */
-    CacheSet *sets;
 
   public:
     /** Typedef the block type used in this tag store. */
@@ -68,6 +67,7 @@ class LRU : public BaseTags
     // virtual void setCache(Cache<LRU> *_cache){ cache = _cache; }
 
   protected:
+    CacheSet *sets;
     /** The number of sets in the cache. */
     const unsigned numSets;
     /** The number of bytes in a block. */
