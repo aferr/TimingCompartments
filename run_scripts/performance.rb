@@ -9,6 +9,7 @@ module RunScripts
     def baseline
       iterate_mp(
         scheme: "none",
+        skip3: false,
         num_wl: 8,
       )
     end
@@ -17,6 +18,7 @@ module RunScripts
       puts $secure_opts
       iterate_mp $secure_opts.merge(
         num_wl: 8,
+        skip3: false
       )
     end
 
@@ -52,6 +54,16 @@ module RunScripts
     def ncore_2tc
       o = $secure_opts.merge(
         nametag: "2tc"
+      )
+
+      # 3 Cores 2 TCs
+      iterate_mp o.merge(
+        num_wl: 3,
+        skip2: true,
+        skip3: false,
+        p0threadID: 0,
+        p1threadID: 0,
+        p2threadID: 1,
       )
 
       # 4 Cores 2 TCs
@@ -114,57 +126,83 @@ module RunScripts
 ##############################################################################
 
     $opt_l2_miss = {
+      nametag: "l2miss_opt",
       l2l3req_tl: 4,
-      l2l3req_o: 2,
+      l2l3req_offset: 2,
       l2l3resp_tl: 11,
-      l2l3resp_o: 18, 
+      l2l3resp_offset: 18, 
       l3memreq_tl: 66,
-      l3memreq_o: 6,
+      l3memreq_offset: 6,
       l3memresp_tl: 66,
-      l3memresp_o: 39,
+      l3memresp_offset: 39,
       mem_tl: 66,
-      mem_o: 7
+      mem_offset: 7
     }
 
     $bad_l2_miss = $opt_l2_miss.merge(
-      l2l3req_o: 114,
-      l2l3resp_o: 53,
-      l3memreq_o: 57,
-      l3memresp_o: 29,
-      mem_o: 54
+      nametag: "l2miss_max",
+      :l2l3req_offset=>5,
+      :l2l3resp_offset=>16,
+      :l3memreq_offset=>121,
+      :l3memresp_offset=>93,
+      :mem_offset=>121
     )
 
     $opt_l3_hit = {
+      nametag: "l3hit_opt",
       l2l3req_tl: 9,
       l2l3resp_tl: 9,
-      l2l3req_o: 0,
-      l2l3resp_o: 10
+      l2l3req_offset: 0,
+      l2l3resp_offset: 10
     }
 
     $bad_l3_hit = {
+      nametag: "l3hit_max",
       l2l3req_tl: 9,
       l2l3resp_tl: 9,
-      l2l3req_o: 0,
-      l2l3resp_o: 9
+      l2l3req_offset: 0,
+      l2l3resp_offset: 9
     }
+
+    $l3_miss_opt= {
+      nametag: "l3miss_opt",
+      l2l3req_tl:    66,
+      l2l3req_offset:      0,
+      l2l3resp_tl:   66,
+      l2l3resp_offset:    65,
+      l3memreq_tl:   66,
+      l3memreq_offset:    10,
+      l3memresp_tl:  66,
+      l3memresp_offset:   47,
+      mem_tl:        66,
+      mem_offset:         11,
+    }
+    
+    $bad_l3_miss = $l3_miss_opt.merge(
+      nametag: "l3miss_max",
+      :l2l3req_offset=>3,
+      :l2l3resp_offset=>11,
+      :l3memreq_offset=>97,
+      :l3memresp_offset=>74,
+      :mem_offset=>97
+    )
 
     def parameter_tests
       o = $secure_opts.merge(
-        skip3: true,
-        skip4: true
+          num_wl: 2
       )
 
       # Optimized L2 Miss Path
-      qsub_scaling o.merge $opt_l2_miss
+      iterate_mp o.merge $opt_l2_miss
 
       # Worst L2 Miss Path
-      qsub_scaling o.merge $bad_l2_miss
+      iterate_mp o.merge $bad_l2_miss
 
       # Optimized L3 Hit Path
-      qsub_scaling o.merge $opt_l3_hit
+      iterate_mp qsub_scaling o.merge $opt_l3_hit
 
       # Worst L3 Miss Path
-      qsub_scaling o.merge $bad_l3_hit
+      iterate_mp qsub_scaling o.merge $bad_l3_hit
     end
 
 end
