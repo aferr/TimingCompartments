@@ -50,6 +50,7 @@ class L3Config(object):
 class L3Shared( L3Config ):
     def __init__( self, options, system ):
         super( L3Shared, self ).__init__( options, system )
+        L2maxWritebacks = 4096
         system.l3 = L3Cache(size = options.l3_size, 
                             latency=self.latencies[options.l3_size],
                             assoc = options.l3_assoc,
@@ -68,11 +69,13 @@ class L3Shared( L3Config ):
         system.tol3bus = ( 
                 RR_NoncoherentBus(num_pids = options.numpids,
                             save_trace = options.do_bus_trace,
-                            bus_trace_file = options.l2l3bustracefile ,
+                            bus_trace_file = options.l2l3bustracefile,
                             req_tl = options.l2l3req_tl,
                             req_offset = options.l2l3req_offset,
                             resp_tl = options.l2l3resp_tl,
-                            resp_offset = options.l2l3resp_offset) if options.rr_l2l3
+                            resp_offset = options.l2l3resp_offset,
+                            reserve_flush = options.reserve_flush,
+                            maxWritebacks = L2maxWritebacks) if options.rr_l2l3                    
                 else NoncoherentBus()
                 )
         # system.tol3bus = NoncoherentBus()

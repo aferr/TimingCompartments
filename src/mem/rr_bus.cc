@@ -86,6 +86,9 @@ RRBus::RRBus(const RRBusParams *p)
     for( int i=0; i<p->num_pids; i++ ) resp_reserved_cycles[i]=0;
 
     params = p;
+	
+	// initialize maxWritebacks
+	maxWritebacks = p->maxWritebacks;
 }
 
 RRBus::~RRBus()
