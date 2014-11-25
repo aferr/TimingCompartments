@@ -21,7 +21,7 @@ WPLRU::WPLRU( unsigned _numSets,
 
 CacheSet
 WPLRU::get_set( int setnum, uint64_t tid, Addr addr ){
-    CacheSet s = sets[tid][setnum];
+   CacheSet s = sets_w[tid][setnum];
 #ifdef DEBUG_TP
     if( s.hasBlk(interesting) ){
         printf( "get_set on interesting @ %lu", curTick() );
@@ -45,42 +45,57 @@ WPLRU::blks_in_tc( int tcid ){
 
 void
 WPLRU::init_sets(){
-    sets = new CacheSet*[num_tcs];
-    for( int i=0; i< num_tcs; i++ ){ sets[i] = new CacheSet[numSets]; }
-    
-    blks_by_tc = new BlkType**[num_tcs];
-    for( int i=0; i < num_tcs; i++ ){
-      blks_by_tc[i] = new BlkType*[blks_in_tc(i)];
+  sets_w = new CacheSet*[num_tcs];
+  for( int i=0; i < num_tcs; i++ ){
+    sets_w[i] = new CacheSet[numSets];
+    std::memcpy( sets_w[i], LRU::sets, numSets * sizeof( CacheSet ) );
+    for( int j=0; j < numSets ; j++ ){
+      sets_w[i][j].assoc = assoc_of_tc( j );
     }
+  }
 
-    numBlocks = numSets * assoc;
-    blks = new BlkType[numBlocks];
-    dataBlks = new uint8_t[numBlocks * blkSize];
-
-    unsigned blkIndex = 0;
-    for( unsigned tc=0; tc< num_tcs; tc++ ){
-      unsigned tcIndex = 0;
-        for( unsigned i = 0; i< numSets; i++ ){
-            int tc_assoc = assoc_of_tc(tc);
-            sets[tc][i].assoc = tc_assoc;
-            sets[tc][i].blks  = new BlkType*[tc_assoc];
-            for( unsigned j = 0; j<tc_assoc; j++ ){
-                BlkType *blk = &blks[blkIndex];
-                blk->data = &dataBlks[blkSize*blkIndex];
-                ++blkIndex;
-
-                blk->status = 0;
-                blk->tag = j;
-                blk->whenReady = 0;
-                blk->isTouched = false;
-                blk->size = blkSize;
-                blk->set = i;
-                sets[tc][i].blks[j] = blk;
-                blks_by_tc[tc][tcIndex++] = blk;
-            }
-        }
-    }
 }
+
+// void
+// WPLRU::init_sets(){
+//     sets = new CacheSet*[num_tcs];
+//     for( int i=0; i< num_tcs; i++ ){
+//       sets[i] = new CacheSet[numSets];
+//     }
+//     
+//     blks_by_tc = new BlkType**[num_tcs];
+//     for( int i=0; i < num_tcs; i++ ){
+//       blks_by_tc[i] = new BlkType*[blks_in_tc(i)];
+//     }
+// 
+//     numBlocks = numSets * assoc;
+//     blks = new BlkType[numBlocks];
+//     dataBlks = new uint8_t[numBlocks * blkSize];
+// 
+//     unsigned blkIndex = 0;
+//     for( unsigned tc=0; tc< num_tcs; tc++ ){
+//       unsigned tcIndex = 0;
+//         for( unsigned i = 0; i< numSets; i++ ){
+//             int tc_assoc = assoc_of_tc(tc);
+//             sets[tc][i].assoc = tc_assoc;
+//             sets[tc][i].blks  = new BlkType*[tc_assoc];
+//             for( unsigned j = 0; j<tc_assoc; j++ ){
+//                 BlkType *blk = &blks[blkIndex];
+//                 blk->data = &dataBlks[blkSize*blkIndex];
+//                 ++blkIndex;
+// 
+//                 blk->status = 0;
+//                 blk->tag = j;
+//                 blk->whenReady = 0;
+//                 blk->isTouched = false;
+//                 blk->size = blkSize;
+//                 blk->set = i;
+//                 sets[tc][i].blks[j] = blk;
+//                 blks_by_tc[tc][tcIndex++] = blk;
+//             }
+//         }
+//     }
+// }
 
 void
 WPLRU::flush( uint64_t tcid = 0 ){

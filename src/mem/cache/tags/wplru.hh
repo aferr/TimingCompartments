@@ -2,6 +2,7 @@
 
 class WPLRU : public LRU{
     private:
+    CacheSet **sets_w;
 
     public:
     WPLRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
@@ -12,7 +13,6 @@ class WPLRU : public LRU{
     virtual void flush( uint64_t tcid );
 
     protected:
-    CacheSet **sets;
     BlkType ***blks_by_tc;
     unsigned num_tcs;
     virtual void init_sets();
