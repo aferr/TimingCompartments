@@ -111,7 +111,7 @@ def grouped_bar data, o={}
     bottom(20).
     left(50).
     right(5).
-    top(10)
+    top(0)
   
   # Bars
   colors=pv.Colors.category20()
@@ -243,7 +243,7 @@ def stacked_bar data, o={}
 
   # Y-Axis Title
   vis.anchor("left").add(pv.Label).
-    text("Percent Overhead").
+    text(options[:x_title]).
     left(-40).
     text_align("center").
     font("9px sans-serif").

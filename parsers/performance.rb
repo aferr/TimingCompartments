@@ -19,7 +19,23 @@ $mpworkloads = {
   lli: %w[ astar astar]
 }
 
+$mpworkload_nn = {
+  hhd: "mcf_bz2",
+  hhn: "mcf_xln",
+  hhi: "lib_lib",
+  hli: "lib_ast",
+  # hld: %w[ mcf h264ref ],
+  hmi: "lib_sjg",
+  # hmd: %w[ xalan gcc ],
+  # mmi: %w[ gcc gobmk ],
+  mmd: "sjg_sjg",
+  llp: "ast_h264",
+  lld: "h264_hmr",
+  lli: "ast_ast"
+}
+
 $workload_names = $mpworkloads.keys.map { |k| k.to_s }
+$new_names = $workload_nn.keys.map { |k| $workload_nn[k] }
 
 def data_of p={}
   p[:core_set].inject([]) do |a1,cores|
@@ -56,7 +72,8 @@ if __FILE__ == $0
   out_dir = ARGV[1].to_s
   FileUtils.mkdir_p(out_dir) unless File.directory?(out_dir)
 
-  o = { core_set: [2], dir: in_dir, numcpus: 2, scheme: "none" }
+  o = { core_set: [2], dir: in_dir, numcpus: 2, scheme: "none",
+        x_label: "System Throughput" }
  
   gb_graph = lambda do |r,name|
     gb = grouped_bar r.transpose, legend: [2,4,6,8], x_labels: $workload_names
@@ -230,7 +247,7 @@ end
 #------------------------------------------------------------------------------
 # STP
 #------------------------------------------------------------------------------
-#graphs.call( method(:stp_data_of), "stp" )
+graphs.call( method(:stp_data_of), "stp" )
 normgraphs.call( method(:stp_data_of), "stp")
 
 #------------------------------------------------------------------------------
@@ -247,9 +264,9 @@ def normalized_progress o={}
   (tisp.nil? || timp.nil?) ? [] : tisp/timp
 end
 
-def two_tc_wprogs
-  o = { dir: in_dir, x_labels: $workload_names,
-        x_title: }
+def two_tc_wprogs o={}
+  o = { dir: "results", x_labels: $workload_names,
+        x_title: "Normalized STP" }
   wls = $mpworkloads
   secure, insecure = %w[tp none].map do|s|
     wls.keys.map do |wl|
@@ -262,7 +279,7 @@ def two_tc_wprogs
   end
   r.normalized( secure, insecure )
   gb = grouped_bar r.transpose o.merge( legend: %w[] )
-  string_to_f gb, "#{out_dir}/two_tc_wprogs.svg"
+  string_to_f gb, "foo/two_tc_wprogs.svg"
 end
 
 end
