@@ -86,6 +86,8 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     tracePrinter = new TracePrinter( p->l3_trace_file, p );
 
     params = p;
+	
+	if(p->do_flush_insecure) this->insertContextSwitches();
 }
 
 template<class TagStore>
