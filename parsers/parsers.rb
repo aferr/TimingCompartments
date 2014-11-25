@@ -65,7 +65,7 @@ end
 
 def single_stdo( p={} )
   p={dir: "results"}.merge p
-  "#{p[:dir]}/stdout_none_1cpus_#{p[:bench]}43_#{43}.out"
+  "#{p[:dir]}/stdout_none_1cpus_#{p[:bench]}64_#{64}.out"
 end
 
 # This can be memoized or eagerly constructed later.

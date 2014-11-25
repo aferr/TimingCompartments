@@ -102,7 +102,7 @@ def grouped_bar data, o={}
   w = o[:w]
   scale_w = o[:legend].nil? ? w : w-o[:legend_space]
   x = pv.Scale.ordinal(pv.range(o[:x_num_outer])).
-        split_banded(0, scale_w, 5/6.0)
+        split_banded(0, scale_w, 1)
   y = pv.Scale.linear(0, data_max*1.1).range(0, h-20)
 
   vis = pv.Panel.new.
@@ -118,11 +118,11 @@ def grouped_bar data, o={}
   bar = vis.add(pv.Panel)
       .data(data)
       .left(lambda {x.scale(self.index)})
-      .width(x.range_band)
+      .width(x.range_band*1.1)
     .add(pv.Bar)
       .data(lambda {|d| d})
-      .left(lambda {self.index * x.range_band / o[:x_num_outer]})
-      .width(x.range_band / o[:x_num_outer].to_f)
+      .left(lambda {self.index * x.range_band * 1.7 / o[:x_num_outer]})
+      .width(x.range_band * 1.7 / o[:x_num_outer].to_f)
       .bottom(20)
       .height(y)
       .fillStyle(lambda { colors.scale(self.index)})

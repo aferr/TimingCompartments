@@ -9,15 +9,17 @@ $mpworkloads = {
   hhn: %w[ mcf xalan ],
   hhi: %w[ libquantum libquantum],
   hli: %w[ libquantum astar ],
-  hld: %w[ mcf h264ref ],
+  # hld: %w[ mcf h264ref ],
   hmi: %w[ libquantum sjeng ],
-  hmd: %w[ xalan gcc ],
-  mmi: %w[ gcc gobmk ],
+  # hmd: %w[ xalan gcc ],
+  # mmi: %w[ gcc gobmk ],
   mmd: %w[ sjeng sjeng ],
   llp: %w[ astar h264ref ],
   lld: %w[ h264ref hmmer ],
   lli: %w[ astar astar]
 }
+
+$workload_names = $mpworkloads.keys.map { |k| k.to_s }
 
 def data_of p={}
   p[:core_set].inject([]) do |a1,cores|
@@ -33,6 +35,18 @@ def stp_data_of(p={}) data_of(p){|o| stp o} end
 
 def antt_data_of(p={}) data_of(p){|o| antt o} end
 
+def normalized o1, o2
+  d1 = yield(o1)
+  d2 = yield(o2)
+
+  d1.each_with_index.map do |x,i|
+    x.each_with_index.map do |y,j|
+      y / d2[i][j]
+    end
+  end
+
+end
+
 if __FILE__ == $0
   in_dir  = ARGV[0].to_s
   out_dir = ARGV[1].to_s
@@ -40,9 +54,8 @@ if __FILE__ == $0
 
   o = { core_set: [2], dir: in_dir, numcpus: 2, scheme: "none" }
  
-  gb_graph_fake = lambda do |r,name|
-    d = 1.upto(4).map{ |i| r[0].map{|j|j*i} }
-    gb = grouped_bar d.transpose, legend: [2,4,6,8], x_labels: $mpworkloads.keys
+  gb_graph = lambda do |r,name|
+    gb = grouped_bar r.transpose, legend: [2,4,6,8], x_labels: $workload_names
     string_to_f gb, "#{out_dir}/#{name}.svg"
   end
 
@@ -53,18 +66,19 @@ graphs = lambda do |fun|
   # baseline
   puts "Baseline #{fun}".green
   r = (method fun).call o.merge(
-    o
+    core_set: [2,4,6,8]
   )
   puts r.to_s
-  gb_graph_fake.call r, "baseline_#{fun}"
+  gb_graph.call r, "baseline_#{fun}"
 
   #n_core_ntc
   puts "N Core N TC #{fun}".green
   r = (method fun).call o.merge(
-    scheme: "tp"
+    scheme: "tp",
+    core_set: [2,4,6,8],
   )
   puts r.to_s
-  gb_graph_fake.call r, "n_core_n_tc_#{fun}"
+  gb_graph.call r, "n_core_n_tc_#{fun}"
   
   # n_core_2tc
   puts "N Core 2 TC ".green
@@ -74,12 +88,12 @@ graphs = lambda do |fun|
     core_set: [4,6,8]
   )
   puts r.to_s
-  gb = grouped_bar r.transpose, legend: [4,6,8], x_labels: $mpworkloads.keys
+  gb = grouped_bar r.transpose, legend: [4,6,8], x_labels: $workload_names
   string_to_f gb, "#{out_dir}/n_core_2_tc_#{fun}.svg"
 
   # breakdown
   puts "Breakdown #{fun}".green
-  [
+  r = [
     ((method fun).call o.merge(
       scheme: "none",
       nametag: "only_waypart",
@@ -91,19 +105,19 @@ graphs = lambda do |fun|
       cores: 2
     )).flatten,
     ((method fun).call o.merge(
-      scheme: "none",
-      nametag: "only_tp",
+      scheme: "tp",
+      nametag: "only_mc",
       cores: 2
     )).flatten,
   ]
   puts r.to_s
-  gb = grouped_bar(r.transpose, legend: %w[cache bus mem], x_labels: $mpworkloads.keys,
+  gb = grouped_bar(r.transpose, legend: %w[cache bus mem], x_labels: $workload_names,
                     legend_space: 40)
   string_to_f gb, "#{out_dir}/breakdown_#{fun}.svg"
 
-  # Flushing overhead
+  # # Flushing overhead
   puts "Flushing #{fun}".green
-  [
+  r = [
     ((method fun).call o.merge(
       nametag: "flush1ms",
       scheme: "tp",
@@ -121,9 +135,9 @@ graphs = lambda do |fun|
     )).flatten,
   ]
   puts r.to_s
-  gb = grouped_bar(r.transpose, legend: %w[1ms 10ms 100ms], x_labels: $mpworkloads.keys,
-                   legend_space: 40)
-  string_to_f gb, "#{out_dir}/flushing_#{fun}.svg"
+  # gb = grouped_bar(r.transpose, legend: %w[1ms 10ms 100ms], x_labels: $workload_names,
+  #                  legend_space: 45)
+  # string_to_f gb, "#{out_dir}/flushing_#{fun}.svg"
 end
 
 #------------------------------------------------------------------------------
@@ -134,6 +148,6 @@ graphs.call( :stp_data_of )
 #------------------------------------------------------------------------------
 # ANTT
 #------------------------------------------------------------------------------
-graphs.call( :antt_data_of )
+# graphs.call( :antt_data_of )
 
 end
