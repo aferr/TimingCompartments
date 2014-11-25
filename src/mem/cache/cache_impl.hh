@@ -1870,5 +1870,6 @@ SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
 
     this->cpuSidePort = new SRCpuSidePort(p->name + ".cpu_side", this,
                                   "CpuSidePort");
+	if( p->do_flush ) this->insertContextSwitches();
 }
 
