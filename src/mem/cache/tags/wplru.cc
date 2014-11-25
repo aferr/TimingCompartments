@@ -51,7 +51,7 @@ WPLRU::init_sets(){
     std::memcpy( sets_w[i], LRU::sets, numSets * sizeof( CacheSet ) );
     std::memcpy( sets_w[i]->blks, LRU::sets->blks,
         numSets * assoc * sizeof( BlkType ) );
-    for(int j; j < numSets * assoc; j++){
+    for(int j=0; j < numSets * assoc; j++){
       std::memcpy( sets_w[i]->blks[j]->data, sets->blks[j]->data,
           sets->blks[j]->size * sizeof( uint8_t ) );
     }
