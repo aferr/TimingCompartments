@@ -35,7 +35,7 @@ $mpworkload_nn = {
 }
 
 $workload_names = $mpworkloads.keys.map { |k| k.to_s }
-$new_names = $workload_nn.keys.map { |k| $workload_nn[k] }
+$new_names = $mpworkload_nn.keys.map { |k| $mpworkload_nn[k] }
 
 def data_of p={}
   p[:core_set].inject([]) do |a1,cores|
@@ -76,7 +76,7 @@ if __FILE__ == $0
         x_label: "System Throughput" }
  
   gb_graph = lambda do |r,name|
-    gb = grouped_bar r.transpose, legend: [2,4,6,8], x_labels: $workload_names
+    gb = grouped_bar r.transpose, legend: [2,4,6,8], x_labels: $new_names
     string_to_f gb, "#{out_dir}/#{name}.svg"
   end
 
@@ -109,7 +109,7 @@ graphs = lambda do |fun,mname|
     core_set: [4,6,8]
   )
   puts r.to_s
-  gb = grouped_bar r.transpose, legend: [4,6,8], x_labels: $workload_names
+  gb = grouped_bar r.transpose, legend: [4,6,8], x_labels: $new_names
   string_to_f gb, "#{out_dir}/n_core_2_tc_#{mname}.svg"
 
   # breakdown
@@ -132,7 +132,7 @@ graphs = lambda do |fun,mname|
     )).flatten,
   ]
   puts r.to_s
-  gb = grouped_bar(r.transpose, legend: %w[cache bus mem], x_labels: $workload_names,
+  gb = grouped_bar(r.transpose, legend: %w[cache bus mem], x_labels: $new_names,
                     legend_space: 40)
   string_to_f gb, "#{out_dir}/breakdown_#{mname}.svg"
 
@@ -163,7 +163,7 @@ end
 
 normgraphs = lambda do |fun, mname|
 
-  o = { x_labels: $workload_names, x_title: "Normalized STP",
+  o = { x_labels: $new_names, x_title: "Normalized STP",
          core_set: [2], dir: in_dir, numcpus: 2, scheme: "none" }
 
   # baseline
@@ -265,9 +265,9 @@ def normalized_progress o={}
 end
 
 def two_tc_wprogs o={}
-  o = { dir: "results", x_labels: $workload_names,
+  o = { dir: "results", x_labels: $new_names,
         x_title: "Normalized STP" }
-  wls = $mpworkloads
+  wls = $new_names
   secure, insecure = %w[tp none].map do|s|
     wls.keys.map do |wl|
       [
