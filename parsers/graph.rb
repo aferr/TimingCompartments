@@ -143,7 +143,7 @@ def grouped_bar data, o={}
 
   # Y-Axis Title
   vis.anchor("left").add(pv.Label).
-    text("Percent Overhead").
+    text(o[:x_title]).
     left(-40).
     text_align("center").
     font("9px sans-serif").

@@ -91,7 +91,7 @@ $secure_opts = {
   scheme: "tp", 
   addrpar: true,
   rr_nc: true,
-  use_way_part: true,
+  waypart: true,
   split_mshr: true,
   split_rport: true
 }

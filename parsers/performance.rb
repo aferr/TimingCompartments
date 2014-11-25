@@ -35,16 +35,20 @@ def stp_data_of(p={}) data_of(p){|o| stp o} end
 
 def antt_data_of(p={}) data_of(p){|o| antt o} end
 
-def normalized o1, o2
-  d1 = yield(o1)
-  d2 = yield(o2)
-
+def normalized d1, d2
   d1.each_with_index.map do |x,i|
     x.each_with_index.map do |y,j|
-      y / d2[i][j]
+      d2[i][j] == 0 ? 0 : y / d2[i][j]
     end
   end
+end
 
+def percent_overhead d1, d2
+  d1.each_with_index.map do |x,i|
+    x.each_with_index.map do |y,j|
+      d2[i][j] == 0 ? 0 : (( d2[i][j] - y ) / d2[i][j])
+    end
+  end
 end
 
 if __FILE__ == $0
@@ -62,49 +66,49 @@ if __FILE__ == $0
 #------------------------------------------------------------------------------
 # Experiments
 #------------------------------------------------------------------------------
-graphs = lambda do |fun|  
+graphs = lambda do |fun,mname|  
   # baseline
   puts "Baseline #{fun}".green
-  r = (method fun).call o.merge(
+  r = fun.call o.merge(
     core_set: [2,4,6,8]
   )
   puts r.to_s
-  gb_graph.call r, "baseline_#{fun}"
+  gb_graph.call r, "baseline_#{mname}"
 
   #n_core_ntc
   puts "N Core N TC #{fun}".green
-  r = (method fun).call o.merge(
+  r = fun.call o.merge(
     scheme: "tp",
     core_set: [2,4,6,8],
   )
   puts r.to_s
-  gb_graph.call r, "n_core_n_tc_#{fun}"
+  gb_graph.call r, "n_core_n_tc_#{mname}"
   
   # n_core_2tc
   puts "N Core 2 TC ".green
-  r = (method fun).call o.merge(
+  r = fun.call o.merge(
     scheme: "tp",
     nametag: "2tc",
     core_set: [4,6,8]
   )
   puts r.to_s
   gb = grouped_bar r.transpose, legend: [4,6,8], x_labels: $workload_names
-  string_to_f gb, "#{out_dir}/n_core_2_tc_#{fun}.svg"
+  string_to_f gb, "#{out_dir}/n_core_2_tc_#{mname}.svg"
 
   # breakdown
   puts "Breakdown #{fun}".green
   r = [
-    ((method fun).call o.merge(
+    (fun.call o.merge(
       scheme: "none",
       nametag: "only_waypart",
       cores: 2
     )).flatten,
-    ((method fun).call o.merge(
+    (fun.call o.merge(
       scheme: "none",
       nametag: "only_rrbus",
       cores: 2
     )).flatten,
-    ((method fun).call o.merge(
+    (fun.call o.merge(
       scheme: "tp",
       nametag: "only_mc",
       cores: 2
@@ -113,22 +117,22 @@ graphs = lambda do |fun|
   puts r.to_s
   gb = grouped_bar(r.transpose, legend: %w[cache bus mem], x_labels: $workload_names,
                     legend_space: 40)
-  string_to_f gb, "#{out_dir}/breakdown_#{fun}.svg"
+  string_to_f gb, "#{out_dir}/breakdown_#{mname}.svg"
 
   # # Flushing overhead
   puts "Flushing #{fun}".green
   r = [
-    ((method fun).call o.merge(
+    (fun.call o.merge(
       nametag: "flush1ms",
       scheme: "tp",
       cores: 2
     )).flatten,
-    ((method fun).call o.merge(
+    (fun.call o.merge(
       nametag: "flush10ms",
       scheme: "tp",
       cores: 2
     )).flatten,
-    ((method fun).call o.merge(
+    (fun.call o.merge(
       nametag: "flush100ms",
       scheme: "tp",
       cores: 2
@@ -140,14 +144,125 @@ graphs = lambda do |fun|
   # string_to_f gb, "#{out_dir}/flushing_#{fun}.svg"
 end
 
+normgraphs = lambda do |fun, mname|
+
+  o = { x_labels: $workload_names, x_title: "Normalized STP",
+         core_set: [2], dir: in_dir, numcpus: 2, scheme: "none" }
+
+  # baseline
+  baseline = fun.call o.merge(
+    core_set: [2,4,6,8]
+  )
+
+  #n_core_ntc
+  ntc = fun.call o.merge(
+    scheme: "tp",
+    core_set: [2,4,6,8],
+  )
+
+  # n_core_2tc
+  twotc = fun.call o.merge(
+    scheme: "tp",
+    nametag: "2tc",
+    core_set: [4,6,8]
+  )
+
+  # breakdown
+  breakdown = [
+    (fun.call o.merge(
+      nametag: "only_waypart",
+      cores: 2
+    )).flatten,
+    (fun.call o.merge(
+      nametag: "only_rrbus",
+      cores: 2
+    )).flatten,
+    (fun.call o.merge(
+      scheme: "tp",
+      nametag: "only_mc",
+      cores: 2
+    )).flatten,
+  ]
+
+  # # Flushing overhead
+  flushing = [
+    (fun.call o.merge(
+      nametag: "flush1ms",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+    (fun.call o.merge(
+      nametag: "flush10ms",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+    (fun.call o.merge(
+      nametag: "flush100ms",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+  ]
+
+  #NTC normalized to base
+  r = normalized( ntc, baseline )
+  gb = grouped_bar r.transpose, o.merge( legend: %w[2 4 6 8] )
+  string_to_f gb, "#{out_dir}/ntc_#{mname}_norm.svg"
+    
+  # #2TC normalized to NTC
+  r = normalized( twotc, ntc[1..-1] )
+  gb = grouped_bar r.transpose, o.merge( legend: %w[4 6 8] )
+  string_to_f gb, "#{out_dir}/twotc_#{mname}_norm.svg"
+    
+  # #Breakdown normalized to base
+  r = normalized( breakdown+[ntc[0]], [baseline[0]]*4 )
+  gb = grouped_bar r.transpose, o.merge(
+    legend: %w[cache bus mem total],
+    legend_space: 40
+  )
+  string_to_f gb, "#{out_dir}/breakdown_#{mname}_norm.svg"
+
+  # # Flushing Overhead
+  # r = normalized( [ntc[0]]+flushing, baseline[0]*4 )
+  # gb = grouped_bar r.transpose, o.merge( legend: %w[none 1ms 10ms 100ms] )
+
+end
+
 #------------------------------------------------------------------------------
 # STP
 #------------------------------------------------------------------------------
-graphs.call( :stp_data_of )
+#graphs.call( method(:stp_data_of), "stp" )
+normgraphs.call( method(:stp_data_of), "stp")
 
 #------------------------------------------------------------------------------
 # ANTT
 #------------------------------------------------------------------------------
 # graphs.call( :antt_data_of )
+
+#------------------------------------------------------------------------------
+# Special Cases
+#------------------------------------------------------------------------------
+def normalized_progress o={}
+  tisp = single_time o
+  timp = find_time o
+  (tisp.nil? || timp.nil?) ? [] : tisp/timp
+end
+
+def two_tc_wprogs
+  o = { dir: in_dir, x_labels: $workload_names,
+        x_title: }
+  wls = $mpworkloads
+  secure, insecure = %w[tp none].map do|s|
+    wls.keys.map do |wl|
+      [
+       normalized_progress(bench: wls[wl][0], scheme: s),
+       normalized_progress(bench: wls[wl][1], r: true , schem: s),
+       stp(workload: wl, numcpus: 2, scheme: s)
+      ]
+    end
+  end
+  r.normalized( secure, insecure )
+  gb = grouped_bar r.transpose o.merge( legend: %w[] )
+  string_to_f gb, "#{out_dir}/two_tc_wprogs.svg"
+end
 
 end
