@@ -56,7 +56,7 @@ end
 
 def m5out_file( p={} )
     p = {dir: "m5out"}.merge p
-    "#{p[:dir]}/#{filename p}_stats.txt"
+    "m5out/#{filename p}_stats.txt"
 end
 
 def bench_swap_file( p={} )
@@ -76,6 +76,22 @@ end
 #-------------------------------------------------------------------------------
 # Data parsing
 #-------------------------------------------------------------------------------
+MEMLATENCY = /system.l20.overall_miss_latency::total\s*(\d*.\d*)/
+
+def get_m5out_stat(filename, opts={})
+  puts filename.to_s.blue
+  (puts filename.red; return 0) unless File.exists? filename
+  time = nil
+  File.open(filename,'r') do |f|
+    f.each_line do |line|
+      return line.match(MEMLATENCY)[1].to_f if line =~ MEMLATENCY
+    end
+  end
+  puts filename.blue
+  0
+end
+
+
 def find_time(filename, opts = {} )
   (puts filename.red; return nil) unless File.exists? filename
   time = nil

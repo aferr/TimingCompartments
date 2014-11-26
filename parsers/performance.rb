@@ -51,6 +51,8 @@ def stp_data_of(p={}) data_of(p){|o| stp o} end
 
 def antt_data_of(p={}) data_of(p){|o| antt o} end
 
+def latency_data_of(p={}) data_of(p){|o| get_m5out_stat(m5out_file o)} end
+
 def normalized d1, d2
   d1.each_with_index.map do |x,i|
     x.each_with_index.map do |y,j|
@@ -76,7 +78,7 @@ if __FILE__ == $0
         x_label: "System Throughput" }
  
   gb_graph = lambda do |r,name|
-    gb = grouped_bar r.transpose, legend: [2,4,6,8], x_labels: $new_names
+    gb = grouped_bar r.transpose, legend: [2,3,4], x_labels: $new_names
     string_to_f gb, "#{out_dir}/#{name}.svg"
   end
 
@@ -87,7 +89,7 @@ graphs = lambda do |fun,mname|
   # baseline
   puts "Baseline #{fun}".green
   r = fun.call o.merge(
-    core_set: [2,4,6,8]
+    core_set: [2,3,4]
   )
   puts r.to_s
   gb_graph.call r, "baseline_#{mname}"
@@ -96,7 +98,7 @@ graphs = lambda do |fun,mname|
   puts "N Core N TC #{fun}".green
   r = fun.call o.merge(
     scheme: "tp",
-    core_set: [2,4,6,8],
+    core_set: [2,3,4],
   )
   puts r.to_s
   gb_graph.call r, "n_core_n_tc_#{mname}"
@@ -106,10 +108,10 @@ graphs = lambda do |fun,mname|
   r = fun.call o.merge(
     scheme: "tp",
     nametag: "2tc",
-    core_set: [4,6,8]
+    core_set: [3,4]
   )
   puts r.to_s
-  gb = grouped_bar r.transpose, legend: [4,6,8], x_labels: $new_names
+  gb = grouped_bar r.transpose, legend: [2,3,4], x_labels: $new_names
   string_to_f gb, "#{out_dir}/n_core_2_tc_#{mname}.svg"
 
   # breakdown
@@ -136,29 +138,53 @@ graphs = lambda do |fun,mname|
                     legend_space: 40)
   string_to_f gb, "#{out_dir}/breakdown_#{mname}.svg"
 
-  # # Flushing overhead
+  # Blocking Writeback
   puts "Flushing #{fun}".green
   r = [
     (fun.call o.merge(
-      nametag: "flush1ms",
+      nametag: "flush10ms_bw",
       scheme: "tp",
       cores: 2
     )).flatten,
     (fun.call o.merge(
-      nametag: "flush10ms",
+      nametag: "flush50ms_bw",
       scheme: "tp",
       cores: 2
     )).flatten,
     (fun.call o.merge(
-      nametag: "flush100ms",
+      nametag: "flush100ms_bw",
       scheme: "tp",
       cores: 2
     )).flatten,
   ]
   puts r.to_s
-  # gb = grouped_bar(r.transpose, legend: %w[1ms 10ms 100ms], x_labels: $workload_names,
-  #                  legend_space: 45)
-  # string_to_f gb, "#{out_dir}/flushing_#{fun}.svg"
+  # b = grouped_bar(r.transpose, legend: %w[1ms 10ms 100ms], x_labels: $workload_names,
+  #                 legend_space: 45)
+  # string_to_f gb, "#{out_dir}/flushing_bw#{fun}.svg"
+
+  # Reserve Bandwidth Writeback
+  puts "Flushing #{fun}".green
+  r = [
+    (fun.call o.merge(
+      nametag: "flush10ms_rbw",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+    (fun.call o.merge(
+      nametag: "flush50ms_rbw",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+    (fun.call o.merge(
+      nametag: "flush100ms_rbw",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+  ]
+  puts r.to_s
+  # b = grouped_bar(r.transpose, legend: %w[1ms 10ms 100ms], x_labels: $workload_names,
+  #                 legend_space: 45)
+  # string_to_f gb, "#{out_dir}/flushing_rbw#{fun}.svg"
 end
 
 normgraphs = lambda do |fun, mname|
@@ -168,20 +194,20 @@ normgraphs = lambda do |fun, mname|
 
   # baseline
   baseline = fun.call o.merge(
-    core_set: [2,4,6,8]
+    core_set: [2,3,4]
   )
 
   #n_core_ntc
   ntc = fun.call o.merge(
     scheme: "tp",
-    core_set: [2,4,6,8],
+    core_set: [2,3,4],
   )
 
   # n_core_2tc
   twotc = fun.call o.merge(
     scheme: "tp",
     nametag: "2tc",
-    core_set: [4,6,8]
+    core_set: [3,4]
   )
 
   # breakdown
@@ -222,12 +248,12 @@ normgraphs = lambda do |fun, mname|
 
   #NTC normalized to base
   r = normalized( ntc, baseline )
-  gb = grouped_bar r.transpose, o.merge( legend: %w[2 4 6 8] )
+  gb = grouped_bar r.transpose, o.merge( legend: %w[2 3 4] )
   string_to_f gb, "#{out_dir}/ntc_#{mname}_norm.svg"
     
   # #2TC normalized to NTC
   r = normalized( twotc, ntc[1..-1] )
-  gb = grouped_bar r.transpose, o.merge( legend: %w[4 6 8] )
+  gb = grouped_bar r.transpose, o.merge( legend: %w[3 4] )
   string_to_f gb, "#{out_dir}/twotc_#{mname}_norm.svg"
     
   # #Breakdown normalized to base
@@ -256,30 +282,60 @@ normgraphs.call( method(:stp_data_of), "stp")
 # graphs.call( :antt_data_of )
 
 #------------------------------------------------------------------------------
+# Latency
+#------------------------------------------------------------------------------
+
+latencygraphs = lambda do |fun, mname|
+
+  o = { x_labels: $new_names, x_title: "Normalized STP",
+         core_set: [2], dir: in_dir, numcpus: 2, scheme: "none" }
+
+  # baseline
+  baseline = fun.call o.merge(
+    core_set: [2,3,4]
+  )
+  puts baseline.to_s.green
+
+  #n_core_ntc
+  ntc = fun.call o.merge(
+    scheme: "tp",
+    core_set: [2,3,4],
+  )
+  puts ntc.to_s.green
+
+  #NTC normalized to base
+  r = normalized( ntc, baseline )
+  gb = grouped_bar r.transpose, o.merge( legend: %w[2 3 4] )
+  string_to_f gb, "#{out_dir}/ntc_#{mname}_norm.svg"
+end    
+
+latencygraphs.call( method(:latency_data_of), "latency" )
+
+#------------------------------------------------------------------------------
 # Special Cases
 #------------------------------------------------------------------------------
-def normalized_progress o={}
-  tisp = single_time o
-  timp = find_time o
-  (tisp.nil? || timp.nil?) ? [] : tisp/timp
-end
-
-def two_tc_wprogs o={}
-  o = { dir: "results", x_labels: $new_names,
-        x_title: "Normalized STP" }
-  wls = $new_names
-  secure, insecure = %w[tp none].map do|s|
-    wls.keys.map do |wl|
-      [
-       normalized_progress(bench: wls[wl][0], scheme: s),
-       normalized_progress(bench: wls[wl][1], r: true , schem: s),
-       stp(workload: wl, numcpus: 2, scheme: s)
-      ]
-    end
-  end
-  r.normalized( secure, insecure )
-  gb = grouped_bar r.transpose o.merge( legend: %w[] )
-  string_to_f gb, "foo/two_tc_wprogs.svg"
-end
+# normalized_progress = lambda do |o|
+#   puts o
+#   tisp = single_time o
+#   timp = find_time stdo_file o
+#   puts timp
+#   (tisp.nil? || timp.nil?) ? 0 : tisp/timp
+# end
+# 
+# o = o.merge( dir: "results", x_labels: $new_names,
+#       x_title: "Normalized STP" )
+# wls = $mpworkloads
+# secure, insecure = %w[tp none].map do|s|
+#   wls.keys.map do |wl|
+#     [
+#      normalized_progress.call(bench: wls[wl][0], scheme: s),
+#      normalized_progress.call(bench: wls[wl][1], r: true , schem: s),
+#      stp(workload: wl, numcpus: 2, scheme: s)
+#     ]
+#   end
+# end
+# r = normalized( secure, insecure )
+# gb = grouped_bar r, o.merge( legend: %w[p1 p2 overall] )
+# string_to_f gb, "foo/two_tc_wprogs.svg"
 
 end
