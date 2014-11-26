@@ -108,17 +108,35 @@ module RunScripts
     end
 
     def flush_overhead
-      [$secure_opts].each do |opt|
-        o = opt.merge(
-          do_flush: true,
-        )
-        #10 ms
-        iterate_mp o.merge(nametag: "flush1ms", context_sw_freq: 10**10)
-        #50 ms
-        iterate_mp o.merge(nametag: "flush10ms", context_sw_freq: 5*10**10)
-        #100 ms
-        iterate_mp o.merge(nametag: "flush100ms", context_sw_freq: 10**11)
+      #Blocking Writeback
+      bw = $secure_opts.merge(
+        wbtag: "bw",
+        do_flush: true,
+        reserve_flush: false
+      )
+
+      #Reserved Bandwidth Writeback
+      rbw = bw.merge(
+          wbtag: "rbw",
+          reserve_flush: true
+      )
+
+      #Insecure Writeback
+      iw25, iw05, iw75 = [0.25,0.5,0.75].map do |r|
+        {
+          wbtag: "iw#{r.to_s.sub(/\./,'')}",
+          do_insecure_flush: true,
+          flushRatio: r
+        }
       end
+
+      [iw25, iw05, iw75].product([10,50,100]).each do |o,period|
+        iterate_mp o.merge(
+            nametag: "flush#{period}ms_#{o[:wbtag]}",
+            context_sw_freq: period * 10**10
+        )
+      end
+
     end 
 
 ##############################################################################
