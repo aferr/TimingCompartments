@@ -5,11 +5,6 @@ require_relative 'runscripts'
 require_relative 'security'
 require_relative 'functionality'
 require_relative 'performance'
-require_relative 'parameter_sweeping'
-require_relative 'memctl_unoptimized'
-require_relative 'memctl_optimized'
-require_relative 'memctl_scheduler'
-require_relative 'memctl_synthetic'
 include RunScripts
 
 #------------------------------------------------------------------------------
@@ -49,51 +44,10 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Performance
 #----------------------------------------------------------------------------
-    # single 
-    # breakdown
-    baseline
-    ncore_2tc
-    ncore_ntc
-    #flush_overhead
-    coordination
-
-#----------------------------------------------------------------------------
-# Parameter Sweeping
-#----------------------------------------------------------------------------
-# l2l3_sweeping_local
-# l2l3_sweeping_l3offset_local
-# membus_sweeping_local
-# memctl_sweeping_local
-# fa_sweeping_local
-# l2l3_sweeping_qsub
-# l2l3_sweeping_l3offset_qsub 
-# membus_sweeping_qsub
-# memctl_sweeping_qsub
-# fa_sweeping_qsub
-# hill_climb
-###############################################################################
-# Memory Controller Tests
-###############################################################################
-#------------------------------------------------------------------------------
-# Unptimized Runs
-#------------------------------------------------------------------------------
-# single_benchmark
-# cache_sweeping
-# turn_length_sweeping
-# thread_scaling
-
-#------------------------------------------------------------------------------
-# Optimized Runs
-#------------------------------------------------------------------------------
-# optimized_thread_scaling
-# fa_thread_scaling
-
-#------------------------------------------------------------------------------
-# Scheduler Policy
-#------------------------------------------------------------------------------
-# fcfs_vs_frfcfs
-
-#------------------------------------------------------------------------------
-# Synthetic Benchmarks
-#------------------------------------------------------------------------------
-# synthetic_asym_period
+# single 
+# breakdown
+# baseline
+# ncore_2tc
+# ncore_ntc
+#flush_overhead
+# coordination
