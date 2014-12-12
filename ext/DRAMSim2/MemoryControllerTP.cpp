@@ -32,6 +32,7 @@ MemoryControllerTP::MemoryControllerTP(MemorySystem *parent,
     commandQueue = new CommandQueueTP(bankStates,dramsim_log_,tpTurnLength,num_pids_, fixAddr, diffPeriod, p0Period, p1Period, offset); 
 
     // reserve for each process
+    transactionQueues = new vector<Transaction *>[num_pids];
     for (int i=0;i<num_pids;i++){
         transactionQueues[i].reserve(TRANS_QUEUE_DEPTH);
     }
