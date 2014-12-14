@@ -19,7 +19,7 @@ namespace DRAMSim
             virtual bool addTransaction(Transaction *trans);
             virtual void receiveFromBus(BusPacket *bpacket);
 
-        private:
+        protected:
             vector<Transaction *> * transactionQueues; //[4];
             
             virtual void updateTransactionQueue();
