@@ -105,22 +105,11 @@ isExitNormal( const std::string &message ){
 void
 exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat)
 {
-
-    
-    int count = ExitCounter::get();
-    if( count > 0 ){
-        cout << message << " @ " << curTick() << endl;
-        if( !isExitNormal(     message ) ){
-            return;
-        }
-    } else {
-        if( !isExitNormal( message ) ){
-            cout << message << " @ " << curTick() << endl;
-            return;
-        }
+    if( message.find("cpu0") == string::npos ) {
+      cout << message << " @ " << curTick() << endl;
+      return;
     }
     
-    ExitCounter::dec();
     Event *event = new SimLoopExitEvent(message, exit_code, repeat);
     mainEventQueue.schedule(event, when);
 }
