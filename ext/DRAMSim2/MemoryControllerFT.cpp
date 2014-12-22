@@ -14,6 +14,7 @@ MemoryControllerFT::MemoryControllerFT(MemorySystem *parent, CSVWriter
     commandQueue = new CommandQueueFT(bankStates,dramsim_log_,num_pids_); 
 
     // reserve for each process
+    transactionQueues = new vector<Transaction *>[num_pids]; 
     for (int i=0;i<num_pids;i++){
         transactionQueues[i].reserve(TRANS_QUEUE_DEPTH);
     }
