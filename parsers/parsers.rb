@@ -41,6 +41,39 @@ def benchmarks_in wl
   }[wl]
 end
 
+$mpworkloads = {
+  hhd: %w[ mcf bzip2 ],
+  hhn: %w[ mcf xalan ],
+  hhi: %w[ libquantum libquantum],
+  hli: %w[ libquantum astar ],
+  hld: %w[ mcf h264ref ],
+  hmi: %w[ libquantum sjeng ],
+  hmd: %w[ xalan gcc ],
+  mmi: %w[ gcc gobmk ],
+  mmd: %w[ sjeng sjeng ],
+  llp: %w[ astar h264ref ],
+  lld: %w[ h264ref hmmer ],
+  lli: %w[ astar astar]
+}
+
+$mpworkload_nn = {
+  hhd: "mcf_bz2",
+  hhn: "mcf_xln",
+  hhi: "lib_lib",
+  hli: "lib_ast",
+  hld: "mcf_h264ref",
+  hmi: "lib_sjg",
+  hmd: "xalan_gcc",
+  mmi: "gcc_gobmk",
+  mmd: "sjg_sjg",
+  llp: "ast_h264",
+  lld: "h264_hmr",
+  lli: "ast_ast"
+}
+
+
+$workload_names = $mpworkloads.keys.map { |k| k.to_s }
+$new_names = $mpworkload_nn.keys.map { |k| $mpworkload_nn[k] }
 #-------------------------------------------------------------------------------
 # Filenames
 #-------------------------------------------------------------------------------
@@ -143,18 +176,36 @@ def antt( p={} )
   s.include?([]) ? 0 : s.reduce(:+)
 end
 
-def overhead( t1, t2 , p={} )
-    unless t1.nil? || t2.nil?
-        ( p[:X] && t1/t2 ) || (t1-t2)/t2 * 100
+def data_of p={}
+  p[:core_set].inject([]) do |a1,cores|
+    a1 << $mpworkloads.keys.inject([]) do |a2,wl|
+      a2 << yield(p.merge(numcpus: cores, workload: wl))
+      a2
     end
+    a1
+  end
 end
 
-def percent_diff(t1,t2)
-     unless t1.nil? || t2.nil?
-         high = ( t1>=t2 && t1 ) || ( true && t2 )
-         low  = ( t1>=t2 && t2 ) || ( true && t1 )
-         (high-low)/((high+low)/2) * 100
-     end
+def stp_data_of(p={}) data_of(p){|o| stp o} end
+
+def antt_data_of(p={}) data_of(p){|o| antt o} end
+
+def latency_data_of(p={}) data_of(p){|o| get_m5out_stat(m5out_file o)} end
+
+def normalized d1, d2
+  d1.each_with_index.map do |x,i|
+    x.each_with_index.map do |y,j|
+      d2[i][j] == 0 ? 0 : y / d2[i][j]
+    end
+  end
+end
+
+def percent_overhead d1, d2
+  d1.each_with_index.map do |x,i|
+    x.each_with_index.map do |y,j|
+      d2[i][j] == 0 ? 0 : (( d2[i][j] - y ) / d2[i][j])
+    end
+  end
 end
 
 #-------------------------------------------------------------------------------
@@ -174,6 +225,16 @@ def hash_to_csv( hash, filename, p={} )
     end
 end
 
+def svg2pdf dir
+  tmpdir = Dir.pwd
+  Dir.chdir dir
+  # This is a bash script that converts all the svgs in the current working
+  # directory into pdfs
+  %x[svg2pdfall]
+  Dir.chdir tmpdir
+end
+
+#this is the module end
 end
 
 if __FILE__ == $0
