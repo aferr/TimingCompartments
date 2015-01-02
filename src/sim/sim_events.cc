@@ -77,6 +77,7 @@ SimLoopExitEvent::description() const
     return "simulation loop exit";
 }
 
+void
 exitSimLoop(const std::string &message, int exit_code, Tick when, Tick repeat)
 {
     if( message.find("cpu0") == string::npos ) {
