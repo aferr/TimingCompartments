@@ -144,7 +144,7 @@ module RunScripts
 ##############################################################################
 
     $opt_l2_miss = {
-      nametag: "l2miss_opt"
+      nametag: "l2miss_opt",
       :l2l3req_tl=>1,
       :l2l3req_offset=>16,
       :l2l3resp_tl=>9,
@@ -171,7 +171,7 @@ module RunScripts
       :mem_offset=>79
     }
 
-    $max_l2_old = $opt_l2_old.merge(
+    $bad_l2_miss = $opt_l2_old.merge(
       nametag: "l2miss_max_old",
       :l2l3req_offset=>5,
       :l2l3resp_offset=>16,
@@ -196,7 +196,7 @@ module RunScripts
       l2l3resp_offset: 9
     }
 
-    $l3_miss_opt = {
+    $opt_l3_miss= {
       nametag: "l3_miss_opt",
       :l2l3req_tl=>7,
       :l2l3req_offset=>13,
@@ -210,7 +210,7 @@ module RunScripts
       :mem_offset=>9
     }
 
-    $bad_l3_miss = $l3_miss_opt.merge(
+    $bad_l3_miss = $opt_l3_miss.merge(
       nametag: "l3miss_max",
       :l2l3req_offset=>26,
       :l2l3resp_offset=>121,
