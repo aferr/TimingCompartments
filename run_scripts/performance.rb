@@ -149,10 +149,10 @@ module RunScripts
       l2l3req_offset: 2,
       l2l3resp_tl: 11,
       l2l3resp_offset: 18, 
-      l3memreq_tl: 66,
-      l3memreq_offset: 6,
-      l3memresp_tl: 66,
-      l3memresp_offset: 39,
+      membusreq_tl: 66,
+      membusreq_offset: 6,
+      membusresp_tl: 66,
+      membusresp_offset: 39,
       mem_tl: 66,
       mem_offset: 7
     }
@@ -161,8 +161,8 @@ module RunScripts
       nametag: "l2miss_max",
       :l2l3req_offset=>5,
       :l2l3resp_offset=>16,
-      :l3memreq_offset=>121,
-      :l3memresp_offset=>93,
+      :membusreq_offset=>121,
+      :membusresp_offset=>93,
       :mem_offset=>121
     )
 
@@ -188,10 +188,10 @@ module RunScripts
       l2l3req_offset:      0,
       l2l3resp_tl:   66,
       l2l3resp_offset:    65,
-      l3memreq_tl:   66,
-      l3memreq_offset:    10,
-      l3memresp_tl:  66,
-      l3memresp_offset:   47,
+      membusreq_tl:   66,
+      membusreq_offset:    10,
+      membusresp_tl:  66,
+      membusresp_offset:   47,
       mem_tl:        66,
       mem_offset:         11,
     }
@@ -200,8 +200,8 @@ module RunScripts
       nametag: "l3miss_max",
       :l2l3req_offset=>3,
       :l2l3resp_offset=>11,
-      :l3memreq_offset=>97,
-      :l3memresp_offset=>74,
+      :membusreq_offset=>97,
+      :membusresp_offset=>74,
       :mem_offset=>97
     )
 
@@ -212,15 +212,36 @@ module RunScripts
 
       # Optimized L2 Miss Path
       iterate_mp o.merge $opt_l2_miss
+      iterate_mp o.merge $opt_l2_miss.merge(
+        nametag: "l2miss_opt_nocwf",
+        nocwf: true
+      )
 
       # Worst L2 Miss Path
       iterate_mp o.merge $bad_l2_miss
+      iterate_mp o.merge $bad_l2_miss.merge(
+        nametag: "l2miss_max_nocwf",
+        nocwf: true
+      )
 
       # Optimized L3 Hit Path
-      iterate_mp qsub_scaling o.merge $opt_l3_hit
+      iterate_mp o.merge $opt_l3_hit
+      iterate_mp o.merge $opt_l3_hit.merge(
+        nametag: "l3hit_opt_nocwf",
+        nocwf: true
+      )
 
       # Worst L3 Miss Path
-      iterate_mp qsub_scaling o.merge $bad_l3_hit
+      iterate_mp o.merge $bad_l3_hit
+      iterate_mp o.merge $bad_l3_hit.merge(
+        nametag: "l3hit_max_nocwf",
+        nocwf: true
+      )
+
+      iterate_mp o.merge(
+        nametag: "nocwf",
+        nocwf: true
+      )
     end
 
 end

@@ -2,7 +2,6 @@
 
 require 'fileutils'
 require 'colored'
-require_relative 'coordinate'
 
 module RunScripts
 #directories
