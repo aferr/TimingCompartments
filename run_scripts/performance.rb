@@ -217,10 +217,10 @@ module RunScripts
       iterate_mp o.merge $bad_l2_miss
 
       # Optimized L3 Hit Path
-      iterate_mp qsub_scaling o.merge $opt_l3_hit
+      iterate_mp o.merge $opt_l3_hit
 
       # Worst L3 Miss Path
-      iterate_mp qsub_scaling o.merge $bad_l3_hit
+      iterate_mp o.merge $bad_l3_hit
     end
 
 end
