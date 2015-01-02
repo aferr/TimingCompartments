@@ -144,26 +144,40 @@ module RunScripts
 ##############################################################################
 
     $opt_l2_miss = {
-      nametag: "l2miss_opt",
-      l2l3req_tl: 4,
-      l2l3req_offset: 2,
-      l2l3resp_tl: 11,
-      l2l3resp_offset: 18, 
-      membusreq_tl: 66,
-      membusreq_offset: 6,
-      membusresp_tl: 66,
-      membusresp_offset: 39,
-      mem_tl: 66,
-      mem_offset: 7
+      nametag: "l2miss_opt"
+      :l2l3req_tl=>1,
+      :l2l3req_offset=>16,
+      :l2l3resp_tl=>9,
+      :l2l3resp_offset=>10,
+      :membusreq_tl=>26,
+      :membusreq_offset=>8,
+      :membusresp_tl=>9,
+      :membusresp_offset=>61,
+      :mem_tl=>52,
+      :mem_offsetffset=>4
     }
 
-    $bad_l2_miss = $opt_l2_miss.merge(
-      nametag: "l2miss_max",
+    $opt_l2_old = {
+      nametag: "l2miss_opt_old",
+      :l2l3req_tl=>1,
+      :l2l3req_offset=>8,
+      :l2l3resp_tl=>13,
+      :l2l3resp_offset=>11,
+      :membusreq_tl=>60,
+      :membusreq_offset=>33,
+      :membusresp_tl=>14,
+      :membusresp_offset=>34,
+      :mem_tl=>70,
+      :mem_offset=>79
+    }
+
+    $max_l2_old = $opt_l2_old.merge(
+      nametag: "l2miss_max_old",
       :l2l3req_offset=>5,
       :l2l3resp_offset=>16,
       :membusreq_offset=>121,
       :membusresp_offset=>93,
-      :mem_offset=>121
+      :mem_offset=>81
     )
 
     $opt_l3_hit = {
@@ -182,27 +196,27 @@ module RunScripts
       l2l3resp_offset: 9
     }
 
-    $l3_miss_opt= {
-      nametag: "l3miss_opt",
-      l2l3req_tl:    66,
-      l2l3req_offset:      0,
-      l2l3resp_tl:   66,
-      l2l3resp_offset:    65,
-      membusreq_tl:   66,
-      membusreq_offset:    10,
-      membusresp_tl:  66,
-      membusresp_offset:   47,
-      mem_tl:        66,
-      mem_offset:         11,
+    $l3_miss_opt = {
+      nametag: "l3_miss_opt",
+      :l2l3req_tl=>7,
+      :l2l3req_offset=>13,
+      :l2l3resp_tl=>11,
+      :l2l3resp_offset=>4,
+      :membusreq_tl=>66,
+      :membusreq_offset=>0,
+      :membusresp_tl=>66,
+      :membusresp_offset=>49,
+      :mem_tl=>44,
+      :mem_offset=>9
     }
-    
+
     $bad_l3_miss = $l3_miss_opt.merge(
       nametag: "l3miss_max",
-      :l2l3req_offset=>3,
-      :l2l3resp_offset=>11,
-      :membusreq_offset=>97,
-      :membusresp_offset=>74,
-      :mem_offset=>97
+      :l2l3req_offset=>26,
+      :l2l3resp_offset=>121,
+      :membusreq_offset=>95,
+      :membusresp_offset=>69,
+      :mem_offset=>64
     )
 
     def parameter_tests
@@ -231,10 +245,24 @@ module RunScripts
         nocwf: true
       )
 
-      # Worst L3 Miss Path
+      # Worst L3 Hit Path
       iterate_mp o.merge $bad_l3_hit
       iterate_mp o.merge $bad_l3_hit.merge(
         nametag: "l3hit_max_nocwf",
+        nocwf: true
+      )
+
+      # Optimized L3 Miss Path
+      iterate_mp o.merge $opt_l3_miss
+      iterate_mp o.merge $opt_l3_miss.merge(
+        nametag: "l3miss_opt_nocwf",
+        nocwf: true
+      )
+
+      # Worst L3 Miss Path
+      iterate_mp o.merge $bad_l3_hit
+      iterate_mp o.merge $bad_l3_hit.merge(
+        nametag: "l3miss_max_nocwf",
         nocwf: true
       )
 
