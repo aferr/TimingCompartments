@@ -81,7 +81,7 @@ class BaseCache : public MemObject
   private:
 
     void flushInternal(){
-	  flush(0);
+	    flush(0);
       Tick time = curTick() + params->context_sw_freq;
       schedule( flushEvent, time);
     }

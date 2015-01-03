@@ -63,7 +63,6 @@ class L3Shared( L3Config ):
                             save_trace = options.do_cache_trace,
                             cw_first = not (options.nocwf),
                             do_flush = options.do_flush,
-                            do_flush_insecure = options.do_flush_insecure,
                             flushRatio = options.flushRatio,
                             context_sw_freq = options.context_sw_freq,
                             l3_trace_file = options.l3tracefile)
@@ -129,14 +128,12 @@ def config_l1( options, system ):
             icache = L1Cache(size = options.l1i_size,
                              assoc = options.l1i_assoc,
                              do_flush = options.do_flush,
-                             do_flush_insecure = options.do_flush_insecure,
                              flushRatio = options.flushRatio,
                              context_sw_freq = options.context_sw_freq,
                              block_size=options.cacheline_size)
             dcache = L1Cache(size = options.l1d_size,
                              assoc = options.l1d_assoc,
                              do_flush = options.do_flush,
-                             do_flush_insecure = options.do_flush_insecure,
                              flushRatio = options.flushRatio,
                              context_sw_freq = options.context_sw_freq,
                              block_size=options.cacheline_size)
@@ -162,7 +159,6 @@ def config_l2( options, system ):
                 l3_trace_file = options.l2tracefile,
                 block_size=options.cacheline_size,
                 do_flush = options.do_flush,
-                do_flush_insecure = options.do_flush_insecure,
                 flushRatio = options.flushRatio,
                 context_sw_freq = options.context_sw_freq,
             ) 

@@ -111,12 +111,11 @@ module RunScripts
       #Blocking Writeback
       bw = $secure_opts.merge(
         wbtag: "bw",
-        do_flush: true,
         reserve_flush: false
       )
 
       #Reserved Bandwidth Writeback
-      rbw = bw.merge(
+      rbw = $secure_opts.merge(
           wbtag: "rbw",
           reserve_flush: true
       )
@@ -125,15 +124,16 @@ module RunScripts
       iw25, iw05, iw75 = [0.25,0.5,0.75].map do |r|
         {
           wbtag: "iw#{r.to_s.sub(/\./,'')}",
-          do_insecure_flush: true,
           flushRatio: r
         }
       end
 
-      [iw25, iw05, iw75].product([10,50,100]).each do |o,period|
+      [bw, rbw, iw25, iw05, iw75].product([10,50,100]).each do |o,period|
         iterate_mp o.merge(
             nametag: "flush#{period}ms_#{o[:wbtag]}",
-            context_sw_freq: period * 10**10
+            context_sw_freq: period * 10**10,
+            do_flush: true,
+            runmode: :fake
         )
       end
 

@@ -87,7 +87,6 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
 
     params = p;
 	
-	if(p->do_flush_insecure) this->insertContextSwitches();
 }
 
 template<class TagStore>
@@ -1870,8 +1869,7 @@ SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
     : SplitMSHRCache<TagStore>( p, tags )
 {
 
-    this->cpuSidePort = new SRCpuSidePort(p->name + ".cpu_side", this,
+  this->cpuSidePort = new SRCpuSidePort(p->name + ".cpu_side", this,
                                   "CpuSidePort");
-	if( p->do_flush ) this->insertContextSwitches();
 }
 
