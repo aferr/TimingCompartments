@@ -250,6 +250,7 @@ def sav_script( options = {} )
     script.puts("    --split_rport \\")   if options[:split_rport]
     script.puts("    --do_flush \\")      if options[:do_flush]
     script.puts("    --reserve_flush \\") if options[:reserve_flush]
+    script.puts("    --flushRatio=#{options[:flushRatio]} \\") unless options[:flushRatio].nil?
     cswf = options[:context_sw_freq]
     script.puts("    --context_sw_freq=#{cswf}\\" ) unless cswf.nil?
 

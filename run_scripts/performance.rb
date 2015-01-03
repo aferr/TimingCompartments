@@ -133,7 +133,6 @@ module RunScripts
             nametag: "flush#{period}ms_#{o[:wbtag]}",
             context_sw_freq: period * 10**10,
             do_flush: true,
-            runmode: :fake
         )
       end
 
