@@ -1,0 +1,40 @@
+#!/bin/bash
+build/ARM/gem5.debug \
+    --stats-file=pfault_tp.txt \
+    --debug-flags=Exec \
+    configs/dramsim2/dramsim2_se.py \
+    --numcpus=4 \
+    --cpu-type=timing \
+    --caches \
+    --l2cache \
+    --l3cache \
+    --l3_size=4MB\
+    --l3config=shared \
+    --fast-forward=1000000000 \
+    --maxinsts=100000000 \
+    --maxtick=2000000000000000 \
+    --fixaddr \
+    --rr_nc \
+    --use_way_part \
+    --split_mshr \
+    --split_rport \
+    --numpids=4 \
+    --p0threadID 0\
+    --p1threadID 0\
+    --p2threadID 1\
+    --p3threadID 1\
+    --p4threadID 4\
+    --p5threadID 5\
+    --p6threadID 6\
+    --p7threadID 7\
+    --dramsim2 \
+    --devicecfg=./ext/DRAMSim2/ini/DDR3_micron_16M_8B_x8_sg15.ini \
+    --systemcfg=./ext/DRAMSim2/system_tp.ini \
+    --outputfile=/dev/null \
+    --p0='benchmarks/spec2k6bin/specint/Xalan -v benchmarks/spec2k6bin/specint/t5.xml benchmarks/spec2k6bin/specint/xalanc.xsl' \
+    --p1='benchmarks/spec2k6bin/specint/gcc benchmarks/spec2k6bin/specint/200.in -o results/200.s' \
+    --p2='benchmarks/spec2k6bin/specint/Xalan -v benchmarks/spec2k6bin/specint/t5.xml benchmarks/spec2k6bin/specint/xalanc.xsl' \
+    --p3='benchmarks/spec2k6bin/specint/gcc benchmarks/spec2k6bin/specint/200.in -o results/200.s' \
+   --diffperiod \
+   --p0period=64 \
+   --p1period=64 > ./pipe1
