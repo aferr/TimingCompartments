@@ -152,31 +152,34 @@ module RunScripts
       :membusreq_offset=>8,
       :membusresp_tl=>9,
       :membusresp_offset=>61,
-      :mem_tl=>52,
-      :mem_offsetffset=>4
+      :tl0=>52,
+      :tl1=>52,
+      :dramoffset=>45
     }
 
     $opt_l2_old = {
       nametag: "l2miss_opt_old",
-      :l2l3req_tl=>1,
-      :l2l3req_offset=>8,
-      :l2l3resp_tl=>13,
-      :l2l3resp_offset=>11,
-      :membusreq_tl=>60,
-      :membusreq_offset=>33,
-      :membusresp_tl=>14,
-      :membusresp_offset=>34,
-      :mem_tl=>70,
-      :mem_offset=>79
+      :l2l3req_tl=>4,
+      :l2l3req_offset=>2,
+      :l2l3resp_tl=>11,
+      :l2l3resp_offset=>18,
+      :membusreq_tl=>66,
+      :membusreq_offset=>66,
+      :membusresp_tl=>66,
+      :membusresp_offset=>39,
+      :tl0=>44,
+      :tl1=>44,
+      :dramoffset=>7
     }
 
+    #Maximized based on old optimum. Could not collect with new optimum.
     $bad_l2_miss = $opt_l2_old.merge(
-      nametag: "l2miss_max_old",
+      nametag: "l2miss_max",
       :l2l3req_offset=>5,
       :l2l3resp_offset=>16,
       :membusreq_offset=>121,
       :membusresp_offset=>93,
-      :mem_offset=>81
+      :dramoffset=>81
     )
 
     $opt_l3_hit = {
@@ -196,7 +199,7 @@ module RunScripts
     }
 
     $opt_l3_miss= {
-      nametag: "l3_miss_opt",
+      nametag: "l3miss_opt",
       :l2l3req_tl=>7,
       :l2l3req_offset=>13,
       :l2l3resp_tl=>11,
@@ -205,8 +208,9 @@ module RunScripts
       :membusreq_offset=>0,
       :membusresp_tl=>66,
       :membusresp_offset=>49,
-      :mem_tl=>44,
-      :mem_offset=>9
+      :tl0=>44,
+      :tl1=>44,
+      :dramoffset=>9
     }
 
     $bad_l3_miss = $opt_l3_miss.merge(
@@ -215,12 +219,13 @@ module RunScripts
       :l2l3resp_offset=>121,
       :membusreq_offset=>95,
       :membusresp_offset=>69,
-      :mem_offset=>64
+      :dramoffset=>64
     )
 
     def parameter_tests
       o = $secure_opts.merge(
-          num_wl: 2
+          num_wl: 2,
+          runmode: :fake
       )
 
       # Optimized L2 Miss Path
@@ -259,8 +264,8 @@ module RunScripts
       )
 
       # Worst L3 Miss Path
-      iterate_mp o.merge $bad_l3_hit
-      iterate_mp o.merge $bad_l3_hit.merge(
+      iterate_mp o.merge $bad_l3_miss
+      iterate_mp o.merge $bad_l3_miss.merge(
         nametag: "l3miss_max_nocwf",
         nocwf: true
       )
