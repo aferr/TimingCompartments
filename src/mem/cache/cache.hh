@@ -247,7 +247,7 @@ class Cache : public BaseCache
       public:
 
         MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
-                    const std::string &_label);
+                    const std::string &_label, int cpuid);
     };
 
     /** Tag and data Storage */
