@@ -84,22 +84,22 @@ end
 def abs_reserved_wb o={}
   r = [
     (o[:fun].call o.merge(
-      nametag: "flush10ms_bw",
+      nametag: "flush10ms_rbw",
       scheme: "tp",
       cores: 2
     )).flatten,
     (o[:fun].call o.merge(
-      nametag: "flush50ms_bw",
+      nametag: "flush50ms_rbw",
       scheme: "tp",
       cores: 2
     )).flatten,
     (o[:fun].call o.merge(
-      nametag: "flush100ms_bw",
+      nametag: "flush100ms_rbw",
       scheme: "tp",
       cores: 2
     )).flatten,
   ]
-  gb = grouped_bar(r.transpose, legend: %w[1ms 10ms 100ms],
+  gb = grouped_bar(r.transpose, legend: %w[10ms 50ms 100ms],
                   x_labels: $workload_names, legend_space: 45)
   string_to_f gb, "#{o[:out_dir]}/reservedwb_flush_#{o[:mnmame]}.svg"
 end
@@ -109,14 +109,16 @@ end
 #------------------------------------------------------------------------------
 def baseline o={}
   o[:fun].call o.merge(
-    core_set: [2,3,4]
+    #core_set: [2,3,4]
+    core_set: [2]
   )
 end
 
 def ntc o={}
   o[:fun].call o.merge(
     scheme: "tp",
-    core_set: [2,3,4],
+    #core_set: [2,3,4],
+    core_set: [2]
   )
 end
 
@@ -164,32 +166,60 @@ def norm_breakdown o={}
   string_to_f gb, "#{o[:out_dir]}/breakdown_#{o[:mname]}_norm.svg"
 end
 
-def norm_flushing o={}
+def norm_flushing_bw o={}
   flushing = [
     (o[:fun].call o.merge(
-      nametag: "flush1ms",
+      nametag: "flush10ms_bw",
       scheme: "tp",
       cores: 2
     )).flatten,
     (o[:fun].call o.merge(
-      nametag: "flush10ms",
+      nametag: "flush50ms_bw",
       scheme: "tp",
       cores: 2
     )).flatten,
     (o[:fun].call o.merge(
-      nametag: "flush100ms",
+      nametag: "flush100ms_bw",
       scheme: "tp",
       cores: 2
     )).flatten,
   ]
 
   r = normalized( [ntc(o)[0]]+flushing, [baseline(o)[0]]*4 )
-  gb = grouped_bar r.transpose, o.merge( legend: %w[none 1ms 10ms 100ms] )
-  string_to_f gb, "#{o[:out_dir]}/flushing_#{o[:mname]}_norm.svg"
+  gb = grouped_bar r.transpose, o.merge( legend: %w[none 10ms 50ms 100ms] )
+  string_to_f gb, "#{o[:out_dir]}/flushing_bw_#{o[:mname]}_norm.svg"
+end
+
+def norm_flushing_rbw o={}
+  flushing = [
+    (o[:fun].call o.merge(
+      nametag: "flush10ms_rbw",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+    (o[:fun].call o.merge(
+      nametag: "flush50ms_rbw",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+    (o[:fun].call o.merge(
+      nametag: "flush100ms_rbw",
+      scheme: "tp",
+      cores: 2
+    )).flatten,
+  ]
+
+  r = normalized( [ntc(o)[0]]+flushing, [baseline(o)[0]]*4 )
+  gb = grouped_bar r.transpose, o.merge( legend: %w[none 10ms 50ms 100ms] )
+  string_to_f gb, "#{o[:out_dir]}/flushing_rbw_#{o[:mname]}_norm.svg"
 end
 
 def norm_params o={}
   params = [
+    (o[:fun].call o.merge(
+      scheme: "tp",
+      core_set: [2]
+    )).flatten,
     (o[:fun].call o.merge(
       scheme: "tp",
       nametag: "l2miss_opt",
@@ -197,21 +227,93 @@ def norm_params o={}
     )).flatten,
     (o[:fun].call o.merge(
       scheme: "tp",
-      nametag: "l2miss_max",
+      nametag: "l2miss_max_old",
+      core_set: [2]
+    )).flatten,
+    (o[:fun].call o.merge(
+      scheme: "tp",
+      nametag: "l3hit_opt",
+      core_set: [2]
+    )).flatten,
+    (o[:fun].call o.merge(
+      scheme: "tp",
+      nametag: "l3hit_max",
       core_set: [2]
     )).flatten,
     # (o[:fun].call o.merge(
     #   scheme: "tp",
-    #   nametag: "l3hit_opt",
+    #   nametag: "l3miss_opt",
     #   core_set: [2]
-    # ))
+    # )).flatten,
+    # (o[:fun].call o.merge(
+    #   scheme: "tp",
+    #   nametag: "l3miss_max",
+    #   core_set: [2]
+    # )).flatten,
   ]
 
-  r = normalized([ntc(o)[0]]+params, [baseline(o)[0]]*3)
-  gb = grouped_bar r.transpose, o.merge(legend: %w[default l2miss_opt l2miss_max])
+  #r = normalized([ntc(o)[0]]+params, [baseline(o)[0]]*3)
+  r = normalized(params, [baseline(o)[0]]*5)
+  gb = grouped_bar r.transpose, o.merge(
+    legend: %w[
+      default
+      l2miss_opt l2miss_max
+      l3hit_opt  l3hit_max
+    ]
+  )
   string_to_f gb, "#{o[:out_dir]}/params_#{o[:mname]}_norm.svg"
 end
-    
+
+def norm_params_nocwf o={}
+  params = [
+    (o[:fun].call o.merge(
+      scheme: "tp",
+      nametag: "nocwf",
+      core_set: [2]
+    )).flatten,
+    (o[:fun].call o.merge(
+      scheme: "tp",
+      nametag: "l2miss_opt_nocwf",
+      core_set: [2]
+    )).flatten,
+    (o[:fun].call o.merge(
+      scheme: "tp",
+      nametag: "l2miss_max_nocwf",
+      core_set: [2]
+    )).flatten,
+    (o[:fun].call o.merge(
+      scheme: "tp",
+      nametag: "l3hit_opt_nocwf",
+      core_set: [2]
+    )).flatten,
+    (o[:fun].call o.merge(
+      scheme: "tp",
+      nametag: "l3hit_max_nocwf",
+      core_set: [2]
+    )).flatten,
+    # (o[:fun].call o.merge(
+    #   scheme: "tp",
+    #   nametag: "l3miss_opt",
+    #   core_set: [2]
+    # )).flatten,
+    # (o[:fun].call o.merge(
+    #   scheme: "tp",
+    #   nametag: "l3miss_max",
+    #   core_set: [2]
+    # )).flatten,
+  ]
+
+  #r = normalized([ntc(o)[0]]+params, [baseline(o)[0]]*3)
+  r = normalized(params, [baseline(o)[0]]*5)
+  gb = grouped_bar r.transpose, o.merge(
+    legend: %w[
+      default
+      l2miss_opt l2miss_max
+      l3hit_opt  l3hit_max
+    ]
+  )
+  string_to_f gb, "#{o[:out_dir]}/params_nocwf_#{o[:mname]}_norm.svg"
+end
 
 if __FILE__ == $0
   in_dir  = ARGV[0].to_s
@@ -233,8 +335,8 @@ if __FILE__ == $0
   # abs_ntc abs_o
   # abs_2tc abs_o
   # abs_breakdown abs_o
-  #abs_blocking_wb abs_o
-  #abs_reserved_wb abs_o
+  # abs_blocking_wb abs_o
+  # abs_reserved_wb abs_o
   
   normo = {
     x_labels: $new_names,
@@ -251,10 +353,12 @@ if __FILE__ == $0
   # norm_ntc normo
   # norm_2tc normo
   # norm_breakdown normo
-  #norm_flushing normo
+  norm_flushing_bw  normo
+  norm_flushing_rbw normo
 
   norm_params normo
+  norm_params_nocwf normo
 
-  svg2pdf out_dir
+  # svg2pdf out_dir
 
 end

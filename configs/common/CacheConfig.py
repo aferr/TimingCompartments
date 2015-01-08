@@ -130,13 +130,17 @@ def config_l1( options, system ):
                              do_flush = options.do_flush,
                              flushRatio = options.flushRatio,
                              context_sw_freq = options.context_sw_freq,
-                             block_size=options.cacheline_size)
+                             block_size=options.cacheline_size,
+                             cpuid = i
+                             )
             dcache = L1Cache(size = options.l1d_size,
                              assoc = options.l1d_assoc,
                              do_flush = options.do_flush,
                              flushRatio = options.flushRatio,
                              context_sw_freq = options.context_sw_freq,
-                             block_size=options.cacheline_size)
+                             block_size=options.cacheline_size,
+                             cpuid = i
+                             )
 
             if buildEnv['TARGET_ISA'] == 'x86':
                 system.cpu[i].addPrivateSplitL1Caches(icache, dcache,
@@ -161,6 +165,7 @@ def config_l2( options, system ):
                 do_flush = options.do_flush,
                 flushRatio = options.flushRatio,
                 context_sw_freq = options.context_sw_freq,
+                cpuid = i
             ) 
             for i in xrange( options.num_cpus )
         ]
