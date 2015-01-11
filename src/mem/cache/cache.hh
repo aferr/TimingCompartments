@@ -110,6 +110,7 @@ class Cache : public BaseCache
     }
 
     virtual void flush( int tcid ){
+      if( !(params->use_way_part) && params->cpuid != tcid ) return;
       tags->flush(tcid);
       memSidePort->contextSwitch(tcid);
       if( params->reserve_flush ){
