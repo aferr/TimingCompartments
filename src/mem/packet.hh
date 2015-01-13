@@ -532,21 +532,21 @@ class Packet : public Printable
      * first, but the Requests's physical address and size fields need
      * not be valid. The command must be supplied.
      */
-    Packet(Request *_req, MemCmd _cmd)
-        :  cmd(_cmd), req(_req), data(NULL),
-           src(InvalidPortID), dest(InvalidPortID),
-           bytesValidStart(0), bytesValidEnd(0),
-           time(curTick()), senderState(NULL), threadID(0)
-    {
-        if (req->hasPaddr()) {
-            addr = req->getPaddr();
-            flags.set(VALID_ADDR);
-        }
-        if (req->hasSize()) {
-            size = req->getSize();
-            flags.set(VALID_SIZE);
-        }
-    }
+    // Packet(Request *_req, MemCmd _cmd)
+    //     :  cmd(_cmd), req(_req), data(NULL),
+    //        src(InvalidPortID), dest(InvalidPortID),
+    //        bytesValidStart(0), bytesValidEnd(0),
+    //        time(curTick()), senderState(NULL), threadID(0)
+    // {
+    //     if (req->hasPaddr()) {
+    //         addr = req->getPaddr();
+    //         flags.set(VALID_ADDR);
+    //     }
+    //     if (req->hasSize()) {
+    //         size = req->getSize();
+    //         flags.set(VALID_SIZE);
+    //     }
+    // }
     
     /**
      * Constructor.  Note that a Request object must be constructed
@@ -574,19 +574,19 @@ class Packet : public Printable
      * a request that is for a whole block, not the address from the
      * req.  this allows for overriding the size/addr of the req.
      */
-    Packet(Request *_req, MemCmd _cmd, int _blkSize)
-        :  cmd(_cmd), req(_req), data(NULL),
-           src(InvalidPortID), dest(InvalidPortID),
-           bytesValidStart(0), bytesValidEnd(0),
-           time(curTick()), senderState(NULL), threadID(0)
-    {
-        if (req->hasPaddr()) {
-            addr = req->getPaddr() & ~(_blkSize - 1);
-            flags.set(VALID_ADDR);
-        }
-        size = _blkSize;
-        flags.set(VALID_SIZE);
-    }
+    // Packet(Request *_req, MemCmd _cmd, int _blkSize)
+    //     :  cmd(_cmd), req(_req), data(NULL),
+    //        src(InvalidPortID), dest(InvalidPortID),
+    //        bytesValidStart(0), bytesValidEnd(0),
+    //        time(curTick()), senderState(NULL), threadID(0)
+    // {
+    //     if (req->hasPaddr()) {
+    //         addr = req->getPaddr() & ~(_blkSize - 1);
+    //         flags.set(VALID_ADDR);
+    //     }
+    //     size = _blkSize;
+    //     flags.set(VALID_SIZE);
+    // }
     
     /**
      * Alternate constructor if you are trying to create a packet with

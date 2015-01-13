@@ -54,4 +54,4 @@ class MemTest(MemObject):
     suppress_func_warnings = Param.Bool(False,
         "suppress warnings when functional accesses fail.\n")
     sys = Param.System(Parent.any, "System Parameter")
-
+    tcid = Param.Int(-1, "tcid")

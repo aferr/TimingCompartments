@@ -681,13 +681,14 @@ RubyPort::M5Port::deviceBlockSize() const
 void
 RubyPort::ruby_eviction_callback(const Address& address)
 {
+    panic("ruby_eviction_callback was called, and we assumed it wouldn't be\n");
     DPRINTF(RubyPort, "Sending invalidations.\n");
     // should this really be using funcMasterId?
     Request req(address.getAddress(), 0, 0, Request::funcMasterId);
     for (CpuPortIter p = slave_ports.begin(); p != slave_ports.end(); ++p) {
         // check if the connected master port is snooping
         if ((*p)->isSnooping()) {
-            Packet *pkt = new Packet(&req, MemCmd::InvalidationReq);
+            Packet *pkt = new Packet(&req, MemCmd::InvalidationReq, -1, -1, -1);
             // send as a snoop request
             (*p)->sendTimingSnoopReq(pkt);
         }

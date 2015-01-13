@@ -87,6 +87,7 @@ CheckerCPU::CheckerCPU(Params *p)
     workload = p->workload;
 
     updateOnError = true;
+    tcid = p->tcid;
 }
 
 CheckerCPU::~CheckerCPU()
@@ -171,7 +172,8 @@ CheckerCPU::readMem(Addr addr, uint8_t *data, unsigned size, unsigned flags)
             PacketPtr pkt = new Packet(memReq,
                                        memReq->isLLSC() ?
                                        MemCmd::LoadLockedReq :
-                                       MemCmd::ReadReq);
+                                       MemCmd::ReadReq,
+                                       tcid, tcid, tcid);
 
             pkt->dataStatic(data);
 

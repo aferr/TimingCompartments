@@ -45,10 +45,12 @@ PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd) const
 {
     Request req;
 
+    panic("blobHelper was called, and we assumed that wouldn't happen\n");
+
     for (ChunkGenerator gen(addr, size, _port.peerBlockSize());
          !gen.done(); gen.next()) {
         req.setPhys(gen.addr(), gen.size(), 0, Request::funcMasterId);
-        Packet pkt(&req, cmd);
+        Packet pkt(&req, cmd, -1, -1, -1);
         pkt.dataStatic(p);
         _port.sendFunctional(&pkt);
         p += gen.size();

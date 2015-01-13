@@ -240,7 +240,7 @@ class MasterPort : public Port
     /** Inject a PrintReq for the given address to print the state of
      * that address throughout the memory system.  For debugging.
      */
-    void printAddr(Addr a);
+    void printAddr(Addr a, int tcid);
 
   protected:
 

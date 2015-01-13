@@ -176,6 +176,7 @@ void
 DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
                    uint8_t *data, Tick delay, Request::Flags flag)
 {
+    panic("DmaPort::dmaAction\n");
     // one DMA request sender state for every action, that is then
     // split into many requests and packets based on the block size,
     // i.e. cache line size
@@ -187,7 +188,7 @@ DmaPort::dmaAction(Packet::Command cmd, Addr addr, int size, Event *event,
          !gen.done(); gen.next()) {
         Request *req = new Request(gen.addr(), gen.size(), flag, masterId);
         fprintf(stderr, "panic: DMA called!\n");
-		PacketPtr pkt = new Packet(req, cmd);
+		PacketPtr pkt = new Packet(req, cmd, -1, -1, -1);
 
         // Increment the data pointer on a write
         if (data)

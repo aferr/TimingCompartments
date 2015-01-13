@@ -95,6 +95,8 @@ NetworkTest::NetworkTest(const Params *p)
     id = TESTER_NETWORK++;
     DPRINTF(NetworkTest,"Config Created: Name = %s , and id = %d\n",
             name(), id);
+
+    tcid = p->tcid;
 }
 
 MasterPort &
@@ -258,7 +260,7 @@ NetworkTest::generatePkt()
             "Generated packet with destination %d, embedded in address %x\n",
             destination, req->getPaddr());
 
-    PacketPtr pkt = new Packet(req, requestType);
+    PacketPtr pkt = new Packet(req, requestType, tcid, tcid, tcid);
     pkt->dataDynamicArray(new uint8_t[req->getSize()]);
     pkt->senderState = NULL;
 
@@ -276,7 +278,7 @@ NetworkTest::doRetry()
 void
 NetworkTest::printAddr(Addr a)
 {
-    cachePort.printAddr(a);
+    cachePort.printAddr(a, tcid);
 }
 
 
