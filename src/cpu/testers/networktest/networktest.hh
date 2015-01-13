@@ -63,6 +63,8 @@ class NetworkTest : public MemObject
      */
     void printAddr(Addr a);
 
+    int tcid;
+
   protected:
     class TickEvent : public Event
     {
