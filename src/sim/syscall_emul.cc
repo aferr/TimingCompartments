@@ -155,6 +155,7 @@ brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     // change brk addr to first arg
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     Addr new_brk = p->getSyscallArg(tc, index);
 
     // in Linux at least, brk(0) returns the current break value
@@ -177,13 +178,14 @@ brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
                 // split non-page aligned accesses
                 Addr next_page = roundUp(gen.addr(), VMPageSize);
                 uint32_t size_needed = next_page - gen.addr();
-                tp.memsetBlob(gen.addr(), zero, size_needed);
+                
+                tp.memsetBlob(gen.addr(), zero, size_needed, tcid);
                 if (gen.addr() + VMPageSize > next_page &&
                         next_page < new_brk &&
                         p->pTable->translate(next_page))
                 {
                     size_needed = VMPageSize - size_needed;
-                    tp.memsetBlob(next_page, zero, size_needed);
+                    tp.memsetBlob(next_page, zero, size_needed, tcid);
                 }
             }
         }
@@ -214,6 +216,7 @@ closeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 readFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     int fd = p->sim_fd(p->getSyscallArg(tc, index));
     Addr bufPtr = p->getSyscallArg(tc, index);
     int nbytes = p->getSyscallArg(tc, index);
@@ -222,7 +225,7 @@ readFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     int bytes_read = read(fd, bufArg.bufferPtr(), nbytes);
 
     if (bytes_read != -1)
-        bufArg.copyOut(tc->getMemProxy());
+        bufArg.copyOut(tc->getMemProxy(), tcid);
 
     return bytes_read;
 }
@@ -231,12 +234,13 @@ readFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 writeFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     int fd = p->sim_fd(p->getSyscallArg(tc, index));
     Addr bufPtr = p->getSyscallArg(tc, index);
     int nbytes = p->getSyscallArg(tc, index);
     BufferArg bufArg(bufPtr, nbytes);
 
-    bufArg.copyIn(tc->getMemProxy());
+    bufArg.copyIn(tc->getMemProxy(), tcid);
 
     int bytes_written = write(fd, bufArg.bufferPtr(), nbytes);
 
@@ -264,6 +268,7 @@ lseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 _llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     int fd = p->sim_fd(p->getSyscallArg(tc, index));
     uint64_t offset_high = p->getSyscallArg(tc, index);
     uint32_t offset_low = p->getSyscallArg(tc, index);
@@ -285,7 +290,7 @@ _llseekFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         // target platform
         BufferArg result_buf(result_ptr, sizeof(result));
         memcpy(result_buf.bufferPtr(), &result, sizeof(result));
-        result_buf.copyOut(tc->getMemProxy());
+        result_buf.copyOut(tc->getMemProxy(), tcid);
         return 0;
     }
 
@@ -308,13 +313,14 @@ const char *hostname = "m5.eecs.umich.edu";
 gethostnameFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     Addr bufPtr = p->getSyscallArg(tc, index);
     int name_len = p->getSyscallArg(tc, index);
     BufferArg name(bufPtr, name_len);
 
     strncpy((char *)name.bufferPtr(), hostname, name_len);
 
-    name.copyOut(tc->getMemProxy());
+    name.copyOut(tc->getMemProxy(), tcid);
 
     return 0;
 }
@@ -323,6 +329,7 @@ gethostnameFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 getcwdFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 {
     int result = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     int index = 0;
     Addr bufPtr = p->getSyscallArg(tc, index);
     unsigned long size = p->getSyscallArg(tc, index);
@@ -347,7 +354,7 @@ getcwdFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         }
     }
 
-    buf.copyOut(tc->getMemProxy());
+    buf.copyOut(tc->getMemProxy(), tcid);
 
     return (result == -1) ? -errno : result;
 }
@@ -359,7 +366,8 @@ readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    int tcid = tc->getCpuPtr()->tcid;
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index), tcid))
         return (TheISA::IntReg)-EFAULT;
 
     // Adjust path for current working directory
@@ -372,7 +380,7 @@ readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
 
     int result = readlink(path.c_str(), (char *)buf.bufferPtr(), bufsiz);
 
-    buf.copyOut(tc->getMemProxy());
+    buf.copyOut(tc->getMemProxy(), tcid);
 
     return (result == -1) ? -errno : result;
 }
@@ -383,7 +391,8 @@ unlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    int tcid = tc->getCpuPtr()->tcid;
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index), tcid))
         return (TheISA::IntReg)-EFAULT;
 
     // Adjust path for current working directory
@@ -400,7 +409,8 @@ mkdirFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    int tcid = tc->getCpuPtr()->tcid;
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index), tcid))
         return (TheISA::IntReg)-EFAULT;
 
     // Adjust path for current working directory
@@ -418,12 +428,13 @@ renameFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string old_name;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(old_name, p->getSyscallArg(tc, index)))
+    int tcid = tc->getCpuPtr()->tcid;
+    if (!tc->getMemProxy().tryReadString(old_name, p->getSyscallArg(tc, index), tcid))
         return -EFAULT;
 
     string new_name;
 
-    if (!tc->getMemProxy().tryReadString(new_name, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(new_name, p->getSyscallArg(tc, index), tcid))
         return -EFAULT;
 
     // Adjust path for current working directory
@@ -440,7 +451,8 @@ truncateFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    int tcid = tc->getCpuPtr()->tcid;
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index), tcid))
         return -EFAULT;
 
     off_t length = p->getSyscallArg(tc, index);
@@ -473,9 +485,10 @@ truncate64Func(SyscallDesc *desc, int num,
         LiveProcess *process, ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     string path;
 
-    if (!tc->getMemProxy().tryReadString(path, process->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(path, process->getSyscallArg(tc, index), tcid))
         return -EFAULT;
 
     int64_t length = process->getSyscallArg(tc, index, 64);
@@ -528,7 +541,8 @@ chownFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    int tcid = tc->getCpuPtr()->tcid;
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index), tcid))
         return -EFAULT;
 
     /* XXX endianess */

@@ -155,7 +155,8 @@ LinuxArmSystem::initState()
     DPRINTF(Loader, "Boot atags was %d bytes in total\n", size << 2);
     DDUMP(Loader, boot_data, size << 2);
 
-    physProxy.writeBlob(params()->atags_addr, boot_data, size << 2);
+    fprintf(stderr, "Warn: LinuxArmSystem's call to writeBlob may be incorrect\n");
+    physProxy.writeBlob(params()->atags_addr, boot_data, size << 2, 0);
 
     for (int i = 0; i < threadContexts.size(); i++) {
         threadContexts[i]->setIntReg(0, 0);

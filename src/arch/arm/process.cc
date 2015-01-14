@@ -284,17 +284,18 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
 
     //Write out the sentry void *
     uint32_t sentry_NULL = 0;
+    fprintf(stderr, "Warn: arm/process.cc's call to writeBlob may be incorrect\n");
     initVirtMem.writeBlob(sentry_base,
-            (uint8_t*)&sentry_NULL, sentry_size);
+            (uint8_t*)&sentry_NULL, sentry_size, 0);
 
     //Fix up the aux vectors which point to other data
     for (int i = auxv.size() - 1; i >= 0; i--) {
         if (auxv[i].a_type == M5_AT_PLATFORM) {
             auxv[i].a_val = platform_base;
-            initVirtMem.writeString(platform_base, platform.c_str());
+            initVirtMem.writeString(platform_base, platform.c_str(), 0);
         } else if (auxv[i].a_type == M5_AT_EXECFN) {
             auxv[i].a_val = aux_data_base;
-            initVirtMem.writeString(aux_data_base, filename.c_str());
+            initVirtMem.writeString(aux_data_base, filename.c_str(), 0);
         } else if (auxv[i].a_type == M5_AT_RANDOM) {
             auxv[i].a_val = aux_random_base;
             // Just leave the value 0, we don't want randomness
@@ -305,19 +306,19 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     for(int x = 0; x < auxv.size(); x++)
     {
         initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
-                (uint8_t*)&(auxv[x].a_type), intSize);
+                (uint8_t*)&(auxv[x].a_type), intSize, 0);
         initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
-                (uint8_t*)&(auxv[x].a_val), intSize);
+                (uint8_t*)&(auxv[x].a_val), intSize, 0);
     }
     //Write out the terminating zeroed auxilliary vector
     const uint64_t zero = 0;
     initVirtMem.writeBlob(auxv_array_base + 2 * intSize * auxv.size(),
-            (uint8_t*)&zero, 2 * intSize);
+            (uint8_t*)&zero, 2 * intSize, 0);
 
-    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
-    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
+    copyStringArray(envp, envp_array_base, env_data_base, initVirtMem, 0);
+    copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem, 0);
 
-    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize);
+    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize, 0);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //Set the stack pointer register

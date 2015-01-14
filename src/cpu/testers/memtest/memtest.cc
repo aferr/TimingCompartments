@@ -209,7 +209,7 @@ MemTest::completeRequest(PacketPtr pkt)
                 exitSimLoop("maximum number of loads reached");
         } else {
             assert(pkt->isWrite());
-            funcProxy.writeBlob(req->getPaddr(), pkt_data, req->getSize());
+            funcProxy.writeBlob(req->getPaddr(), pkt_data, req->getSize(), pkt->threadID);
             numWrites++;
             numWritesStat++;
         }
@@ -321,7 +321,7 @@ MemTest::tick()
         outstandingAddrs.insert(paddr);
 
         // ***** NOTE FOR RON: I'm not sure how to access checkMem. - Kevin
-        funcProxy.readBlob(req->getPaddr(), result, req->getSize());
+        funcProxy.readBlob(req->getPaddr(), result, req->getSize(), tcid);
 
         DPRINTF(MemTest,
                 "id %d initiating %sread at addr %x (blk %x) expecting %x\n",
