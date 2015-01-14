@@ -121,18 +121,18 @@ class BaseBufferArg {
     //
     // copy data into simulator space (read from target memory)
     //
-    virtual bool copyIn(SETranslatingPortProxy &memproxy)
+    virtual bool copyIn(SETranslatingPortProxy &memproxy, int tcid)
     {
-        memproxy.readBlob(addr, bufPtr, size);
+        memproxy.readBlob(addr, bufPtr, size, tcid);
         return true;    // no EFAULT detection for now
     }
 
     //
     // copy data out of simulator space (write to target memory)
     //
-    virtual bool copyOut(SETranslatingPortProxy &memproxy)
+    virtual bool copyOut(SETranslatingPortProxy &memproxy, int tcid)
     {
-        memproxy.writeBlob(addr, bufPtr, size);
+        memproxy.writeBlob(addr, bufPtr, size, tcid);
         return true;    // no EFAULT detection for now
     }
 
@@ -366,7 +366,8 @@ futexFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         }
 
         uint8_t *buf = new uint8_t[sizeof(int)];
-        tc->getMemProxy().readBlob((Addr)uaddr, buf, (int)sizeof(int));
+        int tcid = tc->getCpuPtr()->tcid;
+        tc->getMemProxy().readBlob((Addr)uaddr, buf, (int)sizeof(int), tcid);
         int mem_val = *((int *)buf);
         delete buf;
 
@@ -546,23 +547,23 @@ convertStat64Buf(target_stat &tgt, host_stat64 *host, bool fakeTTY = false)
 template<class OS>
 static void
 copyOutStatBuf(SETranslatingPortProxy &mem, Addr addr,
-        hst_stat *host, bool fakeTTY = false)
+        hst_stat *host, int tcid, bool fakeTTY = false)
 {
     typedef TypedBufferArg<typename OS::tgt_stat> tgt_stat_buf;
     tgt_stat_buf tgt(addr);
     convertStatBuf<tgt_stat_buf, hst_stat>(tgt, host, fakeTTY);
-    tgt.copyOut(mem);
+    tgt.copyOut(mem, tcid);
 }
 
 template<class OS>
 static void
 copyOutStat64Buf(SETranslatingPortProxy &mem, Addr addr,
-        hst_stat64 *host, bool fakeTTY = false)
+        hst_stat64 *host, int tcid, bool fakeTTY = false)
 {
     typedef TypedBufferArg<typename OS::tgt_stat64> tgt_stat_buf;
     tgt_stat_buf tgt(addr);
     convertStat64Buf<tgt_stat_buf, hst_stat64>(tgt, host, fakeTTY);
-    tgt.copyOut(mem);
+    tgt.copyOut(mem, tcid);
 }
 
 /// Target ioctl() handler.  For the most part, programs call ioctl()
@@ -603,8 +604,9 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index)))
+                process->getSyscallArg(tc, index), tcid))
         return -EFAULT;
 
     if (path == "/dev/sysdev0") {
@@ -666,13 +668,14 @@ sysinfoFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
 
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     TypedBufferArg<typename OS::tgt_sysinfo>
         sysinfo(process->getSyscallArg(tc, index));   
 
     sysinfo->uptime=seconds_since_epoch;
     sysinfo->totalram=process->system->memSize();
 
-    sysinfo.copyOut(tc->getMemProxy());
+    sysinfo.copyOut(tc->getMemProxy(), tcid);
 
     return 0;
 }
@@ -686,8 +689,9 @@ chmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index), tcid)) {
         return -EFAULT;
     }
 
@@ -792,8 +796,9 @@ statFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index), tcid)) {
         return -EFAULT;
     }
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -807,7 +812,7 @@ statFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, tcid);
 
     return 0;
 }
@@ -822,8 +827,9 @@ stat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index)))
+                process->getSyscallArg(tc, index), tcid))
         return -EFAULT;
     Addr bufPtr = process->getSyscallArg(tc, index);
 
@@ -841,7 +847,7 @@ stat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, tcid);
 
     return 0;
 }
@@ -854,6 +860,7 @@ fstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
             ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     int fd = process->getSyscallArg(tc, index);
     Addr bufPtr = process->getSyscallArg(tc, index);
     if (fd < 0 || process->sim_fd(fd) < 0) {
@@ -872,7 +879,7 @@ fstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, (fd == 1));
+    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, tcid, (fd == 1));
 
     return 0;
 }
@@ -887,8 +894,9 @@ lstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index), tcid)) {
         return -EFAULT;
     }
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -902,7 +910,7 @@ lstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, tcid);
 
     return 0;
 }
@@ -916,8 +924,9 @@ lstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index), tcid)) {
         return -EFAULT;
     }
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -936,7 +945,7 @@ lstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf);
+    copyOutStat64Buf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, tcid);
 
     return 0;
 }
@@ -948,6 +957,7 @@ fstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     int fd = process->sim_fd(process->getSyscallArg(tc, index));
     Addr bufPtr = process->getSyscallArg(tc, index);
 
@@ -962,7 +972,7 @@ fstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, (fd == 1));
+    copyOutStatBuf<OS>(tc->getMemProxy(), bufPtr, &hostBuf, tcid, (fd == 1));
 
     return 0;
 }
@@ -977,8 +987,9 @@ statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index), tcid)) {
         return -EFAULT;
     }
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -992,7 +1003,7 @@ statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatfsBuf(tc->getMemProxy(), bufPtr, &hostBuf);
+    OS::copyOutStatfsBuf(tc->getMemProxy(), bufPtr, &hostBuf, tcid);
 
     return 0;
 }
@@ -1005,6 +1016,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     int fd = process->sim_fd(process->getSyscallArg(tc, index));
     Addr bufPtr = process->getSyscallArg(tc, index);
 
@@ -1017,7 +1029,7 @@ fstatfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     if (result < 0)
         return -errno;
 
-    OS::copyOutStatfsBuf(tc->getMemProxy(), bufPtr, &hostBuf);
+    OS::copyOutStatfsBuf(tc->getMemProxy(), bufPtr, &hostBuf, tcid);
 
     return 0;
 }
@@ -1042,13 +1054,14 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     struct iovec hiov[count];
     for (size_t i = 0; i < count; ++i) {
         typename OS::tgt_iovec tiov;
+        int tcid = tc->getCpuPtr()->tcid;
 
         p.readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
-                   (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec));
+                   (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec), tcid);
         hiov[i].iov_len = TheISA::gtoh(tiov.iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
         p.readBlob(TheISA::gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
-                   hiov[i].iov_len);
+                   hiov[i].iov_len, tcid);
     }
 
     int result = writev(process->sim_fd(fd), hiov, count);
@@ -1159,6 +1172,7 @@ getrlimitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     unsigned resource = process->getSyscallArg(tc, index);
     TypedBufferArg<typename OS::rlimit> rlp(process->getSyscallArg(tc, index));
 
@@ -1184,7 +1198,7 @@ getrlimitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
             break;
     }
 
-    rlp.copyOut(tc->getMemProxy());
+    rlp.copyOut(tc->getMemProxy(), tcid);
     return 0;
 }
 
@@ -1195,6 +1209,7 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     TypedBufferArg<typename OS::timeval> tp(process->getSyscallArg(tc, index));
 
     getElapsedTime(tp->tv_sec, tp->tv_usec);
@@ -1202,7 +1217,7 @@ gettimeofdayFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     tp->tv_sec = TheISA::htog(tp->tv_sec);
     tp->tv_usec = TheISA::htog(tp->tv_usec);
 
-    tp.copyOut(tc->getMemProxy());
+    tp.copyOut(tc->getMemProxy(), tcid);
 
     return 0;
 }
@@ -1217,14 +1232,15 @@ utimesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     std::string path;
 
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index), tcid)) {
         return -EFAULT;
     }
 
     TypedBufferArg<typename OS::timeval [2]>
         tp(process->getSyscallArg(tc, index));
-    tp.copyIn(tc->getMemProxy());
+    tp.copyIn(tc->getMemProxy(), tcid);
 
     struct timeval hostTimeval[2];
     for (int i = 0; i < 2; ++i)
@@ -1250,6 +1266,7 @@ getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
               ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     int who = process->getSyscallArg(tc, index); // THREAD, SELF, or CHILDREN
     TypedBufferArg<typename OS::rusage> rup(process->getSyscallArg(tc, index));
 
@@ -1290,7 +1307,7 @@ getrusageFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
              who);
     }
 
-    rup.copyOut(tc->getMemProxy());
+    rup.copyOut(tc->getMemProxy(), tcid);
 
     return 0;
 }
@@ -1302,6 +1319,7 @@ timesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
            ThreadContext *tc)
 {
     int index = 0;
+    int tcid = tc->getCpuPtr()->tcid;
     TypedBufferArg<typename OS::tms> bufp(process->getSyscallArg(tc, index));
 
     // Fill in the time structure (in clocks)
@@ -1315,7 +1333,7 @@ timesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     bufp->tms_utime = TheISA::htog(bufp->tms_utime);
 
     // Write back
-    bufp.copyOut(tc->getMemProxy());
+    bufp.copyOut(tc->getMemProxy(), tcid);
 
     // Return clock ticks since system boot
     return clocks;
@@ -1337,7 +1355,8 @@ timeFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         typename OS::time_t t = sec;
         t = TheISA::htog(t);
         SETranslatingPortProxy &p = tc->getMemProxy();
-        p.writeBlob(taddr, (uint8_t*)&t, (int)sizeof(typename OS::time_t));
+        int tcid = tc->getCpuPtr()->tcid;
+        p.writeBlob(taddr, (uint8_t*)&t, (int)sizeof(typename OS::time_t), tcid);
     }
     return sec;
 }

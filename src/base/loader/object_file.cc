@@ -67,14 +67,16 @@ ObjectFile::~ObjectFile()
 bool
 ObjectFile::loadSection(Section *sec, PortProxy& memProxy, Addr addrMask)
 {
+    fprintf( stderr, "warn: ObjectFile::loadSection, unsure of tcid\n");
+    int tcid = 0;
     if (sec->size != 0) {
         Addr addr = sec->baseAddr & addrMask;
         if (sec->fileImage) {
-            memProxy.writeBlob(addr, sec->fileImage, sec->size);
+            memProxy.writeBlob(addr, sec->fileImage, sec->size, tcid);
         }
         else {
             // no image: must be bss
-            memProxy.memsetBlob(addr, 0, sec->size);
+            memProxy.memsetBlob(addr, 0, sec->size, tcid);
         }
     }
     return true;

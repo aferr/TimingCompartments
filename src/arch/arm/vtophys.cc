@@ -51,6 +51,7 @@
 #include "base/chunk_generator.hh"
 #include "base/trace.hh"
 #include "cpu/thread_context.hh"
+#include "cpu/base.hh"
 #include "mem/fs_translating_port_proxy.hh"
 
 using namespace std;
@@ -65,6 +66,7 @@ ArmISA::vtophys(Addr vaddr)
 Addr
 ArmISA::vtophys(ThreadContext *tc, Addr addr)
 {
+    int tcid = tc->getCpuPtr()->tcid;
     SCTLR sctlr = tc->readMiscReg(MISCREG_SCTLR);
     if (!sctlr.m) {
         // Translation is currently disabled PA == VA
@@ -105,7 +107,7 @@ ArmISA::vtophys(ThreadContext *tc, Addr addr)
     Addr l1desc_addr = mbits(ttbr, 31, 14-N) | (bits(addr,31-N,20) << 2);
 
     TableWalker::L1Descriptor l1desc;
-    l1desc.data = port.read<uint32_t>(l1desc_addr);
+    l1desc.data = port.read<uint32_t>(l1desc_addr, tcid);
     if (l1desc.type() == TableWalker::L1Descriptor::Ignore ||
             l1desc.type() == TableWalker::L1Descriptor::Reserved) {
         warn("Unable to translate virtual address: %#x\n", addr);
@@ -117,7 +119,7 @@ ArmISA::vtophys(ThreadContext *tc, Addr addr)
     // Didn't find it at the first level, try againt
     Addr l2desc_addr = l1desc.l2Addr() | (bits(addr, 19, 12) << 2);
     TableWalker::L2Descriptor l2desc;
-    l2desc.data = port.read<uint32_t>(l2desc_addr);
+    l2desc.data = port.read<uint32_t>(l2desc_addr, tcid);
 
     if (l2desc.invalid()) {
         warn("Unable to translate virtual address: %#x\n", addr);

@@ -460,12 +460,14 @@ BaseRemoteGDB::read(Addr vaddr, size_t size, char *data)
 
     DPRINTF(GDBRead, "read:  addr=%#x, size=%d", vaddr, size);
 
+    fprintf( stderr, "warn: BaseRemoteGDB::read unsure of tcid\n");
+    int tcid = 0;
     if (FullSystem) {
         FSTranslatingPortProxy &proxy = context->getVirtProxy();
-        proxy.readBlob(vaddr, (uint8_t*)data, size);
+        proxy.readBlob(vaddr, (uint8_t*)data, size, tcid);
     } else {
         SETranslatingPortProxy &proxy = context->getMemProxy();
-        proxy.readBlob(vaddr, (uint8_t*)data, size);
+        proxy.readBlob(vaddr, (uint8_t*)data, size, tcid);
     }
 
 #if TRACING_ON
@@ -488,6 +490,8 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
 {
     static Addr lastaddr = 0;
     static size_t lastsize = 0;
+    fprintf( stderr, "warn: BaseRemoteGDB::write unsure of tcid\n");
+    int tcid = 0;
 
     if (vaddr < 10) {
       DPRINTF(GDBWrite, "write: writing memory location zero!\n");
@@ -505,10 +509,10 @@ BaseRemoteGDB::write(Addr vaddr, size_t size, const char *data)
     }
     if (FullSystem) {
         FSTranslatingPortProxy &proxy = context->getVirtProxy();
-        proxy.writeBlob(vaddr, (uint8_t*)data, size);
+        proxy.writeBlob(vaddr, (uint8_t*)data, size, tcid);
     } else {
         SETranslatingPortProxy &proxy = context->getMemProxy();
-        proxy.writeBlob(vaddr, (uint8_t*)data, size);
+        proxy.writeBlob(vaddr, (uint8_t*)data, size, tcid);
     }
 
     return true;
