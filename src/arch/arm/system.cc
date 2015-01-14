@@ -41,6 +41,7 @@
  */
 
 #include <iostream>
+#include <stdio.h>
 
 #include "arch/arm/system.hh"
 #include "base/loader/object_file.hh"

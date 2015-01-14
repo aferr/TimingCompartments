@@ -53,6 +53,7 @@
 #include "sim/byteswap.hh"
 #include "sim/process_impl.hh"
 #include "sim/system.hh"
+#include <stdio.h>
 
 using namespace std;
 using namespace ArmISA;
