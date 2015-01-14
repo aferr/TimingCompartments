@@ -19,7 +19,11 @@ multiprocesses = setup_workloads(options)
 (CPUClass,test_mem_mode,FutureClass) = setup_cpus(options)
 systembus = setup_systembus(options)
 
-system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)],
+def cpu_tcid(i):
+    exec("ret = options.p"+str(i)+"threadID")
+    return ret
+
+system = System(cpu = [CPUClass(cpu_id=i, tcid=cpu_tcid(i)) for i in xrange(options.num_cpus)],
                 physmem = DRAM,
                 membus =  systembus,
                 mem_mode = test_mem_mode,
