@@ -1524,6 +1524,19 @@ Cache<TagStore>::getNextMSHR( int threadID )
     return NULL;
 }
 
+template<class TagStore>
+void
+Cache<TagStore>::explicitWriteback( int tcid )
+{
+    MSHR *mshr = getWriteBuffer( tcid )->getNextMSHR();
+    PacketPtr pkt = mshr->getTarget()->pkt;
+    pkt->senderState = mshr;
+    memSidePort->sendTimingReq(pkt);
+    markInService(mshr, pkt);
+    if( blocked && !getWriteBuffer(tcid)->havePending() ){
+      clearBlocked(Blocked_DrainingWritebacks);
+    }
+}
 
 template<class TagStore>
 PacketPtr

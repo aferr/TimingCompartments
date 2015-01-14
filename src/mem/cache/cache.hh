@@ -128,7 +128,8 @@ class Cache : public BaseCache
 
     void drainWritebacks( int tcid ){
       for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
-        memSidePort->requestBus(Request_WB, nextCycle(), false);
+        //memSidePort->requestBus(Request_WB, nextCycle(), tcid, false);
+        explicitWriteback( tcid );
       }
     }
 
@@ -143,7 +144,7 @@ class Cache : public BaseCache
       }
     }
 
-    virtual bool isL3(){ return params->split_mshrq; }
+    virtual void explicitWriteback(int tcid);
 
   protected:
 
@@ -205,6 +206,7 @@ class Cache : public BaseCache
          * requests.
          */
         virtual void sendDeferredPacket();
+
 
         virtual std::string print_elements(){
             MSHR * m = cache.getNextMSHR(ID);

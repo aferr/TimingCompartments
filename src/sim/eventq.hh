@@ -440,8 +440,6 @@ class EventManager
     EventManager(EventManager *em) : eventq(em->eventq) {}
     EventManager(EventQueue *eq) : eventq(eq) {}
 
-    virtual bool isL3(){ return false; }
-
     EventQueue *
     eventQueue() const
     {
