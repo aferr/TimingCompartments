@@ -16,6 +16,8 @@ class SplitMSHRCache : public Cache<TagStore>
     public:
     SplitMSHRCache( const Params *p, TagStore *tags );
 
+    virtual bool isSplitMSHR(){ return true; }
+
     protected:
     class SplitMemSidePort : public Cache<TagStore>::MemSidePort{
         private:
@@ -24,6 +26,9 @@ class SplitMSHRCache : public Cache<TagStore>
         public:
         virtual void recvRetry( int threadID ){
             this->reqQueues[threadID]->retry();
+        }
+        virtual void recvRetry(){
+            panic("recvRetry() without tcid called in SplitMemSidePort\n");
         }
 
         virtual void requestBus(BaseCache::RequestCause cause, Tick time, int 

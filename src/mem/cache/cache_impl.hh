@@ -1771,14 +1771,15 @@ template<class TagStore>
 void
 Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
 {
+    int tcid = cache.isSplitMSHR() ? ID : cache.params->cpuid;
 	// if we have a response packet waiting we have to start with that
     //TODO This should get a TID based on the bus turn
 #ifdef DEBUG_TP
     bool isInterestingTime = (curTick() > interesting_era_l) &&
       (curTick() < interesting_era_h);
     if( isInterestingTime && cache.params->split_mshrq){
-      printf("interesting sendDeferred with ID=%i, @%lu printing transmitlist:\n%s",
-          ID, curTick(), print(transmitList).c_str());
+      printf("interesting sendDeferred with tcid=%i, @%lu printing transmitlist:\n%s",
+          tcid, curTick(), print(transmitList).c_str());
     }
 #endif
     if (deferredPacketReady()) {
@@ -1786,7 +1787,7 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
         trySendTiming();
     } else {
         // check for request packets (requests & writebacks)
-        PacketPtr pkt = cache.getTimingPacket( ID );
+        PacketPtr pkt = cache.getTimingPacket( tcid );
 #ifdef DEBUG_TP
         if(isInterestingTime && cache.params->split_mshrq){
             printf("getTimingPacket produced packet %s @%lu\n",
@@ -1837,10 +1838,10 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
     // next send, not only looking at the response transmit list, but
     // also considering when the next MSHR is ready
     if (!waitingOnRetry) {
-        scheduleSend(cache.nextMSHRReadyTime( ID ));
+        scheduleSend(cache.nextMSHRReadyTime( tcid ));
     }
 
-    if(cache.blocked && !cache.getWriteBuffer(ID)->havePending() ){
+    if(cache.blocked && !cache.getWriteBuffer(tcid)->havePending() ){
       cache.clearBlocked(Blocked_DrainingWritebacks);
     }
 }
