@@ -82,7 +82,7 @@ SimpleTimingPort::recvTimingReq(PacketPtr pkt)
         // recvAtomic() should already have turned packet into
         // atomic response
         assert(pkt->isResponse());
-        schedTimingResp(pkt, curTick() + latency);
+        schedTimingResp(pkt, curTick() + latency, pkt->threadID);
     } else {
         /// @todo nominally we should just delete the packet here.
         /// Until 4-phase stuff we can't because the sending
