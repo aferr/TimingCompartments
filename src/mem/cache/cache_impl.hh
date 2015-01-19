@@ -1774,7 +1774,10 @@ void
 Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
 {
     int tcid = cache.isSplitMSHR() ? ID : cache.params->cpuid;
-    sendDeferredPacketDraining(tcid);
+    if(cache.isDraining()){
+        sendDeferredPacketDraining(tcid);
+        return;
+    }
 
 	// if we have a response packet waiting we have to start with that
 #ifdef DEBUG_TP
@@ -1854,20 +1857,25 @@ void
 Cache<TagStore>::MemSidePacketQueue::sendDeferredPacketDraining(int tcid)
 {
     MSHR *wb = cache.getWriteBuffer(tcid)->getNextMSHR();
-    PacketPtr pkt = wb->getTarget()->pkt;
-    pkt->senderState = wb;
-   
-    waitingOnRetry = !masterPort.sendTimingReq(pkt);
-
-    if(!waitingOnRetry){
-        scheduleSend(cache.nextMSHRReadyTime(tcid));
-        cache.markInService(wb, pkt);
-
-        if( cache.blocked && !cache.getWriteBuffer(tcid)->havePending() ){
-          cache.clearBlocked(Blocked_DrainingWritebacks);
-        }
+    PacketPtr pkt = NULL;
+    if(wb != NULL){
+        pkt = wb->getTarget()->pkt;
+        pkt->senderState = wb;
     }
 
+    if(pkt != NULL){
+        waitingOnRetry = !masterPort.sendTimingReq(pkt);
+        if(!waitingOnRetry){
+            scheduleSend(cache.nextMSHRReadyTime(tcid));
+            cache.markInService(wb, pkt);
+        }
+    } else {
+        waitingOnRetry = false;
+    }
+   
+    if( cache.blocked && !cache.getWriteBuffer(tcid)->havePending() ){
+      cache.clearBlocked(Blocked_DrainingWritebacks);
+    }
 }
 
 template<class TagStore>

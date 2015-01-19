@@ -228,7 +228,7 @@ def sav_script( options = {} )
     script.puts("    --numcpus=#{options[:numcpus]} \\")
     script.puts("    --cpu-type=#{cpu} \\")
     script.puts("    --caches \\")
-    script.puts("    --l2cache \\")
+    script.puts("    --l2cache \\") unless options[:nol2]
     unless cacheSize == 0
         script.puts("    --l3cache \\")
         script.puts("    --l3_size=#{cacheSize}MB\\")
@@ -296,24 +296,24 @@ def sav_script( options = {} )
     l2tracefile  = options[:l2tracefile] || "#{result_dir}/l2trace_#{filename}.txt"
     script.puts("    --l2tracefile #{l2tracefile}\\") if options[:do_cache_trace]
 
-    script.puts("    --dramsim2 \\")
-    #script.puts("    --tpturnlength=#{tl0} \\") unless tl0==0 || diffperiod
-    script.puts("    --devicecfg="+
-                "./ext/DRAMSim2/ini/#{$device} \\")
-    if tl0== 0
-        script.puts("    --systemcfg=./ext/DRAMSim2/system_ft.ini \\")
-    else
-        script.puts("    --systemcfg=./ext/DRAMSim2/system_#{scheme}.ini \\")
-    end
-    script.puts("    --outputfile=/dev/null \\")
-
     numcpus.times do |n|
       script.puts "    --p#{n}=#{invoke(options[eval ":p#{n}"])} \\"
     end
 
-    script.puts("   --diffperiod \\")
-    script.puts("   --p0period=#{tl0} \\")
-    script.puts("   --p1period=#{tl1} \\")
+    unless options[:nodramsim]
+      script.puts("    --dramsim2 \\")
+      #script.puts("    --tpturnlength=#{tl0} \\") unless tl0==0 || diffperiod
+      script.puts("    --devicecfg="+
+                  "./ext/DRAMSim2/ini/#{$device} \\")
+      script.puts("    --systemcfg=./ext/DRAMSim2/system_#{scheme}.ini \\") unless tl0==0
+      script.puts("    --systemcfg=./ext/DRAMSim2/system_ft.ini \\") if tl0==0
+      script.puts("    --outputfile=/dev/null \\")
+
+
+      script.puts("   --diffperiod \\")
+      script.puts("   --p0period=#{tl0} \\")
+      script.puts("   --p1period=#{tl1} \\")
+    end
 
     script.puts("    > #{result_dir}/stdout_#{filename}.out")
     script_abspath = File.expand_path(script.path)

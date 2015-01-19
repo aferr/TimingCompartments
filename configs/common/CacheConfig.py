@@ -180,8 +180,6 @@ def connect_l2( options, system ):
             system.l2[i].cpu_side = system.tol2bus[i].master
             if not options.l3cache:
                 system.l2[i].mem_side = system.membus.slave
-        else:
-            system.cpu[i].connectAllPorts(system.membus)
 
 
 def config_cache(options, system):
@@ -200,12 +198,16 @@ def config_cache(options, system):
     #-------------------------------------------------------------------------
     
     config_l1( options, system )
+    if not options.l2cache:
+        for i in xrange(options.num_cpus):
+            system.cpu[i].connectAllPorts(system.membus)
 
     #-------------------------------------------------------------------------
     # L2
     #-------------------------------------------------------------------------
-    config_l2( options, system )
-    connect_l2( options, system )
+    if options.l2cache: 
+        config_l2( options, system )
+        connect_l2( options, system )
 
     if options.l3cache:
         l3config.connect_l2()

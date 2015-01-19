@@ -70,117 +70,116 @@ def add_options():
     Options.addCommonOptions(parser)
     Options.addSEOptions(parser)
     parser.add_option("--dramsim2", action="store_true")
-    if '--dramsim2' in sys.argv:
-        parser.add_option("--devicecfg", type="string", default="",
-                help="device configuration file to be used by DRAMSim2")
-        parser.add_option("--systemcfg", type="string", default="", 
-                help="system configuration file to be used by DRAMSim2")
-        parser.add_option("--tpturnlength", type="string", default="12",
-                help="Turn length for TP. Unused if another scheme is used.")
-        parser.add_option("--outputfile", type="string", default="",
-                help="output file for DRAMSim results."),
-        parser.add_option("--fixaddr", action="store_true", default=False,
-        		help="fixed the address mapping of each application")
-        parser.add_option("--diffperiod", action="store_true", default=False,
-        		help="use different periods for different security domains")
-        parser.add_option("--p0period", type="int", default=64,
-        		help="period for security domain 0")
-        parser.add_option("--p1period", type="int", default=64,
-        		help="period for security domain 1")
-        parser.add_option("--dramoffset", type="int", default=0,
-        		help="dram offset")
-        # bus turn length and offset
-        parser.add_option("--l2l3req_tl", type="int", default=1,
-                help="l2l3 bus request layer turn length")
-        parser.add_option("--l2l3req_offset", type="int", default=0,
-                help="l2l3 bus request layer offset")
-        parser.add_option("--l2l3resp_tl", type="int", default=1,
-                help="l2l3 bus response layer turn length")
-        parser.add_option("--l2l3resp_offset", type="int", default=0,
-                help="l2l3 bus response layer offset")
-        parser.add_option("--membusreq_tl", type="int", default=1,
-                help="membus request layer turn length")
-        parser.add_option("--membusreq_offset", type="int", default=0,
-                help="membus request layer offset")
-        parser.add_option("--membusresp_tl", type="int", default=1,
-                help="membus response layer turn length")
-        parser.add_option("--membusresp_offset", type="int", default=0,
-                help="membus response layer offset")
+    parser.add_option("--devicecfg", type="string", default="",
+            help="device configuration file to be used by DRAMSim2")
+    parser.add_option("--systemcfg", type="string", default="", 
+            help="system configuration file to be used by DRAMSim2")
+    parser.add_option("--tpturnlength", type="string", default="12",
+            help="Turn length for TP. Unused if another scheme is used.")
+    parser.add_option("--outputfile", type="string", default="",
+            help="output file for DRAMSim results."),
+    parser.add_option("--fixaddr", action="store_true", default=False,
+    		help="fixed the address mapping of each application")
+    parser.add_option("--diffperiod", action="store_true", default=False,
+    		help="use different periods for different security domains")
+    parser.add_option("--p0period", type="int", default=64,
+    		help="period for security domain 0")
+    parser.add_option("--p1period", type="int", default=64,
+    		help="period for security domain 1")
+    parser.add_option("--dramoffset", type="int", default=0,
+    		help="dram offset")
+    # bus turn length and offset
+    parser.add_option("--l2l3req_tl", type="int", default=1,
+            help="l2l3 bus request layer turn length")
+    parser.add_option("--l2l3req_offset", type="int", default=0,
+            help="l2l3 bus request layer offset")
+    parser.add_option("--l2l3resp_tl", type="int", default=1,
+            help="l2l3 bus response layer turn length")
+    parser.add_option("--l2l3resp_offset", type="int", default=0,
+            help="l2l3 bus response layer offset")
+    parser.add_option("--membusreq_tl", type="int", default=1,
+            help="membus request layer turn length")
+    parser.add_option("--membusreq_offset", type="int", default=0,
+            help="membus request layer offset")
+    parser.add_option("--membusresp_tl", type="int", default=1,
+            help="membus response layer turn length")
+    parser.add_option("--membusresp_offset", type="int", default=0,
+            help="membus response layer offset")
 
-        for i in range(8):
-            parser.add_option("--p{0}".format(i), type="string",
-                    help="workload number n")
-            parser.add_option("--p{0}threadID".format(i), type="int", default=i,
-                    help="timing compartment id for p{0}".format(i))
-                
-        parser.add_option("--gentrace", action="store_true", default=False,
-                help="generate the trace for benchmarks.")
-        parser.add_option("--numpids", type="int", default=2,
-                help="determine the number of PIDs")
-        parser.add_option("--numcpus", type="int", default=None,
-                help="set the number of cpus")
-        parser.add_option("--l3tracefile", type="string", default="l3trace.txt",
-                help="Output file for l3 cache traces")
-        parser.add_option("--l2tracefile", type="string", default="l2trace.txt",
-                help="Output file for l2 cache traces")
-        parser.add_option("--use_set_part", action="store_true", default=False,
-                help="Determines if the L3 cache should be set partitioned")
-        parser.add_option("--use_way_part", action="store_true", default=False,
-                help="Determines if the L3 cache should be way partitioned")
-        parser.add_option("--rr_nc", action="store_true", default=False,
-                help="Should a round robin noncoherent bus be used?" )
-        parser.add_option("--rr_l2l3", action="store_true", default=False,
-                help="Should a round robin noncoherent bus be used for l2l3?" )
-        parser.add_option("--rr_mem", action="store_true", default=False,
-                help="Should a round robin noncoherent bus be used for membus?" )
-        parser.add_option("--split_mshr", action="store_true", default=False,
-                help="Determines if L3 has separate MSHR Queues per TC")
-        parser.add_option("--split_rport", action="store_true", default=False,
-                help="Determines if L3 has separate Response Port Queues per TC")
-        parser.add_option("--do_cache_trace", action="store_true", default=False,
-                help="Determines if cache traces should be saved and reported")
-        parser.add_option("--do_bus_trace", action="store_true", default=False,
-                help="Save bus traces or not" )
-        parser.add_option("--membustracefile", type="string", default="bustrace.txt",
-                help="Output file for bus traces")
-        parser.add_option("--l2l3bustracefile", type="string", default="bustrace.txt",
-                help="Output file for bus traces")
-        parser.add_option("--do_mem_trace", action="store_true", default=False,
-                help= "do memory trace" )
-        parser.add_option("--mem_trace_file", type="string", default="memtrace.txt",
-                help="memory trace file")
-        parser.add_option("--addr_trace", action="store_true", default=False,
-                help="do detailed trace for address")
-        parser.add_option("--trace_addr", type="int", default=0,
-                help="address for detailed trace")
-        parser.add_option("--nocwf", action="store_true", default=False,
-                help="Enable to turn off critical word first timing")
-        parser.add_option("--do_flush", action="store_true", default=False,
-                help="Flush the cache occasionally to model context switching.")
-        parser.add_option("--flushRatio", type="float", default=1,
-                help="flusing ratio of the insecure cache.")
-        parser.add_option("--reserve_flush", action="store_true", default=False,
-                help="reserve bandwidth when flushing.")
-        parser.add_option("--context_sw_freq", type="int", default=1000,
-                help="Frequency of context switches in us.")
+    for i in range(8):
+        parser.add_option("--p{0}".format(i), type="string",
+                help="workload number n")
+        parser.add_option("--p{0}threadID".format(i), type="int", default=i,
+                help="timing compartment id for p{0}".format(i))
+            
+    parser.add_option("--gentrace", action="store_true", default=False,
+            help="generate the trace for benchmarks.")
+    parser.add_option("--numpids", type="int", default=2,
+            help="determine the number of PIDs")
+    parser.add_option("--numcpus", type="int", default=None,
+            help="set the number of cpus")
+    parser.add_option("--l3tracefile", type="string", default="l3trace.txt",
+            help="Output file for l3 cache traces")
+    parser.add_option("--l2tracefile", type="string", default="l2trace.txt",
+            help="Output file for l2 cache traces")
+    parser.add_option("--use_set_part", action="store_true", default=False,
+            help="Determines if the L3 cache should be set partitioned")
+    parser.add_option("--use_way_part", action="store_true", default=False,
+            help="Determines if the L3 cache should be way partitioned")
+    parser.add_option("--rr_nc", action="store_true", default=False,
+            help="Should a round robin noncoherent bus be used?" )
+    parser.add_option("--rr_l2l3", action="store_true", default=False,
+            help="Should a round robin noncoherent bus be used for l2l3?" )
+    parser.add_option("--rr_mem", action="store_true", default=False,
+            help="Should a round robin noncoherent bus be used for membus?" )
+    parser.add_option("--split_mshr", action="store_true", default=False,
+            help="Determines if L3 has separate MSHR Queues per TC")
+    parser.add_option("--split_rport", action="store_true", default=False,
+            help="Determines if L3 has separate Response Port Queues per TC")
+    parser.add_option("--do_cache_trace", action="store_true", default=False,
+            help="Determines if cache traces should be saved and reported")
+    parser.add_option("--do_bus_trace", action="store_true", default=False,
+            help="Save bus traces or not" )
+    parser.add_option("--membustracefile", type="string", default="bustrace.txt",
+            help="Output file for bus traces")
+    parser.add_option("--l2l3bustracefile", type="string", default="bustrace.txt",
+            help="Output file for bus traces")
+    parser.add_option("--do_mem_trace", action="store_true", default=False,
+            help= "do memory trace" )
+    parser.add_option("--mem_trace_file", type="string", default="memtrace.txt",
+            help="memory trace file")
+    parser.add_option("--addr_trace", action="store_true", default=False,
+            help="do detailed trace for address")
+    parser.add_option("--trace_addr", type="int", default=0,
+            help="address for detailed trace")
+    parser.add_option("--nocwf", action="store_true", default=False,
+            help="Enable to turn off critical word first timing")
+    parser.add_option("--do_flush", action="store_true", default=False,
+            help="Flush the cache occasionally to model context switching.")
+    parser.add_option("--flushRatio", type="float", default=1,
+            help="flusing ratio of the insecure cache.")
+    parser.add_option("--reserve_flush", action="store_true", default=False,
+            help="reserve bandwidth when flushing.")
+    parser.add_option("--context_sw_freq", type="int", default=1000,
+            help="Frequency of context switches in us.")
 
-        (options, args) = parser.parse_args()
+    (options, args) = parser.parse_args()
 
-        if '--ruby' in sys.argv:
-            Ruby.define_options(parser)
+    if '--ruby' in sys.argv:
+        Ruby.define_options(parser)
 
-        #Allow rr_nc to apply rr to both buses
-        if options.rr_nc :
-            options.rr_l2l3 = True 
-            options.rr_mem  = True
+    #Allow rr_nc to apply rr to both buses
+    if options.rr_nc :
+        options.rr_l2l3 = True 
+        options.rr_mem  = True
 
-        options.num_cpus = ( options.numpids if (options.numcpus == None)
-            else options.numcpus )
+    options.num_cpus = ( options.numpids if (options.numcpus == None)
+        else options.numcpus )
 
-        if args:
-            print "Error: script doesn't take any positional arguments"
-            sys.exit(1)
-        return options
+    if args:
+        print "Error: script doesn't take any positional arguments"
+        sys.exit(1)
+    return options
 
 
 ###############################################################################

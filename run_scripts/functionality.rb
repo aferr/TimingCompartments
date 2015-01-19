@@ -174,4 +174,20 @@ module RunScripts
       )
     end
 
+    def test_simple_flush
+        parallel_local(
+            fastforward: 0,
+            maxinsts: 10**7,
+            schemes: %w[none],
+            nametag: "simple_flush",
+            #do_flush: true,
+            context_sw_freq: 10**5,
+            benchmarks: %w[mcf],
+            nol2: true,
+            nodramsim: true,
+            cacheSize: 0,
+            # num_wl: 2
+        )
+    end
+
 end
