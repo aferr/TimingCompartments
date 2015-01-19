@@ -1687,7 +1687,9 @@ bool
 Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
     // always let inhibited requests through even if blocked
-    if (!pkt->isWriteback() && !pkt->memInhibitAsserted() && blocked) {
+    if (!(pkt->isWriteback() && cache->isDraining()) &&
+            !pkt->memInhibitAsserted() && blocked) 
+    {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
         return false;
@@ -1772,8 +1774,9 @@ void
 Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
 {
     int tcid = cache.isSplitMSHR() ? ID : cache.params->cpuid;
+    sendDeferredPacketDraining(tcid);
+
 	// if we have a response packet waiting we have to start with that
-    //TODO This should get a TID based on the bus turn
 #ifdef DEBUG_TP
     bool isInterestingTime = (curTick() > interesting_era_l) &&
       (curTick() < interesting_era_h);
@@ -1844,6 +1847,27 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
     if(cache.blocked && !cache.getWriteBuffer(tcid)->havePending() ){
       cache.clearBlocked(Blocked_DrainingWritebacks);
     }
+}
+
+template<class TagStore>
+void
+Cache<TagStore>::MemSidePacketQueue::sendDeferredPacketDraining(int tcid)
+{
+    MSHR *wb = cache.getWriteBuffer(tcid)->getNextMSHR();
+    PacketPtr pkt = wb->getTarget()->pkt;
+    pkt->senderState = wb;
+   
+    waitingOnRetry = !masterPort.sendTimingReq(pkt);
+
+    if(!waitingOnRetry){
+        scheduleSend(cache.nextMSHRReadyTime(tcid));
+        cache.markInService(wb, pkt);
+
+        if( cache.blocked && !cache.getWriteBuffer(tcid)->havePending() ){
+          cache.clearBlocked(Blocked_DrainingWritebacks);
+        }
+    }
+
 }
 
 template<class TagStore>

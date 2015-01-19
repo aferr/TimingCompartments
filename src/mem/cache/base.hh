@@ -527,6 +527,12 @@ class BaseCache : public MemObject
         return blocked != 0;
     }
 
+    bool isDraining()
+    {
+        uint8_t flag = 1 << Blocked_DrainingWritebacks;
+        return (blocked & flag) != 0;
+    }
+
     /**
      * Marks the access path of the cache as blocked for the given cause. This
      * also sets the blocked flag in the slave interface.

@@ -244,7 +244,7 @@ void LRU::flush(uint64_t tid=0 ){
   for( int i=0; i < flushNumBlocks; i++ ){
     if( blks[i].isDirty() && blks[i].isValid() ){
        _cache->allocateWriteBuffer(_cache->writebackBlk(&blks[i], cpuid),
-           curTick(), false);
+           curTick(), true );
       writebacks++;
     } else {
       invalidateBlk( &blks[i], cpuid );

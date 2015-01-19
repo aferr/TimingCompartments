@@ -115,15 +115,13 @@ class Cache : public BaseCache
       if( !(params->use_way_part) && params->cpuid != tcid ) return;
       tags->flush(tcid);
       memSidePort->contextSwitch(tcid);
-      if( params->reserve_flush ){
-        if( getWriteBuffer(tcid)->havePending() ){
-          functionalDrainWritebacks(tcid);
-        }
-      } else {
-        if( getWriteBuffer(tcid)->havePending() ){
-          drainWritebacks(tcid);
-          setBlocked(Blocked_DrainingWritebacks);
-        }
+      // if( params->reserve_flush ){
+      //   if( getWriteBuffer(tcid)->havePending() ){
+      //     functionalDrainWritebacks(tcid);
+      //   }
+      // } else {
+      if( getWriteBuffer(tcid)->havePending() ){
+        setBlocked(Blocked_DrainingWritebacks);
       }
     }
 
@@ -208,6 +206,7 @@ class Cache : public BaseCache
          * requests.
          */
         virtual void sendDeferredPacket();
+        virtual void sendDeferredPacketDraining(int tcid);
 
 
         virtual std::string print_elements(){

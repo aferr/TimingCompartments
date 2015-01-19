@@ -91,7 +91,7 @@ WPLRU::flush( uint64_t tcid = 0){
     BlkType* b = blks_by_tc[tcid][i];
     if( b->isDirty() && b->isValid() ){
       _cache->allocateWriteBuffer( _cache->writebackBlk( b, tcid ),
-          curTick(), false );
+          curTick(), true );
     } else {
       if( b->isValid() ) {invalidateBlk( b, tcid );}
     }
