@@ -180,14 +180,35 @@ module RunScripts
             maxinsts: 10**7,
             schemes: %w[none],
             nametag: "simple_flush",
-            #do_flush: true,
-            context_sw_freq: 10**5,
+            do_flush: true,
+            context_sw_freq: 10**7,
             benchmarks: %w[mcf],
             nol2: true,
             nodramsim: true,
             cacheSize: 0,
             # num_wl: 2
         )
+    end
+
+    def big_scale_simple_flush
+        # Only L1
+        o = {
+            wbtag: "onlyl1",
+            schemes: %w[none],
+            nol2: true,
+            nodramsim: true,
+            cacheSize: 0
+        }
+
+        [10,50,100].each do |period|
+            itreate_mp o.merge(
+                nametag: "flush#{period}ms_#{o[:wbtag]}",
+                context_sw_freq: period * 10 ** 9,
+                do_flush: true,
+            )
+        end
+
+
     end
 
 end
