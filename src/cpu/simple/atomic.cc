@@ -477,7 +477,6 @@ AtomicSimpleCPU::tick()
                 //if(decoder.needMoreBytes())
                 //{
                     icache_access = true;
-                    uint64_t tcid = thread[0].getProcessPtr()->__pid;
                     Packet ifetch_pkt = Packet(&ifetch_req, MemCmd::ReadReq,
                         tcid, tcid, tcid);
                     ifetch_pkt.dataStatic(&inst);
