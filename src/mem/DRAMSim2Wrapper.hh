@@ -86,7 +86,7 @@ class DRAMSim2Wrapper : public AbstractMemory
         void removePendingDelete()
         {
             for (int x = 0; x < pendingDelete.size(); x++){
-                delete pendingDelete[x];
+                //delete pendingDelete[x];
             }
             pendingDelete.clear();
         }
