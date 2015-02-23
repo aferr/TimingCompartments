@@ -128,7 +128,6 @@ end
 def sav_script( options = {} ) 
 
     options = {
-        cacheSize: 4,
         #TP Minimum: 
         tl0: 64,
         tl1: 64,
@@ -151,7 +150,8 @@ def sav_script( options = {} )
     cpu = options[:cpu]
     scheme = options[:scheme]
 
-    cacheSize  = options[:cacheSize]
+
+
     # workloads to run on p1-p3
     p0         = options[:p0]
     p1         = options[:p1]
@@ -201,10 +201,18 @@ def sav_script( options = {} )
     options[:otherbench] = options[:benchmarks] if options[:otherbench].nil?
 
     numcpus = options[:numcpus] = (
-      n = 0; until eval "options[:p#{n}].nil?"
+      n = 0
+      until eval "options[:p#{n}].nil?"
         n += 1
       end; n
     )
+
+    cacheSize  = options[:cacheSize] || {
+      2 => 2,
+      4 => 2,
+      6 => 6,
+      8 => 9
+    }[numcpus]
 
     o = options
 
