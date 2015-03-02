@@ -87,9 +87,6 @@ class CPUProgressEvent : public Event
 
 class BaseCPU : public MemObject
 {
-  public:
-  int tcid;
-
   private:
     void contextSwitchInternal(){
       fakeContextSwitch();
@@ -115,7 +112,6 @@ class BaseCPU : public MemObject
     // takeover (which should be done from within the BaseCPU anyway,
     // therefore no setCpuId() method is provided
     int _cpuId;
-
 
     /** instruction side request id that must be placed in all requests */
     MasterID _instMasterId;

@@ -79,7 +79,6 @@ Check::initiate()
 void
 Check::initiatePrefetch()
 {
-    panic("Check::initiatePrefetch\n");
     DPRINTF(RubyTest, "initiating prefetch\n");
 
     int index = random() % m_num_readers;
@@ -108,7 +107,7 @@ Check::initiatePrefetch()
             m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
     req->setThreadContext(index, 0);
 
-    PacketPtr pkt = new Packet(req, cmd, -1, -1, -1);
+    PacketPtr pkt = new Packet(req, cmd);
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
@@ -133,7 +132,6 @@ Check::initiatePrefetch()
 void
 Check::initiateFlush()
 {
-    panic("Check::initiateFlush\n");
 
     DPRINTF(RubyTest, "initiating Flush\n");
 
@@ -149,7 +147,7 @@ Check::initiateFlush()
 
     cmd = MemCmd::FlushReq;
 
-    PacketPtr pkt = new Packet(req, cmd, -1, -1, -1);
+    PacketPtr pkt = new Packet(req, cmd);
 
     // push the subblock onto the sender state.  The sequencer will
     // update the subblock on the return
@@ -164,7 +162,6 @@ Check::initiateFlush()
 void
 Check::initiateAction()
 {
-    panic("Check::initiateAction\n");
     DPRINTF(RubyTest, "initiating Action\n");
     assert(m_status == TesterStatus_Idle);
 
@@ -191,7 +188,7 @@ Check::initiateAction()
     cmd = MemCmd::WriteReq;
     // }
 
-    PacketPtr pkt = new Packet(req, cmd, -1, -1, -1);
+    PacketPtr pkt = new Packet(req, cmd);
     uint8_t* writeData = new uint8_t;
     *writeData = m_value + m_store_count;
     pkt->dataDynamic(writeData);
@@ -229,7 +226,6 @@ Check::initiateAction()
 void
 Check::initiateCheck()
 {
-    panic("Check::initiateCheck()\n");
     DPRINTF(RubyTest, "Initiating Check\n");
     assert(m_status == TesterStatus_Ready);
 
@@ -248,7 +244,7 @@ Check::initiateCheck()
                                m_tester_ptr->masterId(), curTick(), m_pc.getAddress());
 
     req->setThreadContext(index, 0);
-    PacketPtr pkt = new Packet(req, MemCmd::ReadReq, -1, -1, -1);
+    PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
     uint8_t* dataArray = new uint8_t[CHECK_SIZE];
     pkt->dataDynamicArray(dataArray);
 

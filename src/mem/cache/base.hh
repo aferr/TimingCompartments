@@ -81,7 +81,7 @@ class BaseCache : public MemObject
   private:
 
     void flushInternal(){
-	  flush(0);
+	    flush(0);
       Tick time = curTick() + params->context_sw_freq;
       schedule( flushEvent, time);
     }
@@ -97,10 +97,7 @@ class BaseCache : public MemObject
 
   public:
       void insertContextSwitches(){
-        if (!flushEvent.scheduled()){
-          Tick time = curTick() + params->context_sw_freq;
-          schedule(flushEvent, time);
-        }
+        if (!flushEvent.scheduled()) schedule(flushEvent, params->context_sw_freq);
       }
 	  
     virtual void flush( int tcid ){}
@@ -167,7 +164,7 @@ class BaseCache : public MemObject
         }
 		
 		virtual void requestBus(RequestCause cause, Tick time, int threadID,
-            bool isInteresting)
+        bool isInteresting)
         {
             requestBus( cause, time, isInteresting );
         }

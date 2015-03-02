@@ -110,7 +110,6 @@ class Cache : public BaseCache
     }
 
     virtual void flush( int tcid ){
-      if( !(params->use_way_part) && params->cpuid != tcid ) return;
       tags->flush(tcid);
       memSidePort->contextSwitch(tcid);
       if( params->reserve_flush ){
@@ -128,8 +127,7 @@ class Cache : public BaseCache
 
     void drainWritebacks( int tcid ){
       for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
-        //memSidePort->requestBus(Request_WB, nextCycle(), tcid, false);
-        explicitWriteback( tcid );
+        memSidePort->requestBus(Request_WB, nextCycle(), false);
       }
     }
 
@@ -144,7 +142,7 @@ class Cache : public BaseCache
       }
     }
 
-    virtual void explicitWriteback(int tcid);
+    virtual bool isL3(){ return params->split_mshrq; }
 
   protected:
 
@@ -207,7 +205,6 @@ class Cache : public BaseCache
          */
         virtual void sendDeferredPacket();
 
-
         virtual std::string print_elements(){
             MSHR * m = cache.getNextMSHR(ID);
             if(m){
@@ -250,7 +247,7 @@ class Cache : public BaseCache
       public:
 
         MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
-                    const std::string &_label, int cpuid);
+                    const std::string &_label);
     };
 
     /** Tag and data Storage */

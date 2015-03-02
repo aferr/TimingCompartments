@@ -52,7 +52,6 @@ InvalidateGenerator::~InvalidateGenerator()
 bool
 InvalidateGenerator::initiate()
 {
-    panic("InvalidateGenerator::initiate\n");
     MasterPort* port;
     Request::Flags flags;
     PacketPtr pkt;
@@ -68,12 +67,12 @@ InvalidateGenerator::initiate()
         DPRINTF(DirectedTest, "initiating read\n");
         cmd = MemCmd::ReadReq;
         port = m_directed_tester->getCpuPort(m_active_read_node);
-        pkt = new Packet(req, cmd, -1, -1, -1);
+        pkt = new Packet(req, cmd);
     } else if (m_status == InvalidateGeneratorStatus_Inv_Waiting) {
         DPRINTF(DirectedTest, "initiating invalidating write\n");
         cmd = MemCmd::WriteReq;
         port = m_directed_tester->getCpuPort(m_active_inv_node);
-        pkt = new Packet(req, cmd, -1, -1, -1);
+        pkt = new Packet(req, cmd);
     } else {
         panic("initiate was unexpectedly called\n");
     }

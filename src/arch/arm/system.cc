@@ -41,7 +41,6 @@
  */
 
 #include <iostream>
-#include <stdio.h>
 
 #include "arch/arm/system.hh"
 #include "base/loader/object_file.hh"
@@ -86,8 +85,7 @@ ArmSystem::initState()
         {
             0x07, 0xf0, 0xa0, 0xe1  // branch to r7
         };
-        fprintf(stderr, "Warn: ArmSystem's call to writeBlob may be incorrect\n");
-        physProxy.writeBlob(0x0, jump_to_bl, sizeof(jump_to_bl), 0);
+        physProxy.writeBlob(0x0, jump_to_bl, sizeof(jump_to_bl));
 
         inform("Using bootloader at address %#x\n", bootldr->entryPoint());
 

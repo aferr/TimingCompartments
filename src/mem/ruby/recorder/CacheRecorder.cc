@@ -70,7 +70,6 @@ CacheRecorder::~CacheRecorder()
 void
 CacheRecorder::enqueueNextFlushRequest()
 {
-    panic("CacheRecorder::enqueueNextFushRequest\n");
     if (m_records_flushed < m_records.size()) {
         TraceRecord* rec = m_records[m_records_flushed];
         m_records_flushed++;
@@ -78,7 +77,7 @@ CacheRecorder::enqueueNextFlushRequest()
                                    RubySystem::getBlockSizeBytes(),0,
                                    Request::funcMasterId);
         MemCmd::Command requestType = MemCmd::FlushReq;
-        Packet *pkt = new Packet(req, requestType, -1, -1, -1);
+        Packet *pkt = new Packet(req, requestType);
 
         Sequencer* m_sequencer_ptr = m_seq_map[rec->m_cntrl_id];
         assert(m_sequencer_ptr != NULL);
@@ -91,7 +90,6 @@ CacheRecorder::enqueueNextFlushRequest()
 void
 CacheRecorder::enqueueNextFetchRequest()
 {
-    panic("CacheRecorder::enqueueNextFushRequest\n");
     if (m_bytes_read < m_uncompressed_trace_size) {
         TraceRecord* traceRecord = (TraceRecord*) (m_uncompressed_trace +
                                                                 m_bytes_read);
@@ -115,7 +113,7 @@ CacheRecorder::enqueueNextFetchRequest()
                     RubySystem::getBlockSizeBytes(),0, Request::funcMasterId);
         }
 
-        Packet *pkt = new Packet(req, requestType, -1, -1, -1);
+        Packet *pkt = new Packet(req, requestType);
         pkt->dataStatic(traceRecord->m_data);
 
         Sequencer* m_sequencer_ptr = m_seq_map[traceRecord->m_cntrl_id];

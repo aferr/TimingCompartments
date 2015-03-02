@@ -164,10 +164,10 @@ MasterPort::sendRetry(int threadID)
 }
 
 void
-MasterPort::printAddr(Addr a, int tcid)
+MasterPort::printAddr(Addr a)
 {
     Request req(a, 1, 0, Request::funcMasterId);
-    Packet pkt(&req, MemCmd::PrintReq, tcid, tcid, tcid);
+    Packet pkt(&req, MemCmd::PrintReq);
     Packet::PrintReqState prs(std::cerr);
     pkt.senderState = &prs;
 

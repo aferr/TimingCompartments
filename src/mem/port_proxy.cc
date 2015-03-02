@@ -41,14 +41,14 @@
 #include "mem/port_proxy.hh"
 
 void
-PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd, int tcid) const
+PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd) const
 {
     Request req;
 
     for (ChunkGenerator gen(addr, size, _port.peerBlockSize());
          !gen.done(); gen.next()) {
         req.setPhys(gen.addr(), gen.size(), 0, Request::funcMasterId);
-        Packet pkt(&req, cmd, tcid, tcid, tcid);
+        Packet pkt(&req, cmd);
         pkt.dataStatic(p);
         _port.sendFunctional(&pkt);
         p += gen.size();
@@ -56,13 +56,13 @@ PortProxy::blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd, int tcid) con
 }
 
 void
-PortProxy::memsetBlob(Addr addr, uint8_t v, int size, int tcid) const
+PortProxy::memsetBlob(Addr addr, uint8_t v, int size) const
 {
     // quick and dirty...
     uint8_t *buf = new uint8_t[size];
 
     std::memset(buf, v, size);
-    blobHelper(addr, buf, size, MemCmd::WriteReq, tcid);
+    blobHelper(addr, buf, size, MemCmd::WriteReq);
 
     delete [] buf;
 }

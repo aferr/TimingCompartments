@@ -207,12 +207,11 @@ def sav_script( options = {} )
       end; n
     )
 
-    cacheSize  = options[:cacheSize] || {
-      2 => 2,
-      4 => 2,
-      6 => 6,
-      8 => 9
-    }[numcpus]
+    cacheSize  = options[:cacheSize] || lambda { |x|
+        x >= 8 ? 9 :
+        x >= 6 ? 6 :
+        2
+    }.call(numcpus)
 
     o = options
 
@@ -323,7 +322,7 @@ def sav_script( options = {} )
     script.puts("   --p0period=#{tl0} \\")
     script.puts("   --p1period=#{tl1} \\")
 
-    script.puts("    > #{result_dir}/stdout_#{filename}.out")
+    script.puts("    >! #{result_dir}/stdout_#{filename}.out")
     script_abspath = File.expand_path(script.path)
     script.close
 
@@ -346,7 +345,7 @@ def iterate_and_submit opts={}, &block
         cpus: %w[detailed],
         schemes: $schemes,
         benchmarks: $specint,
-        runmode: :local,
+        runmode: :qsub,
         threads: 4
     }.merge opts
 

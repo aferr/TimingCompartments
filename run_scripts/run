@@ -44,10 +44,11 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Performance
 #----------------------------------------------------------------------------
-# single 
-# breakdown
-# baseline
-# ncore_2tc
-# ncore_ntc
-#flush_overhead
-# coordination
+  single 
+  breakdown
+  baseline
+  ncore_2tc
+  ncore_ntc
+ # flush_overhead
+#  coordination
+parameter_tests

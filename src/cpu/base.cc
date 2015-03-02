@@ -126,8 +126,6 @@ BaseCPU::BaseCPU(Params *p, bool is_checker)
         _cpuId = cpuList.size();
     }
 
-    tcid = p->tcid;
-
     insertContextSwitches();
 
     // add self to global list of CPUs

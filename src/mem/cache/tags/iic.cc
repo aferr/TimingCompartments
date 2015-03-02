@@ -349,7 +349,6 @@ IIC::insertBlock(Addr addr, BlkType* blk, int context_src)
 void
 IIC::freeReplacementBlock(PacketList & writebacks)
 {
-    panic("IIC::freeReplacementBlock\n");
     IICTag *tag_ptr;
     unsigned long data_ptr;
     /* consult replacement policy */
@@ -377,7 +376,7 @@ IIC::freeReplacementBlock(PacketList & writebacks)
             Request *writebackReq = new Request(regenerateBlkAddr(tag_ptr->tag, 0),
                                            blkSize, 0, Request::wbMasterId);
 			fprintf(stderr, "panic: iic called!\n");
-			PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback, -1, -1, -1);
+			PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
             writeback->allocate();
             memcpy(writeback->getPtr<uint8_t>(), tag_ptr->data, blkSize);
 

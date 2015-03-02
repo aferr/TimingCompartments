@@ -94,7 +94,6 @@ TimingSimpleCPU::TimingSimpleCPU(TimingSimpleCPUParams *p)
 
     changeState(SimObject::Running);
     system->totalNumInsts = 0;
-    tcid  = p->tcid;
 }
 
 
@@ -922,7 +921,7 @@ TimingSimpleCPU::IprEvent::description() const
 void
 TimingSimpleCPU::printAddr(Addr a)
 {
-    dcachePort.printAddr(a, tcid);
+    dcachePort.printAddr(a);
 }
 
 

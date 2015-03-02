@@ -77,7 +77,7 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     cpuSidePort = new CpuSidePort(p->name + ".cpu_side", this,
                                   "CpuSidePort");
     memSidePort = new MemSidePort(p->name + ".mem_side", this,
-                                  "MemSidePort", p->cpuid);
+                                  "MemSidePort");
 
     tags->setCache(this);
     if (prefetcher)
@@ -1524,19 +1524,6 @@ Cache<TagStore>::getNextMSHR( int threadID )
     return NULL;
 }
 
-template<class TagStore>
-void
-Cache<TagStore>::explicitWriteback( int tcid )
-{
-    MSHR *mshr = getWriteBuffer( tcid )->getNextMSHR();
-    PacketPtr pkt = mshr->getTarget()->pkt;
-    pkt->senderState = mshr;
-    memSidePort->sendTimingReq(pkt);
-    markInService(mshr, pkt);
-    if( blocked && !getWriteBuffer(tcid)->havePending() ){
-      clearBlocked(Blocked_DrainingWritebacks);
-    }
-}
 
 template<class TagStore>
 PacketPtr
@@ -1848,9 +1835,9 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
 template<class TagStore>
 Cache<TagStore>::
 MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
-                         const std::string &_label, int cpuid)
+                         const std::string &_label)
     : BaseCache::CacheMasterPort(_name, _cache, _queue),
-      _queue(*_cache, *this, _label, cpuid), cache(_cache)
+      _queue(*_cache, *this, _label, 5), cache(_cache)
 {}
 
 //-----------------------------------------------------------------------------
@@ -1865,7 +1852,7 @@ SplitMSHRCache<TagStore>::SplitMSHRCache( const Params *p, TagStore *tags )
           for( int i=0; i < (p->num_tcs); i++ ){
               mshrQueues[i] = new MSHRQueue( "MSHRs", p->mshrs, 4, 0 );
               writeBuffers[i] =new MSHRQueue("write buffer",
-                  p->write_buffers, 4, 0);
+                  p->write_buffers, p->mshrs+1000, 1);
           }
 
           num_tcs = p->num_tcs;

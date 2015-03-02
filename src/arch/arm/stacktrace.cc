@@ -47,35 +47,33 @@ namespace ArmISA
         : tc(_tc)
     {
         Addr addr = 0;
-        int tcid = tc->getCpuPtr()->tcid;
 
         FSTranslatingPortProxy &vp = tc->getVirtProxy();
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_size", addr))
             panic("thread info not compiled into kernel\n");
-        thread_info_size = vp.readGtoH<int32_t>(addr, tcid);
+        thread_info_size = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_size", addr))
             panic("thread info not compiled into kernel\n");
-        task_struct_size = vp.readGtoH<int32_t>(addr, tcid);
+        task_struct_size = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("thread_info_task", addr))
             panic("thread info not compiled into kernel\n");
-        task_off = vp.readGtoH<int32_t>(addr, tcid);
+        task_off = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_pid", addr))
             panic("thread info not compiled into kernel\n");
-        pid_off = vp.readGtoH<int32_t>(addr, tcid);
+        pid_off = vp.readGtoH<int32_t>(addr);
 
         if (!tc->getSystemPtr()->kernelSymtab->findAddress("task_struct_comm", addr))
             panic("thread info not compiled into kernel\n");
-        name_off = vp.readGtoH<int32_t>(addr, tcid);
+        name_off = vp.readGtoH<int32_t>(addr);
     }
 
     Addr
     ProcessInfo::task(Addr ksp) const
     {
-        int tcid = tc->getCpuPtr()->tcid;
         Addr base = ksp & ~0x1fff;
         if (base == ULL(0xffffffffc0000000))
             return 0;
@@ -83,7 +81,7 @@ namespace ArmISA
         Addr tsk;
 
         FSTranslatingPortProxy &vp = tc->getVirtProxy();
-        tsk = vp.readGtoH<Addr>(base + task_off, tcid);
+        tsk = vp.readGtoH<Addr>(base + task_off);
 
         return tsk;
     }
@@ -91,7 +89,6 @@ namespace ArmISA
     int
     ProcessInfo::pid(Addr ksp) const
     {
-        int tcid = tc->getCpuPtr()->tcid;
         Addr task = this->task(ksp);
         if (!task)
             return -1;
@@ -99,7 +96,7 @@ namespace ArmISA
         uint16_t pd;
 
         FSTranslatingPortProxy &vp = tc->getVirtProxy();
-        pd = vp.readGtoH<uint16_t>(task + pid_off, tcid);
+        pd = vp.readGtoH<uint16_t>(task + pid_off);
 
         return pd;
     }

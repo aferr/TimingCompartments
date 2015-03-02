@@ -49,7 +49,6 @@ SeriesRequestGenerator::~SeriesRequestGenerator()
 bool
 SeriesRequestGenerator::initiate()
 {
-    panic("SeriesRequestGenerator::initiate\n");
     DPRINTF(DirectedTest, "initiating request\n");
     assert(m_status == SeriesRequestGeneratorStatus_Thinking);
 
@@ -66,7 +65,7 @@ SeriesRequestGenerator::initiate()
     } else {
         cmd = MemCmd::ReadReq;
     }
-    PacketPtr pkt = new Packet(req, cmd, -1, -1, -1);
+    PacketPtr pkt = new Packet(req, cmd);
     uint8_t* dummyData = new uint8_t;
     *dummyData = 0;
     pkt->dataDynamic(dummyData);

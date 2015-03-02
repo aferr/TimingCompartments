@@ -66,8 +66,6 @@ HexFile::loadSections(PortProxy& memProxy)
     char Line[64];
     Addr MemAddr;
     uint32_t Data;
-    fprintf( stderr, "warn: HexFile::loadSections, unsure of tcid\n");
-    int tcid = 0;
     while (!feof(fp)) {
         char *ret = fgets(Line, sizeof(Line), fp);
         if (!ret)
@@ -75,7 +73,7 @@ HexFile::loadSections(PortProxy& memProxy)
         parseLine(Line, &MemAddr, &Data);
         if (MemAddr != 0) {
             // Now, write to memory
-            memProxy.writeBlob(MemAddr << 2, (uint8_t *)&Data, sizeof(Data), tcid);
+            memProxy.writeBlob(MemAddr << 2, (uint8_t *)&Data, sizeof(Data));
         }
     }
     return true;

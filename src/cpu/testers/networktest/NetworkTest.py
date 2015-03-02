@@ -43,4 +43,3 @@ class NetworkTest(MemObject):
     precision = Param.Int(3, "Number of digits of precision after decimal point")
     test = MasterPort("Port to the memory system to test")
     system = Param.System(Parent.any, "System we belong to")
-    tcid = Param.Int(-1, "tcid")

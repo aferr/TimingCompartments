@@ -238,16 +238,14 @@ void LRU::flush(uint64_t tid=0 ){
   Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
   int writebacks = 0;
   int valid = 0;
-  int flushNumBlocks = int(_cache->params->flushRatio * numBlocks);
-  int cpuid = _cache->params->cpuid;
-  if( cpuid != tid ) return;
-  for( int i=0; i < flushNumBlocks; i++ ){
+  int flushNumblocks = int(_cache->params->flushRatio * numBlocks);
+  for( int i=0; i < flushNumblocks; i++ ){
     if( blks[i].isDirty() && blks[i].isValid() ){
-       _cache->allocateWriteBuffer(_cache->writebackBlk(&blks[i], cpuid),
-           curTick(), false);
+      _cache->allocateWriteBuffer(_cache->writebackBlk(&blks[i], tid),
+          curTick(), true);
       writebacks++;
     } else {
-      invalidateBlk( &blks[i], cpuid );
+      invalidateBlk( &blks[i], tid );
       valid++;
     }
   }

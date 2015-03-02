@@ -69,9 +69,8 @@ unameFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     strcpy(name->release, "3.0.0");
     strcpy(name->version, "#1 Mon Aug 18 11:32:15 EDT 2003");
     strcpy(name->machine, "armv7l");
-    
-    int tcid = tc->getCpuPtr()->tcid;
-    name.copyOut(tc->getMemProxy(), tcid);
+
+    name.copyOut(tc->getMemProxy());
     return 0;
 }
 
@@ -451,11 +450,10 @@ setTLSFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
           ThreadContext *tc)
 {
     int index = 0;
-    int tcid = tc->getCpuPtr()->tcid;
     uint32_t tlsPtr = process->getSyscallArg(tc, index);
 
     tc->getMemProxy().writeBlob(ArmLinuxProcess::commPage + 0x0ff0,
-                                (uint8_t *)&tlsPtr, sizeof(tlsPtr), tcid);
+                                (uint8_t *)&tlsPtr, sizeof(tlsPtr));
     tc->setMiscReg(MISCREG_TPIDRURO,tlsPtr);
     return 0;
 }
@@ -507,7 +505,6 @@ ArmLinuxProcess::initState()
     ArmLiveProcess::initState();
     allocateMem(commPage, PageBytes);
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
-    int tcid = tc->getCpuPtr()->tcid;
 
     uint8_t swiNeg1[] = {
         0xff, 0xff, 0xff, 0xef  // swi -1
@@ -516,7 +513,7 @@ ArmLinuxProcess::initState()
     // Fill this page with swi -1 so we'll no if we land in it somewhere.
     for (Addr addr = 0; addr < PageBytes; addr += sizeof(swiNeg1)) {
         tc->getMemProxy().writeBlob(commPage + addr,
-                                    swiNeg1, sizeof(swiNeg1), tcid);
+                                    swiNeg1, sizeof(swiNeg1));
     }
 
     uint8_t memory_barrier[] =
@@ -525,7 +522,7 @@ ArmLinuxProcess::initState()
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };
     tc->getMemProxy().writeBlob(commPage + 0x0fa0, memory_barrier,
-                                sizeof(memory_barrier), tcid);
+                                sizeof(memory_barrier));
 
     uint8_t cmpxchg[] =
     {
@@ -538,7 +535,7 @@ ArmLinuxProcess::initState()
         0x5f, 0xf0, 0x7f, 0xf5,  // dmb
         0x0e, 0xf0, 0xa0, 0xe1   // return
     };
-    tc->getMemProxy().writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg), tcid);
+    tc->getMemProxy().writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg));
 
     uint8_t get_tls[] =
     {
@@ -546,7 +543,7 @@ ArmLinuxProcess::initState()
         0x70, 0x0f, 0x1d, 0xee, // mrc p15, 0, r0, c13, c0, 3
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };
-    tc->getMemProxy().writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls), tcid);
+    tc->getMemProxy().writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls));
 }
 
 ArmISA::IntReg

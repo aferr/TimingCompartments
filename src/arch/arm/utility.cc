@@ -65,7 +65,6 @@ initCPU(ThreadContext *tc, int cpuId)
 uint64_t
 getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
 {
-    int tcid = tc->getCpuPtr()->tcid;
     if (!FullSystem) {
         panic("getArgument() only implemented for full system mode.\n");
         M5_DUMMY_RETURN
@@ -100,12 +99,12 @@ getArgument(ThreadContext *tc, int &number, uint16_t size, bool fp)
             if ((number % 2) != 0)
                 number++;
             arg = vp.read<uint64_t>(sp +
-                    (number-NumArgumentRegs) * sizeof(uint32_t), tcid);
+                    (number-NumArgumentRegs) * sizeof(uint32_t));
             // since two 32 bit args == 1 64 bit arg, increment number
             number++;
         } else {
             arg = vp.read<uint32_t>(sp +
-                           (number-NumArgumentRegs) * sizeof(uint32_t), tcid);
+                           (number-NumArgumentRegs) * sizeof(uint32_t));
         }
         return arg;
     }

@@ -81,7 +81,6 @@ class MemTest : public MemObject
     };
 
     TickEvent tickEvent;
-    int tcid;
 
     class CpuPort : public MasterPort
     {

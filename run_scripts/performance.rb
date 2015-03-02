@@ -225,7 +225,6 @@ module RunScripts
     def parameter_tests
       o = $secure_opts.merge(
           num_wl: 2,
-          runmode: :fake
       )
 
       # Optimized L2 Miss Path

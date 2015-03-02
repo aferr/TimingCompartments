@@ -20,7 +20,6 @@ class BasePrefetcher(SimObject):
     data_accesses_only = Param.Bool(False,
          "Only prefetch on data not on instruction accesses")
     sys = Param.System(Parent.any, "System this device belongs to")
-    tcid = Param.Int(-1, "tcid")
 
 class GHBPrefetcher(BasePrefetcher):
     type = 'GHBPrefetcher'

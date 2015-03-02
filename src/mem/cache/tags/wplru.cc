@@ -61,7 +61,7 @@ WPLRU::init_sets(){
 
     unsigned blkIndex = 0;
     for( unsigned tc=0; tc< num_tcs; tc++ ){
-        unsigned tcIndex = 0;
+      unsigned tcIndex = 0;
         for( unsigned i = 0; i< numSets; i++ ){
             int tc_assoc = assoc_of_tc(tc);
             sets_w[tc][i].assoc = tc_assoc;
@@ -85,15 +85,15 @@ WPLRU::init_sets(){
 }
 
 void
-WPLRU::flush( uint64_t tcid = 0){
+WPLRU::flush( uint64_t tcid = 0 ){
   Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
   for( int i=0; i < blks_in_tc(tcid); i++ ){
     BlkType* b = blks_by_tc[tcid][i];
     if( b->isDirty() && b->isValid() ){
       _cache->allocateWriteBuffer( _cache->writebackBlk( b, tcid ),
-          curTick(), false );
+          curTick(), true );
     } else {
-      if( b->isValid() ) {invalidateBlk( b, tcid );}
+      invalidateBlk( b, tcid );
     }
   }
 }
