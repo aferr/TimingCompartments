@@ -52,7 +52,7 @@ class L3Config(object):
             '4MB' : 16,
             '3MB' : 12,
             '2MB' : 16,
-            '1MB' : 16,
+            '1MB' : 16
         }
 
     def connect_l2( self ): return
@@ -63,7 +63,7 @@ class L3Shared( L3Config ):
         L2maxWritebacks = 4096
         system.l3 = L3Cache(size = options.l3_size, 
                             latency=self.latencies[options.l3_size],
-                            assoc = options.l3_assoc,
+                            assoc = self.assocs[options.l3_size],
                             block_size=options.cacheline_size,
                             use_set_part = options.use_set_part,
                             num_tcs = options.numpids,
@@ -106,7 +106,7 @@ class L3Private( L3Config ):
                 L3Cache(
                     size = options.l3_size,
                     latency = self.latencies[options.l3_size],
-                    assoc = self.latencies[options.l3_size],
+                    assoc = self.assocs[options.l3_size],
                     block_size = options.cacheline_size,
                     use_set_part = options.use_set_part,
                     use_way_part = options.use_way_part,
@@ -140,17 +140,13 @@ def config_l1( options, system ):
                              do_flush = options.do_flush,
                              flushRatio = options.flushRatio,
                              context_sw_freq = options.context_sw_freq,
-                             block_size=options.cacheline_size,
-                             cpuid = i
-                             )
+                             block_size=options.cacheline_size)
             dcache = L1Cache(size = options.l1d_size,
                              assoc = options.l1d_assoc,
                              do_flush = options.do_flush,
                              flushRatio = options.flushRatio,
                              context_sw_freq = options.context_sw_freq,
-                             block_size=options.cacheline_size,
-                             cpuid = i
-                             )
+                             block_size=options.cacheline_size)
 
             if buildEnv['TARGET_ISA'] == 'x86':
                 system.cpu[i].addPrivateSplitL1Caches(icache, dcache,
@@ -175,7 +171,6 @@ def config_l2( options, system ):
                 do_flush = options.do_flush,
                 flushRatio = options.flushRatio,
                 context_sw_freq = options.context_sw_freq,
-                cpuid = i
             ) 
             for i in xrange( options.num_cpus )
         ]
