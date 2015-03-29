@@ -55,6 +55,7 @@ $p0periods = [64,96,128,192,256]
 
 #Multiprogram Workloads
 $mpworkloads = {
+  # integer workloads
   mcf_bz2: %w[ mcf bzip2 ],
   bz2_mcf: %w[ bzip2 mcf ],
   mcf_xln: %w[ mcf xalan ],
@@ -67,12 +68,24 @@ $mpworkloads = {
   lib_ast: %w[ libquantum astar ],
   mcf_h264: %w[ mcf h264ref ],
   lib_sjg: %w[ libquantum sjeng ],
+  xln_gcc: %w[ xalan gcc ],
   gcc_gob: %w[ gcc gobmk ],
   sjg_sgj: %w[ sjeng sjeng ],
   ast_h264: %w[ astar h264ref ],
   h264_hmm: %w[ h264ref hmmer ],
-  ast_ast: %w[ astar astar]
+  ast_ast: %w[ astar astar],
+
+  # Float workloads
+  milc_milc: %w[milc milc],
+  namd_namd: %w[namd namd],
+  deal_deal: %w[deal deal],
+  splx_splx: %w[soplex soplex],
+  pov_pov: %w[povray povray],
+  lbm_lbm: %w[lbm lbm],
+  # spx_spx: %w[sphinx3 sphinx3]
+
 }
+
 
 
 
@@ -128,8 +141,29 @@ $synthinvoke = {
 }
 $synthb = $synthinvoke.keys.sort
 
+$specfpinvoke = {
+    # "bwaves"     => "'#{$specfp_dir}/bwaves'",
+    # "gamess"     => "'#{$specfp_dir}/gamess < #{$specfp_dir}/cytosine.2.config'",
+    "milc"       => "'#{$specfp_dir}/milc < #{$specfp_dir}/su3imp.in'",
+    # "zeusmp"     => "'#{$specfp_dir}/zeusmp'",
+    # "gromacs"    => "'#{$specfp_dir}/gromacs -silent -deffnm #{$specfp_dir}/gromacs -nice 0'",
+    # "cactusADM"  => "'#{$specfp_dir}/cactusADM #{$specfp_dir}/benchADM.par'",
+    # "leslie3d"   => "'#{$specfp_dir}/leslie3d < #{$specfp_dir}/leslie3d.in'",
+    "namd"       => "'#{$specfp_dir}/namd --input #{$specfp_dir}/namd.input --iterations 38 --output #{$specfp_dir}/namd.out'",
+    "dealII"     => "'#{$specfp_dir}/dealII 23'",
+    "soplex"     => "'#{$specfp_dir}/soplex -sl -e -m45000 #{$specfp_dir}/pds-50.mps'",
+    "povray"     => "'#{$specfp_dir}/povray #{$specfp_dir}/SPEC-benchmark-ref.ini'",
+    # "calculix"   => "'#{$specfp_dir}/calculix -i #{$specfp_dir}/hyperviscoplastic.inp'",
+    # "GemsFDTD"   => "'#{$specfp_dir}/GemsFDTD'",
+    # "tonto"      => "'#{$specfp_dir}/tonto'",
+    "lbm"        => "'#{$specfp_dir}/lbm 3000 reference.dat 0 0 #{$specfp_dir}/100_100_130_ldc.of'",
+    # "wrf"        => "'#{$specfp_dir}/wrf'",
+    "sphinx3"    => "'#{$specfp_dir}/sphinx_livepretend ctlfile . #{$specfp_dir}/args.an4'"  
+}
+$specfp = $specfpinvoke.keys.sort
+
 def invoke( name )
-    $specinvoke[name] || $synthinvoke[name]
+    $specinvoke[name] || $synthinvoke[name] || $specfpinvoke[name]
 end
 
 def sav_script( options = {} ) 
@@ -394,7 +428,7 @@ def single opts={}
         cpu: "detailed",
         schemes: %w[ none],
         scheme: "none",
-        benchmarks: $specint,
+        benchmarks: $specint + $specfp,
         threads: 1
     }.merge opts
 
