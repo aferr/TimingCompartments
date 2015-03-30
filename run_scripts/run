@@ -49,6 +49,6 @@ include RunScripts
   baseline
   ncore_2tc
   ncore_ntc
- # flush_overhead
-#  coordination
-parameter_tests
+# flush_overhead
+# coordination
+# parameter_tests

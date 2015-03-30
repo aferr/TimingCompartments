@@ -28,7 +28,10 @@ module RunScripts
         schemes: %w[none],
         scheme: "none",
         addrpar: true,
-        num_wl: 2,
+        skip2: true,
+        skip4: true,
+        skip6: true,
+        num_wl: 8,
       }
 
       iterate_mp o.merge(
@@ -54,16 +57,6 @@ module RunScripts
     def ncore_2tc
       o = $secure_opts.merge(
         nametag: "2tc"
-      )
-
-      # 3 Cores 2 TCs
-      iterate_mp o.merge(
-        num_wl: 3,
-        skip2: true,
-        skip3: false,
-        p0threadID: 0,
-        p1threadID: 0,
-        p2threadID: 1,
       )
 
       # 4 Cores 2 TCs

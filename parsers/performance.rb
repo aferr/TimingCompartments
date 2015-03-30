@@ -128,11 +128,11 @@ def norm_2tc o={}
   twotc = o[:fun].call o.merge(
     scheme: "tp",
     nametag: "2tc",
-    core_set: [4] #[4, 6, 8]
+    core_set: [4, 6, 8]
   )
-  base = ntc( o.merge( coreset: [4] ) ) #core_set: [4, 6, 8] ) )
+  base = ntc( o.merge( core_set: [4, 6, 8] ) )
   r = normalized( twotc, base )
-  gb = grouped_bar r.transpose, o #, o.merge( legend: %w[4 6 8] )
+  gb = grouped_bar r.transpose, o.merge( legend: %w[4 6 8] )
   string_to_f gb, "#{o[:out_dir]}/twotc_#{o[:mname]}_norm.svg"
 end
 
@@ -376,8 +376,8 @@ if __FILE__ == $0
     font: "18px arial"
   }
 
-  # abs_baseline abs_o
-  # abs_ntc abs_o
+  abs_baseline abs_o
+  abs_ntc abs_o
   # abs_2tc abs_o
   # abs_breakdown abs_o
   # abs_blocking_wb abs_o
@@ -398,17 +398,17 @@ if __FILE__ == $0
     font: "18px arial"
   }
 
-  # norm_ntc normo
-  # norm_2tc normo
-  #norm_breakdown normo
+  norm_ntc normo
+  norm_2tc normo
+  norm_breakdown normo
   
-  norm_flushing_bw  normo
-  norm_flushing_rbw normo
-  norm_flushing_partial normo
+  # norm_flushing_bw  normo
+  # norm_flushing_rbw normo
+  # norm_flushing_partial normo
 
-  # paramo = normo.merge(bar_width: 1)
-  # norm_params paramo
-  # norm_params_nocwf paramo
+  paramo = normo.merge(bar_width: 1)
+  norm_params paramo
+  norm_params_nocwf paramo
 
   # svg2pdf out_dir
 

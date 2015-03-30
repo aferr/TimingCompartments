@@ -60,10 +60,10 @@ $mpworkloads = {
   bz2_mcf: %w[ bzip2 mcf ],
   mcf_xln: %w[ mcf xalan ],
   mcf_mcf: %w[ mcf mcf ],
-  mcf_lib: %w[mcf lib],
-  mcf_ast: %w[mcf ast],
-  ast_mcf: %w[ast mcf],
-  lib_mcf: %w[lib mcf],
+  mcf_lib: %w[mcf libquantum],
+  mcf_ast: %w[mcf astar],
+  ast_mcf: %w[astar mcf],
+  lib_mcf: %w[libquantum mcf],
   lib_lib: %w[ libquantum libquantum],
   lib_ast: %w[ libquantum astar ],
   mcf_h264: %w[ mcf h264ref ],
@@ -78,16 +78,13 @@ $mpworkloads = {
   # Float workloads
   milc_milc: %w[milc milc],
   namd_namd: %w[namd namd],
-  deal_deal: %w[deal deal],
+  deal_deal: %w[dealII dealII],
   splx_splx: %w[soplex soplex],
   pov_pov: %w[povray povray],
   lbm_lbm: %w[lbm lbm],
   # spx_spx: %w[sphinx3 sphinx3]
 
 }
-
-
-
 
 def workloads_of_size n, wl2=$mpworkloads
   wl2.keys.inject({}) do |hash, name|
@@ -190,8 +187,6 @@ def sav_script( options = {} )
 
     cpu = options[:cpu]
     scheme = options[:scheme]
-
-
 
     # workloads to run on p1-p3
     p0         = options[:p0]
