@@ -54,9 +54,26 @@
  */
 
 #include <list>
+#include <sstream>
 
 #include "mem/port.hh"
 #include "sim/eventq.hh"
+
+//#define DEBUG_TP
+#define interesting 0x55fc40
+#define i_era_l     48318210000
+#define i_era_h     48319352000
+
+//fix compiling problem on cluster by replacing to_string
+namespace patch
+{
+    template < typename T > std::string to_string( const T& n )
+    {
+        std::ostringstream stm ;
+        stm << n ;
+        return stm.str() ;
+    }
+}
 
 /**
  * A packet queue is a class that holds deferred packets and later
@@ -64,7 +81,15 @@
  */
 class PacketQueue
 {
-  private:
+  public:
+    bool isEra(){ return isEra(curTick()); }
+    bool isEra(Tick w){
+#ifdef DEBUG_TP
+      return (w > i_era_l) && (w < i_era_h);
+#else
+      return false;
+#endif
+    }
     /** A deferred packet, buffered to transmit later. */
     class DeferredPacket {
       public:
@@ -74,10 +99,39 @@ class PacketQueue
         DeferredPacket(Tick t, PacketPtr p, bool send_as_snoop)
             : tick(t), pkt(p), sendAsSnoop(send_as_snoop)
         {}
+
+        std::string print(){
+          std::string t = patch::to_string(tick);
+          return "(" + t + ") " + pkt->to_string();
+        }
+
     };
 
     typedef std::list<DeferredPacket> DeferredPacketList;
     typedef std::list<DeferredPacket>::iterator DeferredPacketIterator;
+
+    virtual std::string print_elements(){
+      return "";
+    }
+
+#ifdef DEBUG_TP
+    bool hasInteresting(DeferredPacketList tl){
+      for( DeferredPacketIterator it = tl.begin();
+          it != tl.end(); ++it ){
+        if((*it).pkt->getAddr() == interesting) return true;
+      }
+      return false;
+    }
+#endif
+
+    std::string print(DeferredPacketList tl){
+      std::ostringstream s;
+      for( DeferredPacketIterator it = tl.begin();
+          it != tl.end(); ++it ){
+        s << (*it).print() << "\n";
+      }
+      return s.str();
+    }
 
     /** A list of outgoing timing response packets that haven't been
      * serviced yet. */
@@ -93,7 +147,30 @@ class PacketQueue
     /**
      * Event used to call processSendEvent.
      **/
-    EventWrapper<PacketQueue, &PacketQueue::processSendEvent> sendEvent;
+    typedef EventWrapper<PacketQueue, &PacketQueue::processSendEvent> WrappedPSE;
+    class WrappedSend : public WrappedPSE{
+
+      public:
+        WrappedSend( PacketQueue * pq )
+          : WrappedPSE(pq), pq(pq){}
+
+      protected:
+      virtual void setWhen(Tick w, EventQueue *q){
+
+#ifdef DEBUG_TP
+        if(pq->em.isL3() && pq->ID==0 && (pq->isEra() || pq->isEra(w)) ){
+          printf("setting the sendEvent to %lu with an element_list:\n%s",
+              w, pq->print_elements().c_str());
+        }
+#endif
+        WrappedPSE::setWhen(w, q);
+      }
+
+      private:
+      PacketQueue * pq;
+    };
+    WrappedSend sendEvent;
+
 
     /** If we need to drain, keep the drain event around until we're done
      * here.*/
@@ -103,6 +180,8 @@ class PacketQueue
 
     /** Label to use for print request packets label stack. */
     const std::string label;
+	
+	int ID;
 
     /** Remember whether we're awaiting a retry from the bus. */
     bool waitingOnRetry;
@@ -161,7 +240,7 @@ class PacketQueue
      * @param _em Event manager used for scheduling this queue
      * @param _label Label to push on the label stack for print request packets
      */
-    PacketQueue(EventManager& _em, const std::string& _label);
+    PacketQueue(EventManager& _em, const std::string& _label, int _ID);
 
     /**
      * Virtual desctructor since the class may be used as a base class.
@@ -188,7 +267,7 @@ class PacketQueue
      *
      * @param when
      */
-    void schedSendEvent(Tick when);
+    void schedSendEvent(Tick when, bool isInteresting);
 
     /**
      * Add a packet to the transmit list, and ensure that a
@@ -235,7 +314,7 @@ class MasterPacketQueue : public PacketQueue
      * @param _label Label to push on the label stack for print request packets
      */
     MasterPacketQueue(EventManager& _em, MasterPort& _masterPort,
-                      const std::string _label = "MasterPacketQueue");
+                      const std::string _label = "MasterPacketQueue", int ID = 0);
 
     virtual ~MasterPacketQueue() { }
 
@@ -264,7 +343,7 @@ class SlavePacketQueue : public PacketQueue
      * @param _label Label to push on the label stack for print request packets
      */
     SlavePacketQueue(EventManager& _em, SlavePort& _slavePort,
-                     const std::string _label = "SlavePacketQueue");
+                     const std::string _label = "SlavePacketQueue", int ID = 0);
 
     virtual ~SlavePacketQueue() { }
 

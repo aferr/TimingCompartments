@@ -87,7 +87,23 @@ class CPUProgressEvent : public Event
 
 class BaseCPU : public MemObject
 {
+  private:
+    void contextSwitchInternal(){
+      fakeContextSwitch();
+    }
+
+    void insertContextSwitches(){
+      EventWrapper<BaseCPU,&BaseCPU::contextSwitchInternal> *e;
+      for( int i=0; i < 10; i++ ){
+        e = new EventWrapper<BaseCPU,&BaseCPU::contextSwitchInternal>(this);
+        schedule( e, i*1000*1000 );
+      }
+    }
+
   protected:
+
+    virtual void fakeContextSwitch(){
+    }
 
     // @todo remove me after debugging with legion done
     Tick instCnt;

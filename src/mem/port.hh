@@ -114,6 +114,8 @@ class Port
     /** Get the port id. */
     PortID getId() const { return id; }
 
+    virtual void contextSwitch(int tcid){}
+
 };
 
 /** Forward declaration */
@@ -145,6 +147,8 @@ class MasterPort : public Port
      * mirror action and binds the slave port to the master port.
      */
     void bind(SlavePort& slave_port);
+
+    virtual void contextSwitch(int tcid);
 
     /**
      * Unbind this master port and the associated slave port.
@@ -203,6 +207,8 @@ class MasterPort : public Port
      * sendTimingResp to this master port and failed.
      */
     void sendRetry();
+	
+	void sendRetry(int threadID);
 
     /**
      * Determine if this master port is snooping or not. The default
@@ -275,6 +281,8 @@ class MasterPort : public Port
      * slave port) and was unsuccesful.
      */
     virtual void recvRetry() = 0;
+	
+	virtual void recvRetry(int threadID) {}
 
     /**
      * Called to receive an address range change from the peer slave
@@ -358,6 +366,8 @@ class SlavePort : public Port
      * failed.
      */
     void sendRetry();
+	
+	void sendRetry(int threadID);
 
     /**
      * Called by a peer port in order to determine the block size of
@@ -434,6 +444,8 @@ class SlavePort : public Port
      * port) and was unsuccesful.
      */
     virtual void recvRetry() = 0;
+	
+	virtual void recvRetry(int threadID) {}
 
 };
 

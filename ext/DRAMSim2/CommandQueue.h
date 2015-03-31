@@ -36,8 +36,10 @@
 
 
 
-//#define DEBUG_TP
-
+// #define DEBUG_TP
+#define interesting 0x55fc40
+// #define interesting_era_l 5619814
+// #define interesting_era_h 5620121
 
 #ifndef CMDQUEUE_H
 #define CMDQUEUE_H
@@ -73,7 +75,7 @@ namespace DRAMSim
         virtual ~CommandQueue(); 
 
         virtual void enqueue(BusPacket *newBusPacket);
-        bool pop(BusPacket **busPacket);
+        virtual bool pop(BusPacket **busPacket);
         virtual bool hasRoomFor(unsigned numberToEnqueue, unsigned rank, unsigned 
                 bank, unsigned pid);
         bool isIssuable(BusPacket *busPacket);

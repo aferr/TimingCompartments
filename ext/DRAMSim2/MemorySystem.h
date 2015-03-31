@@ -42,7 +42,8 @@
 #include "SystemConfiguration.h"
 #include "MemoryController.h"
 #include "MemoryControllerFT.h"
-#include "MemoryControllerTP.h"
+#include "MemoryControllerTPD.h"
+#include "MemoryControllerFR.h"
 #include "Rank.h"
 #include "Transaction.h"
 #include "Callback.h"
@@ -60,7 +61,8 @@ public:
 	MemorySystem(unsigned id, unsigned megsOfMemory, 
             CSVWriter &csvOut_, ostream &dramsim_log_, 
             const string &outputFilename_, unsigned tpTurnLength, bool genTrace, 
-            const string &traceFilename_, int num_pids);
+            const string &traceFilename_, int num_pids, bool fixAddr,
+            bool diffPeriod, int p0Period, int p1Period, int offset);
 	virtual ~MemorySystem();
 	void update();
 	bool addTransaction(Transaction *trans);
@@ -83,6 +85,7 @@ public:
 	//TODO: make this a functor as well?
 	static powerCallBack_t ReportPower;
 	unsigned systemID;
+	bool use_TP;
 
 private:
 	CSVWriter &csvOut;

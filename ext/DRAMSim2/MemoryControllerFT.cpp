@@ -7,13 +7,14 @@ using namespace DRAMSim;
 
 MemoryControllerFT::MemoryControllerFT(MemorySystem *parent, CSVWriter 
         &csvOut_, ostream &dramsim_log_, const string &outputFilename_, bool genTrace_,
-        const string &traceFilename_, int num_pids_) :
-    MemoryController(parent,csvOut_,dramsim_log_,outputFilename_, genTrace_, traceFilename_, num_pids_)
+        const string &traceFilename_, int num_pids_, bool fixAddr) :
+    MemoryController(parent,csvOut_,dramsim_log_,outputFilename_, genTrace_, traceFilename_, num_pids_, fixAddr)
 {
 
     commandQueue = new CommandQueueFT(bankStates,dramsim_log_,num_pids_); 
 
     // reserve for each process
+    transactionQueues = new vector<Transaction *>[num_pids]; 
     for (int i=0;i<num_pids;i++){
         transactionQueues[i].reserve(TRANS_QUEUE_DEPTH);
     }

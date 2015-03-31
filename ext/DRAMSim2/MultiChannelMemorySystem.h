@@ -47,7 +47,8 @@ namespace DRAMSim {
                     const string &pwd, const string &trc, unsigned megsOfMemory,
                     const string &output, string *visFilename=NULL, 
                     const IniReader::OverrideMap *paramOverrides=NULL,
-                    int num_pids=2);
+                    int num_pids=2, bool fixAddr=false,
+                    bool diffPeriod=false, int p0Period=64, int p1Period=64, int offset=0);
             virtual ~MultiChannelMemorySystem();
             bool addTransaction(Transaction *trans);
             bool addTransaction(const Transaction &trans);
@@ -70,11 +71,11 @@ namespace DRAMSim {
             //output file
             std::ofstream visDataOut;
             ofstream dramsim_log; 
+			vector<MemorySystem*> channels; 
 
         private:
             unsigned findChannelNumber(uint64_t addr);
             void actual_update(); 
-            vector<MemorySystem*> channels; 
             unsigned megsOfMemory; 
             string deviceIniFilename;
             string systemIniFilename;

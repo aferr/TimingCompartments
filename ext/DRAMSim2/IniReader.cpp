@@ -524,6 +524,14 @@ void IniReader::InitEnumsFromStrings()
 			DEBUG("ADDR SCHEME: 7");
 		}
 	}
+	else if (ADDRESS_MAPPING_SCHEME == "scheme8")
+	{
+		addressMappingScheme = Scheme8;
+		if (DEBUG_INI_READER) 
+		{
+			DEBUG("ADDR SCHEME: 8");
+		}
+	}
 	else
 	{
 		cout << "WARNING: unknown address mapping scheme '"<<ADDRESS_MAPPING_SCHEME<<"'; valid values are 'scheme1'...'scheme7'. Defaulting to scheme1"<<endl;
@@ -590,6 +598,14 @@ void IniReader::InitEnumsFromStrings()
     } else if(TIMING_PROTECTION == "timing_partitioning"){
         timingProtection = TimingPartitioning;
         queuingStructure = PerRankPerThread;
+    } else if(TIMING_PROTECTION == "fix_address"){
+    	timingProtection = FixedAddress;
+    	queuingStructure = PerRankPerThread;
+    } else if(TIMING_PROTECTION == "fr_fcfs"){
+    	timingProtection = FR_FCFS;
+    } else if(TIMING_PROTECTION == "timing_partitioning_d"){
+    	timingProtection = TimingPartitioningD;
+		queuingStructure = PerRankPerThread;
     }
 
 	if (SCHEDULING_POLICY == "rank_then_bank_round_robin")

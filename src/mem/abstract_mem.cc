@@ -76,11 +76,11 @@ AbstractMemory::AbstractMemory(const Params *p) :
         return;
 
     if (params()->file == "") {
-        int map_flags = MAP_ANON | MAP_PRIVATE;
+        int map_flags = MAP_ANON | MAP_PRIVATE | MAP_NORESERVE;
         pmemAddr = (uint8_t *)mmap(NULL, size(),
                                    PROT_READ | PROT_WRITE, map_flags, -1, 0);
     } else {
-        int map_flags = MAP_PRIVATE;
+        int map_flags = MAP_PRIVATE | MAP_NORESERVE;
         int fd = open(params()->file.c_str(), O_RDONLY);
         long _size = lseek(fd, 0, SEEK_END);
         if (_size != range.size()) {
@@ -160,7 +160,7 @@ AbstractMemory::regStats()
         .init(system()->maxMasters())
         .name(name() + ".num_writes")
         .desc("Number of write requests responded to by this memory")
-        .flags(total | nozero | nonan)
+        .flags(total | nonan)
         ;
     for (int i = 0; i < system()->maxMasters(); i++) {
         numWrites.subname(i, system()->getMasterName(i));
@@ -444,7 +444,7 @@ AbstractMemory::functionalAccess(PacketPtr pkt)
         if (pmemAddr)
             memcpy(hostAddr, pkt->getPtr<uint8_t>(), pkt->getSize());
         TRACE_PACKET("Write");
-        pkt->makeResponse();
+        if(pkt->needsResponse()) pkt->makeResponse();
     } else if (pkt->isPrint()) {
         Packet::PrintReqState *prs =
             dynamic_cast<Packet::PrintReqState*>(pkt->senderState);
@@ -551,7 +551,7 @@ AbstractMemory::unserialize(Checkpoint *cp, const string &section)
               _size, params()->range.size());
 
     pmemAddr = (uint8_t *)mmap(NULL, size(),
-        PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+        PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE | MAP_NORESERVE, -1, 0);
 
     if (pmemAddr == (void *)MAP_FAILED) {
         perror("mmap");

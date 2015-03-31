@@ -73,6 +73,8 @@ vector<System *> System::systemList;
 
 int System::numSystemsRunning = 0;
 
+bool System::is_fast_forward;
+
 System::System(Params *p)
     : MemObject(p), _systemPort("system_port", this),
       _numContexts(0),
@@ -92,11 +94,19 @@ System::System(Params *p)
 {
     // add self to global system list
     systemList.push_back(this);
+
+    is_fast_forward = p->fast_forward;
+
+    int mem_end = physmem.totalSize() >> LogVMPageSize;
+    //int partition_size = (mem_end + p->numPids - 1) / p->numPids;
+    int partition_size = mem_end / p->numPids;
+
+    pagePtr = new Addr[p->numPids];
+    for( int i=0; i < p->numPids; i++ ){
+      pagePtr[i] = i * partition_size;
+    }
     
-    pagePtr[0] = 0;
-    pagePtr[2] = (physmem.totalSize() >> (LogVMPageSize + 1));
-    pagePtr[1] = pagePtr[2] >> 1;
-    pagePtr[3] = pagePtr[1] + pagePtr[2];
+    fixAddr = p->fixAddr;
 
     if (FullSystem) {
         kernelSymtab = new SymbolTable;
@@ -308,19 +318,20 @@ System::replaceThreadContext(ThreadContext *tc, int context_id)
 Addr
 System::allocPhysPages(int npages, int pid)
 {
-#ifdef FIXADDR
-	Addr return_addr = pagePtr[pid] << LogVMPageSize;
-    pagePtr[pid] += npages;
-    if ((pagePtr[pid] << LogVMPageSize) > (physmem.totalSize()*(pid+1)/4))
-        fatal("Out of memory, please increase size of physical memory.");
-    return return_addr;
-#else    
-    Addr return_addr = pagePtr[0] << LogVMPageSize;
-    pagePtr[0] += npages;
-    if ((pagePtr[0] << LogVMPageSize) > physmem.totalSize())
-        fatal("Out of memory, please increase size of physical memory.");
-    return return_addr;
-#endif
+	if( fixAddr ) {
+		Addr return_addr = pagePtr[pid] << LogVMPageSize;
+		pagePtr[pid] += npages;
+		if ((pagePtr[pid] << LogVMPageSize) > (physmem.totalSize()*(pid+1)/_params->numPids))
+			fatal("Out of memory, please increase size of physical memory.");
+		return return_addr;
+	}
+	else {    
+		Addr return_addr = pagePtr[0] << LogVMPageSize;
+		pagePtr[0] += npages;
+		if ((pagePtr[0] << LogVMPageSize) > physmem.totalSize())
+			fatal("Out of memory, please increase size of physical memory.");
+		return return_addr;
+	}
 }
 
 Addr
@@ -332,11 +343,10 @@ System::memSize() const
 Addr
 System::freeMemSize() const
 {
-#ifdef FIXADDR
-   return physmem.totalSize()*3 - ((pagePtr[0] + pagePtr[1] + pagePtr[2] + pagePtr[3]) << LogVMPageSize);
-#else
-   return physmem.totalSize() - (pagePtr[0] << LogVMPageSize);
-#endif
+	if( fixAddr ) 
+	   return physmem.totalSize()*3 - ((pagePtr[0] + pagePtr[1] + pagePtr[2] + pagePtr[3]) << LogVMPageSize);
+	else
+	   return physmem.totalSize() - (pagePtr[0] << LogVMPageSize);
 }
 
 bool

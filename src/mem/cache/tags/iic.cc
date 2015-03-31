@@ -46,6 +46,7 @@
 #include "mem/cache/tags/iic.hh"
 #include "mem/cache/base.hh"
 #include "sim/core.hh"
+#include "stdio.h"
 
 using namespace std;
 
@@ -351,6 +352,7 @@ IIC::freeReplacementBlock(PacketList & writebacks)
     IICTag *tag_ptr;
     unsigned long data_ptr;
     /* consult replacement policy */
+	printf("iic called\n");
     tag_ptr = &tagStore[repl->getRepl()];
     assert(tag_ptr->isValid());
 
@@ -373,7 +375,8 @@ IIC::freeReplacementBlock(PacketList & writebacks)
 */
             Request *writebackReq = new Request(regenerateBlkAddr(tag_ptr->tag, 0),
                                            blkSize, 0, Request::wbMasterId);
-            PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
+			fprintf(stderr, "panic: iic called!\n");
+			PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
             writeback->allocate();
             memcpy(writeback->getPtr<uint8_t>(), tag_ptr->data, blkSize);
 

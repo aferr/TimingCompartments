@@ -76,6 +76,15 @@ class MSHRQueue
 
 
   public:
+
+    std::string print_allocated(){
+      std::string s = "Allocated MSHRs:\n";
+      for(MSHR::Iterator it=allocatedList.begin();
+          it!=allocatedList.end(); ++it){
+        s += (*it)->to_string() + '\n';
+      }
+      return s;
+    }
     /** The number of allocated entries. */
     int allocated;
     /** The number of entries that have been forwarded to the bus. */
@@ -184,6 +193,10 @@ class MSHRQueue
         return !readyList.empty();
     }
 
+    int numReady(){
+      return readyList.size();
+    }
+
     /**
      * Returns true if there are no free entries.
      * @return True if this queue is full.
@@ -203,6 +216,11 @@ class MSHRQueue
             return NULL;
         }
         return readyList.front();
+    }
+
+    MSHR *getNextMSHRFunctional() const
+    {
+      return readyList.front();
     }
 
     Tick nextMSHRReadyTime() const

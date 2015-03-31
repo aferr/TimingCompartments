@@ -129,6 +129,9 @@ class FullO3CPU : public BaseO3CPU
 
   private:
 
+    virtual void fakeContextSwitch(){
+    }
+
     /**
      * IcachePort class for instruction fetch.
      */

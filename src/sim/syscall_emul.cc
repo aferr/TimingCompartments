@@ -116,9 +116,11 @@ exitFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 {
     if (process->system->numRunningContexts() == 1) {
         // Last running context... exit simulator
+        stringstream ss;
+        ss << tc->cpuId();
+        string cause = "cpu"+ss.str()+" called exit()";
         int index = 0;
-            exitSimLoop("target called exit()",
-                    process->getSyscallArg(tc, index) & 0xff);
+        exitSimLoop( cause, process->getSyscallArg(tc, index) & 0xff );
     } else {
         // other running threads... just halt this one
         tc->halt();

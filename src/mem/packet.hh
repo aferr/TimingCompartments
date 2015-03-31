@@ -199,6 +199,7 @@ class MemCmd
     bool isError() const        { return testCmdAttrib(IsError); }
     bool isPrint() const        { return testCmdAttrib(IsPrint); }
     bool isFlush() const        { return testCmdAttrib(IsFlush); }
+    bool isWriteback() const    { return cmd == Writeback; }
 
     const Command
     responseCommand() const
@@ -268,6 +269,7 @@ class Packet : public Printable
 
     /// The command field of the packet.
     MemCmd cmd;
+    bool isWriteback() const    { return cmd.isWriteback(); }
 
     /// A pointer to the original request.
     RequestPtr req;
@@ -337,6 +339,10 @@ class Packet : public Printable
 
     /// The time at which the first chunk of the packet will be transmitted
     Tick firstWordTime;
+
+    Tick getFirstWordTime( bool useFWT ){
+      return useFWT ? firstWordTime : finishTime;
+    }
 
     /**
      * A virtual base opaque structure used to hold state associated
@@ -492,6 +498,7 @@ class Packet : public Printable
     /// Reset destination field, e.g. to turn a response into a request again.
     void clearDest() { dest = InvalidPortID; }
 
+    Addr getPaddr() const { return req->getPaddr(); }
     Addr getAddr() const { assert(flags.isSet(VALID_ADDR)); return addr; }
     unsigned getSize() const  { assert(flags.isSet(VALID_SIZE)); return size; }
     Addr getOffset(int blkSize) const { return getAddr() & (Addr)(blkSize - 1); }

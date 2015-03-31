@@ -38,6 +38,8 @@
 
 #include "config/the_isa.hh"
 #include "mem/cache/base.hh"
+#include "mem/cache/split_mshr_cache.hh"
+#include "mem/cache/split_rport_cache.hh"
 #include "mem/cache/cache.hh"
 #include "mem/config/cache.hh"
 #include "params/BaseCache.hh"
@@ -45,6 +47,8 @@
 // Tag Templates
 #if defined(USE_CACHE_LRU)
 #include "mem/cache/tags/lru.hh"
+#include "mem/cache/tags/splru.hh"
+#include "mem/cache/tags/wplru.hh"
 #endif
 
 #if defined(USE_CACHE_FALRU)
@@ -58,11 +62,16 @@
 
 using namespace std;
 
-#define BUILD_CACHE(TAGS, tags)                         \
-    do {                                                \
-        Cache<TAGS> *retval =                           \
-            new Cache<TAGS>(this, tags);            \
-        return retval;                                  \
+#define BUILD_CACHE(TAGS, tags)                               \
+    do {                                                      \
+        Cache<TAGS> *retval;                                  \
+        if( split_rport )                                     \
+            retval = new SplitRPortCache<TAGS>(this, tags);   \
+        else if( split_mshrq )                                \
+            retval = new SplitMSHRCache<TAGS>(this, tags);    \
+        else                                                  \
+            retval = new Cache<TAGS>(this, tags);             \
+        return retval;                                        \
     } while (0)
 
 #define BUILD_CACHE_PANIC(x) do {                       \
@@ -80,7 +89,13 @@ using namespace std;
 
 #if defined(USE_CACHE_LRU)
 #define BUILD_LRU_CACHE do {                                            \
-        LRU *tags = new LRU(numSets, block_size, assoc, latency);       \
+        LRU *tags;                                                      \
+        if( use_way_part )                                              \
+            tags = new WPLRU( numSets, block_size, assoc, latency, num_tcs ); \
+        else if( use_set_part )                                               \
+            tags = new SPLRU( numSets, block_size, assoc, latency, num_tcs );     \
+        else                                                            \
+            tags = new LRU(numSets, block_size, assoc, latency);        \
         BUILD_CACHE(LRU, tags);                                         \
     } while (0)
 #else

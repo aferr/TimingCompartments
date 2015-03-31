@@ -158,6 +158,12 @@ MasterPort::sendRetry()
 }
 
 void
+MasterPort::sendRetry(int threadID)
+{
+    _slavePort->recvRetry(threadID);
+}
+
+void
 MasterPort::printAddr(Addr a)
 {
     Request req(a, 1, 0, Request::funcMasterId);
@@ -166,6 +172,11 @@ MasterPort::printAddr(Addr a)
     pkt.senderState = &prs;
 
     sendFunctional(&pkt);
+}
+
+void
+MasterPort::contextSwitch(int tcid){
+  _slavePort->contextSwitch(tcid);
 }
 
 /**
@@ -246,4 +257,10 @@ void
 SlavePort::sendRetry()
 {
     _masterPort->recvRetry();
+}
+
+void
+SlavePort::sendRetry(int threadID)
+{
+    _masterPort->recvRetry(threadID);
 }

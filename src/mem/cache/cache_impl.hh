@@ -59,6 +59,8 @@
 #include "mem/cache/blk.hh"
 #include "mem/cache/cache.hh"
 #include "mem/cache/mshr.hh"
+#include "mem/cache/split_mshr_cache.hh"
+#include "mem/cache/split_rport_cache.hh"
 #include "sim/sim_exit.hh"
 
 template<class TagStore>
@@ -80,6 +82,11 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     tags->setCache(this);
     if (prefetcher)
         prefetcher->setCache(this);
+
+    tracePrinter = new TracePrinter( p->l3_trace_file, p );
+
+    params = p;
+	
 }
 
 template<class TagStore>
@@ -136,7 +143,7 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
                                        bool deferred_response,
                                        bool pending_downgrade)
 {
-    assert(blk && blk->isValid());
+    // assert(blk && blk->isValid());
     // Occasionally this is not true... if we are a lower-level cache
     // satisfying a string of Read and ReadEx requests from
     // upper-level caches, a Read will mark the block as shared but we
@@ -170,7 +177,7 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
                     pkt->assertMemInhibit();
                 }
                 // on ReadExReq we give up our copy unconditionally
-                tags->invalidateBlk(blk);
+                tags->invalidateBlk(blk, pkt->threadID);
             } else if (blk->isWritable() && !pending_downgrade
                       && !pkt->sharedAsserted() && !pkt->req->isInstFetch()) {
                 // we can give the requester an exclusive copy (by not
@@ -210,7 +217,7 @@ Cache<TagStore>::satisfyCpuSideRequest(PacketPtr pkt, BlkType *blk,
         // to just ack those as long as we have an exclusive
         // copy at this level.
         assert(pkt->isUpgrade());
-        tags->invalidateBlk(blk);
+        tags->invalidateBlk(blk, pkt->threadID);
     }
 }
 
@@ -247,6 +254,7 @@ Cache<TagStore>::squash(int threadNum)
 {
     bool unblock = false;
     BlockedCause cause = NUM_BLOCKED_CAUSES;
+    fprintf(stderr, "%s\n", "SQUASHED!!");
 
     if (noTargetMSHR && noTargetMSHR->threadNum == threadNum) {
         noTargetMSHR = NULL;
@@ -278,9 +286,9 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         if (pkt->req->isClearLL()) {
             tags->clearLocks();
         } else if (pkt->isWrite()) {
-           blk = tags->findBlock(pkt->getAddr());
+           blk = tags->findBlock(pkt->getAddr(), pkt->threadID );
            if (blk != NULL) {
-               tags->invalidateBlk(blk);
+               tags->invalidateBlk( blk, pkt->threadID );
            }
         }
 
@@ -290,7 +298,17 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
     }
 
     int id = pkt->req->hasContextId() ? pkt->req->contextId() : -1;
-    blk = tags->accessBlock(pkt->getAddr(), lat, id);
+
+    blk = tags->accessBlock(pkt->getAddr(), lat, id, pkt->threadID);
+#ifdef DEBUG_TP
+    if(isInteresting(pkt)){
+        printf( "did interesting access it was a %s @ %lu with dest %i\n",
+                (blk == NULL)? "miss" : "hit",
+                curTick(),
+                pkt->getDest()
+              );
+    }
+#endif
 
     DPRINTF(Cache, "%s%s %x %s\n", pkt->cmdString(),
             pkt->req->isInstFetch() ? " (ifetch)" : "",
@@ -316,7 +334,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
         assert(blkSize == pkt->getSize());
         if (blk == NULL) {
             // need to do a replacement
-            blk = allocateBlock(pkt->getAddr(), writebacks);
+            blk = allocateBlock(pkt->getAddr(), writebacks, pkt->threadID);
             if (blk == NULL) {
                 // no replaceable block available, give up.
                 // writeback will be forwarded to next level.
@@ -324,7 +342,7 @@ Cache<TagStore>::access(PacketPtr pkt, BlkType *&blk,
                 return false;
             }
             int id = pkt->req->masterId();
-            tags->insertBlock(pkt->getAddr(), blk, id);
+            tags->insertBlock(pkt->getAddr(), blk, id, pkt->threadID );
             blk->status = BlkValid | BlkReadable;
         }
         std::memcpy(blk->data, pkt->getPtr<uint8_t>(), blkSize);
@@ -380,7 +398,6 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 //@todo Add back in MemDebug Calls
 //    MemDebug::cacheAccess(pkt);
 
-
     /// @todo temporary hack to deal with memory corruption issue until
     /// 4-phase transactions are complete
     for (int x = 0; x < pendingDelete.size(); x++)
@@ -389,6 +406,12 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
     // we charge hitLatency for doing just about anything here
     Tick time =  curTick() + hitLatency;
+
+#ifdef DEBUG_TP
+    if(isInteresting(pkt)){
+      printf("(hitLatency) time = %lu\n", time);
+    }
+#endif
 
     if (pkt->isResponse()) {
         // must be cache-to-cache response from upper to lower level
@@ -408,6 +431,11 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         rec->restore(pkt, this);
         delete rec;
         memSidePort->schedTimingSnoopResp(pkt, time);
+#ifdef DEBUG_TP
+        if(isInteresting(pkt)){
+          printf("(did schedTimingSnoopResp) time = %lu\n", time);
+        }
+#endif
         return true;
     }
 
@@ -439,12 +467,18 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 
     if (pkt->req->isUncacheable()) {
+#ifdef DEBUG_TP
+      if(isInteresting(pkt)){
+        printf( "interesting %s isUncacheable\n",
+            pkt->to_string().c_str() );
+      }
+#endif
         if (pkt->req->isClearLL()) {
             tags->clearLocks();
         } else if (pkt->isWrite()) {
-            BlkType *blk = tags->findBlock(pkt->getAddr());
+            BlkType *blk = tags->findBlock( pkt->getAddr(), pkt->threadID );
             if (blk != NULL) {
-                tags->invalidateBlk(blk);
+                tags->invalidateBlk( blk, pkt->threadID );
             }
         }
 
@@ -500,7 +534,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
 
         if (needsResponse) {
             pkt->makeTimingResponse();
-            cpuSidePort->schedTimingResp(pkt, curTick()+lat);
+            	cpuSidePort->schedTimingResp(pkt, curTick()+lat, pkt->threadID);
         } else {
             /// @todo nominally we should just delete the packet here,
             /// however, until 4-phase stuff we can't because sending
@@ -511,7 +545,16 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
         // miss
 
         Addr blk_addr = blockAlign(pkt->getAddr());
-        MSHR *mshr = mshrQueue.findMatch(blk_addr);
+        MSHR *mshr = getMSHRQueue( pkt->threadID )->findMatch( blk_addr );
+
+#ifdef DEBUG_TP
+        if(isInteresting(pkt)){
+            printf("searched MSHR for interesting @ %lu it was a %s\n",
+                    curTick(),
+                    mshr? "mshr hit" : "mshr miss"
+                  );
+        }
+#endif
 
         if (mshr) {
             // MSHR hit
@@ -521,6 +564,12 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             if (mshr->threadNum != 0/*pkt->req->threadId()*/) {
                 mshr->threadNum = -1;
             }
+#ifdef DEBUG_TP
+            if(isInteresting(pkt)){
+              printf( "mshr->allocateTarget( %s, %lu, %lu )\n",
+                  pkt->to_string().c_str(), time, order+1 );
+            }
+#endif
             mshr->allocateTarget(pkt, time, order++);
             if (mshr->getNumTargets() == numTarget) {
                 noTargetMSHR = mshr;
@@ -538,6 +587,12 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
             // no-write-allocate or bypass accesses this will have to
             // be changed.
             if (pkt->cmd == MemCmd::Writeback) {
+#ifdef DEBUG_TP
+                if(isInteresting(pkt)){
+                  printf( "mshr->allocateWriteBuffer( %s, %lu, %i )\n",
+                      pkt->to_string().c_str(), time, true );
+                }
+#endif
                 allocateWriteBuffer(pkt, time, true);
             } else {
                 if (blk && blk->isValid()) {
@@ -560,6 +615,13 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
                     blk->status &= ~BlkReadable;
                 }
 
+                //printf("store miss %llx from thread %llu to MSHR @ cycle %llu\n", pkt->getAddr(), pkt->threadID, time);
+#ifdef DEBUG_TP
+                if( isInteresting(pkt) ){
+                    printf("allocateMissBuffer( %s, %lu, true ) @ %lu\n",
+                        pkt->to_string().c_str(), time, curTick());
+                }
+#endif 
                 allocateMissBuffer(pkt, time, true);
             }
 
@@ -570,7 +632,7 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     }
 
     if (next_pf_time != 0)
-        requestMemSideBus(Request_PF, std::max(time, next_pf_time));
+        requestMemSideBus(Request_PF, std::max(time, next_pf_time), pkt->threadID);
 
     // copy writebacks to write buffer
     while (!writebacks.empty()) {
@@ -642,9 +704,9 @@ Cache<TagStore>::atomicAccess(PacketPtr pkt)
         // have to invalidate ourselves and any lower caches even if
         // upper cache will be responding
         if (pkt->isInvalidate()) {
-            BlkType *blk = tags->findBlock(pkt->getAddr());
+            BlkType *blk = tags->findBlock( pkt->getAddr(), pkt->threadID );
             if (blk && blk->isValid()) {
-                tags->invalidateBlk(blk);
+                tags->invalidateBlk( blk, pkt->threadID );
                 DPRINTF(Cache, "rcvd mem-inhibited %s on 0x%x: invalidating\n",
                         pkt->cmdString(), pkt->getAddr());
             }
@@ -752,8 +814,8 @@ void
 Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 {
     Addr blk_addr = blockAlign(pkt->getAddr());
-    BlkType *blk = tags->findBlock(pkt->getAddr());
-    MSHR *mshr = mshrQueue.findMatch(blk_addr);
+    BlkType *blk = tags->findBlock( pkt->getAddr(), pkt->threadID );
+    MSHR *mshr = getMSHRQueue( pkt->threadID )->findMatch(blk_addr);
 
     pkt->pushLabel(name());
 
@@ -776,8 +838,8 @@ Cache<TagStore>::functionalAccess(PacketPtr pkt, bool fromCpuSide)
 
     bool done = have_dirty
         || cpuSidePort->checkFunctional(pkt)
-        || mshrQueue.checkFunctional(pkt, blk_addr)
-        || writeBuffer.checkFunctional(pkt, blk_addr)
+        || getMSHRQueue( pkt->threadID   )->checkFunctional(pkt, blk_addr)
+        || getWriteBuffer( pkt->threadID )->checkFunctional(pkt, blk_addr)
         || memSidePort->checkFunctional(pkt);
 
     DPRINTF(Cache, "functional %s %x %s%s%s\n",
@@ -821,7 +883,8 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
 
     assert(mshr);
 
-    if (is_error) {
+    //printf("handle response %llx @ cycle %llu\n", pkt->getAddr(), curTick());
+	if (is_error) {
         DPRINTF(Cache, "Cache received packet with error for address %x, "
                 "cmd: %s\n", pkt->getAddr(), pkt->cmdString());
     }
@@ -839,7 +902,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
 
     // Initial target is used just for stats
     MSHR::Target *initial_tgt = mshr->getTarget();
-    BlkType *blk = tags->findBlock(pkt->getAddr());
+    BlkType *blk = tags->findBlock( pkt->getAddr(), pkt->threadID );
     int stats_cmd_idx = initial_tgt->pkt->cmdToIndex();
     Tick miss_latency = curTick() - initial_tgt->recvTime;
     PacketList writebacks;
@@ -892,8 +955,9 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 }
 
                 // If critical word (no offset) return first word time
-                completion_time = tags->getHitLatency() +
-                    (transfer_offset ? pkt->finishTime : pkt->firstWordTime);
+                completion_time = tags->getHitLatency() + ( transfer_offset ?
+                  pkt->finishTime :
+                  pkt->getFirstWordTime(params->cw_first) );
 
                 assert(!target->pkt->req->isUncacheable());
 
@@ -925,7 +989,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
                 // isInvalidate() set otherwise.
                 target->pkt->cmd = MemCmd::ReadRespWithInvalidate;
             }
-            cpuSidePort->schedTimingResp(target->pkt, completion_time);
+		    cpuSidePort->schedTimingResp(target->pkt, completion_time, target->pkt->threadID);
             break;
 
           case MSHR::Target::FromPrefetcher:
@@ -955,7 +1019,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
 
     if (blk) {
         if (pkt->isInvalidate() || mshr->hasPostInvalidate()) {
-            tags->invalidateBlk(blk);
+            tags->invalidateBlk( blk, pkt->threadID );
         } else if (mshr->hasPostDowngrade()) {
             blk->status &= ~BlkWritable;
         }
@@ -969,7 +1033,7 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
         }
         MSHRQueue *mq = mshr->queue;
         mq->markPending(mshr);
-        requestMemSideBus((RequestCause)mq->index, pkt->finishTime);
+        requestMemSideBus((RequestCause)mq->index, pkt->finishTime, pkt->threadID);
     } else {
         mq->deallocate(mshr);
         if (wasFull && !mq->isFull()) {
@@ -986,10 +1050,10 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
     // if we used temp block, clear it out
     if (blk == tempBlock) {
         if (blk->isDirty()) {
-            allocateWriteBuffer(writebackBlk(blk), time, true);
+            allocateWriteBuffer(writebackBlk(blk, pkt->threadID), time, true);
         }
         blk->status &= ~BlkValid;
-        tags->invalidateBlk(blk);
+        tags->invalidateBlk( blk, pkt->threadID );
     }
 
     delete pkt;
@@ -1000,16 +1064,17 @@ Cache<TagStore>::handleResponse(PacketPtr pkt)
 
 template<class TagStore>
 PacketPtr
-Cache<TagStore>::writebackBlk(BlkType *blk)
+Cache<TagStore>::writebackBlk(BlkType *blk, int threadID)
 {
     assert(blk && blk->isValid() && blk->isDirty());
 
     writebacks[Request::wbMasterId]++;
 
-    Request *writebackReq =
+	Request *writebackReq =
         new Request(tags->regenerateBlkAddr(blk->tag, blk->set), blkSize, 0,
                 Request::wbMasterId);
-    PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback);
+    //if(threadID == 0) printf("replacing blk %llx\n", writebackReq->getPaddr());
+	PacketPtr writeback = new Packet(writebackReq, MemCmd::Writeback, threadID, threadID, threadID);
     if (blk->isWritable()) {
         writeback->setSupplyExclusive();
     }
@@ -1023,13 +1088,13 @@ Cache<TagStore>::writebackBlk(BlkType *blk)
 
 template<class TagStore>
 typename Cache<TagStore>::BlkType*
-Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
+Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks, uint64_t tid)
 {
-    BlkType *blk = tags->findVictim(addr, writebacks);
+    BlkType *blk = tags->findVictim( addr, writebacks, tid );
 
     if (blk->isValid()) {
         Addr repl_addr = tags->regenerateBlkAddr(blk->tag, blk->set);
-        MSHR *repl_mshr = mshrQueue.findMatch(repl_addr);
+        MSHR *repl_mshr = getMSHRQueue( tid )->findMatch(repl_addr);
         if (repl_mshr) {
             // must be an outstanding upgrade request on block
             // we're about to replace...
@@ -1045,7 +1110,7 @@ Cache<TagStore>::allocateBlock(Addr addr, PacketList &writebacks)
 
             if (blk->isDirty()) {
                 // Save writeback packet for handling by caller
-                writebacks.push_back(writebackBlk(blk));
+                writebacks.push_back(writebackBlk(blk, tid));
             }
         }
     }
@@ -1073,7 +1138,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
         // better have read new data...
         assert(pkt->hasData());
         // need to do a replacement
-        blk = allocateBlock(addr, writebacks);
+        blk = allocateBlock(addr, writebacks, pkt->threadID);
         if (blk == NULL) {
             // No replaceable block... just use temporary storage to
             // complete the current request and then get rid of it
@@ -1084,7 +1149,7 @@ Cache<TagStore>::handleFill(PacketPtr pkt, BlkType *blk,
             DPRINTF(Cache, "using temp block for %x\n", addr);
         } else {
             int id = pkt->req->masterId();
-            tags->insertBlock(pkt->getAddr(), blk, id);
+            tags->insertBlock(pkt->getAddr(), blk, id, pkt->threadID );
         }
 
         // starting from scratch with a new block
@@ -1259,7 +1324,7 @@ Cache<TagStore>::handleSnoop(PacketPtr pkt, BlkType *blk,
     // Do this last in case it deallocates block data or something
     // like that
     if (invalidate) {
-        tags->invalidateBlk(blk);
+        tags->invalidateBlk( blk, pkt->threadID );
     }
 }
 
@@ -1277,10 +1342,10 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
         return;
     }
 
-    BlkType *blk = tags->findBlock(pkt->getAddr());
+    BlkType *blk = tags->findBlock( pkt->getAddr(), pkt->threadID );
 
     Addr blk_addr = blockAlign(pkt->getAddr());
-    MSHR *mshr = mshrQueue.findMatch(blk_addr);
+    MSHR *mshr = getMSHRQueue( pkt->threadID )->findMatch(blk_addr);
 
     // Let the MSHR itself track the snoop and decide whether we want
     // to go ahead and do the regular cache snoop
@@ -1294,7 +1359,7 @@ Cache<TagStore>::snoopTiming(PacketPtr pkt)
 
     //We also need to check the writeback buffers and handle those
     std::vector<MSHR *> writebacks;
-    if (writeBuffer.findMatches(blk_addr, writebacks)) {
+    if (getWriteBuffer(pkt->threadID)->findMatches(blk_addr, writebacks)) {
         DPRINTF(Cache, "Snoop hit in writeback to addr: %x\n",
                 pkt->getAddr());
 
@@ -1344,6 +1409,7 @@ bool
 Cache<TagStore>::CpuSidePort::recvTimingSnoopResp(PacketPtr pkt)
 {
     // Express snoop responses from master to slave, e.g., from L1 to L2
+    cache->tracePrinter->addTrace( pkt, "recvTimingSnoopResp" );
     cache->timingAccess(pkt);
     return true;
 }
@@ -1358,7 +1424,7 @@ Cache<TagStore>::snoopAtomic(PacketPtr pkt)
         return hitLatency;
     }
 
-    BlkType *blk = tags->findBlock(pkt->getAddr());
+    BlkType *blk = tags->findBlock( pkt->getAddr(), pkt->threadID );
     handleSnoop(pkt, blk, false, false, false);
     return hitLatency;
 }
@@ -1366,11 +1432,11 @@ Cache<TagStore>::snoopAtomic(PacketPtr pkt)
 
 template<class TagStore>
 MSHR *
-Cache<TagStore>::getNextMSHR()
+Cache<TagStore>::getNextMSHR( int threadID )
 {
     // Check both MSHR queue and write buffer for potential requests
-    MSHR *miss_mshr  = mshrQueue.getNextMSHR();
-    MSHR *write_mshr = writeBuffer.getNextMSHR();
+    MSHR *miss_mshr  = getMSHRQueue( threadID )->getNextMSHR();
+    MSHR *write_mshr = getWriteBuffer( threadID )->getNextMSHR();
 
     // Now figure out which one to send... some cases are easy
     if (miss_mshr && !write_mshr) {
@@ -1381,13 +1447,14 @@ Cache<TagStore>::getNextMSHR()
     }
 
     if (miss_mshr && write_mshr) {
+        if(blocked) return write_mshr;
         // We have one of each... normally we favor the miss request
         // unless the write buffer is full
-        if (writeBuffer.isFull() && writeBuffer.inServiceEntries == 0) {
+        if (getWriteBuffer( threadID )->isFull() && getWriteBuffer( threadID )->inServiceEntries == 0) {
             // Write buffer is full, so we'd like to issue a write;
             // need to search MSHR queue for conflicting earlier miss.
             MSHR *conflict_mshr =
-                mshrQueue.findPending(write_mshr->addr, write_mshr->size);
+                getMSHRQueue( threadID )->findPending(write_mshr->addr, write_mshr->size);
 
             if (conflict_mshr && conflict_mshr->order < write_mshr->order) {
                 // Service misses in order until conflict is cleared.
@@ -1401,7 +1468,7 @@ Cache<TagStore>::getNextMSHR()
         // Write buffer isn't full, but need to check it for
         // conflicting earlier writeback
         MSHR *conflict_mshr =
-            writeBuffer.findPending(miss_mshr->addr, miss_mshr->size);
+            getWriteBuffer( threadID )->findPending(miss_mshr->addr, miss_mshr->size);
         if (conflict_mshr) {
             // not sure why we don't check order here... it was in the
             // original code but commented out.
@@ -1424,13 +1491,22 @@ Cache<TagStore>::getNextMSHR()
 
     // fall through... no pending requests.  Try a prefetch.
     assert(!miss_mshr && !write_mshr);
-    if (prefetcher && !mshrQueue.isFull()) {
+#ifdef DEBUG_TP
+    bool isInterestingTime = (curTick() > interesting_era_l) &&
+      (curTick() < interesting_era_h);
+    if( isInterestingTime && params->split_mshrq ){
+      printf("got a prefetch in getNextMSHR at @%lu during the chosen time\n",
+          curTick());
+    }
+#endif
+    if (prefetcher && !getMSHRQueue( threadID )->isFull()) {
         // If we have a miss queue slot, we can try a prefetch
         PacketPtr pkt = prefetcher->getPacket();
         if (pkt) {
             Addr pf_addr = blockAlign(pkt->getAddr());
-            if (!tags->findBlock(pf_addr) && !mshrQueue.findMatch(pf_addr) &&
-                                             !writeBuffer.findMatch(pf_addr)) {
+            if (!tags->findBlock( pf_addr, pkt->threadID )
+                    && !getMSHRQueue( threadID )->findMatch(pf_addr)
+                    && !getWriteBuffer( threadID )->findMatch(pf_addr)) {
                 // Update statistic on number of prefetches issued
                 // (hwpf_mshr_misses)
                 assert(pkt->req->masterId() < system->maxMasters());
@@ -1451,9 +1527,9 @@ Cache<TagStore>::getNextMSHR()
 
 template<class TagStore>
 PacketPtr
-Cache<TagStore>::getTimingPacket()
+Cache<TagStore>::getTimingPacket( int threadID )
 {
-    MSHR *mshr = getNextMSHR();
+    MSHR *mshr = getNextMSHR( threadID );
 
     if (mshr == NULL) {
         return NULL;
@@ -1462,6 +1538,12 @@ Cache<TagStore>::getTimingPacket()
     // use request from 1st target
     PacketPtr tgt_pkt = mshr->getTarget()->pkt;
     PacketPtr pkt = NULL;
+
+#ifdef DEBUG_TP
+    if(isInteresting(tgt_pkt)){
+        printf("interesting target pulled from mshr at time %lu\n",curTick());
+    }
+#endif
 
     if (tgt_pkt->cmd == MemCmd::SCUpgradeFailReq ||
         tgt_pkt->cmd == MemCmd::StoreCondFailReq) {
@@ -1476,10 +1558,10 @@ Cache<TagStore>::getTimingPacket()
         return NULL;
     } else if (mshr->isForwardNoResponse()) {
         // no response expected, just forward packet as it is
-        assert(tags->findBlock(mshr->addr) == NULL);
+        // assert(tags->findBlock(mshr->addr, pkt->threadID ) == NULL);
         pkt = tgt_pkt;
     } else {
-        BlkType *blk = tags->findBlock(mshr->addr);
+        BlkType *blk = tags->findBlock( mshr->addr, tgt_pkt->threadID );
 
         if (tgt_pkt->cmd == MemCmd::HardPFReq) {
             // It might be possible for a writeback to arrive between
@@ -1531,10 +1613,10 @@ Cache<TagStore>::getTimingPacket()
 
 template<class TagStore>
 Tick
-Cache<TagStore>::nextMSHRReadyTime()
+Cache<TagStore>::nextMSHRReadyTime( int threadID )
 {
-    Tick nextReady = std::min(mshrQueue.nextMSHRReadyTime(),
-                              writeBuffer.nextMSHRReadyTime());
+    Tick nextReady = std::min(getMSHRQueue( threadID )->nextMSHRReadyTime(),
+                              getWriteBuffer( threadID )->nextMSHRReadyTime());
 
     if (prefetcher) {
         nextReady = std::min(nextReady,
@@ -1592,12 +1674,13 @@ bool
 Cache<TagStore>::CpuSidePort::recvTimingReq(PacketPtr pkt)
 {
     // always let inhibited requests through even if blocked
-    if (!pkt->memInhibitAsserted() && blocked) {
+    if (!pkt->isWriteback() && !pkt->memInhibitAsserted() && blocked) {
         DPRINTF(Cache,"Scheduling a retry while blocked\n");
         mustSendRetry = true;
         return false;
     }
 
+    cache->tracePrinter->addTrace( pkt , "recvTimingReq" );
     cache->timingAccess(pkt);
     return true;
 }
@@ -1607,6 +1690,7 @@ Tick
 Cache<TagStore>::CpuSidePort::recvAtomic(PacketPtr pkt)
 {
     // atomic request
+    cache->tracePrinter->addTrace( pkt , "recvAtomic" );
     return cache->atomicAccess(pkt);
 }
 
@@ -1636,6 +1720,7 @@ template<class TagStore>
 bool
 Cache<TagStore>::MemSidePort::recvTimingResp(PacketPtr pkt)
 {
+    cache->tracePrinter->addTrace( pkt, "recvTimingResp" );
     cache->handleResponse(pkt);
     return true;
 }
@@ -1646,6 +1731,7 @@ void
 Cache<TagStore>::MemSidePort::recvTimingSnoopReq(PacketPtr pkt)
 {
     // handle snooping requests
+    cache->tracePrinter->addTrace( pkt, "recvTimingSnoopReq" );
     cache->snoopTiming(pkt);
 }
 
@@ -1654,6 +1740,7 @@ Tick
 Cache<TagStore>::MemSidePort::recvAtomicSnoop(PacketPtr pkt)
 {
     // atomic snoop
+    cache->tracePrinter->addTrace( pkt, "recvAtomicSnoop" );
     return cache->snoopAtomic(pkt);
 }
 
@@ -1671,13 +1758,32 @@ template<class TagStore>
 void
 Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
 {
-    // if we have a response packet waiting we have to start with that
+	// if we have a response packet waiting we have to start with that
+    //TODO This should get a TID based on the bus turn
+#ifdef DEBUG_TP
+    bool isInterestingTime = (curTick() > interesting_era_l) &&
+      (curTick() < interesting_era_h);
+    if( isInterestingTime && cache.params->split_mshrq){
+      printf("interesting sendDeferred with ID=%i, @%lu printing transmitlist:\n%s",
+          ID, curTick(), print(transmitList).c_str());
+    }
+#endif
     if (deferredPacketReady()) {
         // use the normal approach from the timing port
         trySendTiming();
     } else {
         // check for request packets (requests & writebacks)
-        PacketPtr pkt = cache.getTimingPacket();
+        PacketPtr pkt = cache.getTimingPacket( ID );
+#ifdef DEBUG_TP
+        if(isInterestingTime && cache.params->split_mshrq){
+            printf("getTimingPacket produced packet %s @%lu\n",
+                    pkt->to_string().c_str(), curTick());
+        }
+#endif
+		// if(pkt != NULL) {
+		// 	printf("send miss %llx from thread %llu @ %llu\n", pkt->getAddr(), pkt->threadID, cache.nextCycle());
+		// 	std::cout << cache.name() << " " << cache.isSplitMSHR() << std::endl;
+		// }
         if (pkt == NULL) {
             // can happen if e.g. we attempt a writeback and fail, but
             // before the retry, the writeback is eliminated because
@@ -1685,6 +1791,13 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
             waitingOnRetry = false;
         } else {
             MSHR *mshr = dynamic_cast<MSHR*>(pkt->senderState);
+
+#ifdef DEBUG_TP
+            if(cache.isInteresting(pkt)){
+                printf("getTimingPacket sent to bus @%lu\n",
+                        curTick());
+            }
+#endif
 
             waitingOnRetry = !masterPort.sendTimingReq(pkt);
 
@@ -1711,7 +1824,11 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
     // next send, not only looking at the response transmit list, but
     // also considering when the next MSHR is ready
     if (!waitingOnRetry) {
-        scheduleSend(cache.nextMSHRReadyTime());
+        scheduleSend(cache.nextMSHRReadyTime( ID ));
+    }
+
+    if(cache.blocked && !cache.getWriteBuffer(ID)->havePending() ){
+      cache.clearBlocked(Blocked_DrainingWritebacks);
     }
 }
 
@@ -1720,6 +1837,39 @@ Cache<TagStore>::
 MemSidePort::MemSidePort(const std::string &_name, Cache<TagStore> *_cache,
                          const std::string &_label)
     : BaseCache::CacheMasterPort(_name, _cache, _queue),
-      _queue(*_cache, *this, _label), cache(_cache)
-{
+      _queue(*_cache, *this, _label, 5), cache(_cache)
+{}
+
+//-----------------------------------------------------------------------------
+// Split MSHR Cache
+//-----------------------------------------------------------------------------
+template<class TagStore>
+SplitMSHRCache<TagStore>::SplitMSHRCache( const Params *p, TagStore *tags )
+    : Cache<TagStore>( p, tags )
+ {
+          mshrQueues = new MSHRQueue*[p->num_tcs];
+          writeBuffers = new MSHRQueue*[p->num_tcs];
+          for( int i=0; i < (p->num_tcs); i++ ){
+              mshrQueues[i] = new MSHRQueue( "MSHRs", p->mshrs, 4, 0 );
+              writeBuffers[i] =new MSHRQueue("write buffer",
+                  p->write_buffers, p->mshrs+1000, 1);
+          }
+
+          num_tcs = p->num_tcs;
+
+          this->memSidePort = new SplitMemSidePort(p->name + ".mem_side", this,
+                                  "MemSidePort");
 }
+
+//-----------------------------------------------------------------------------
+// Split Response Port Cache
+//-----------------------------------------------------------------------------
+template<class TagStore>
+SplitRPortCache<TagStore>::SplitRPortCache( const Params *p, TagStore *tags )
+    : SplitMSHRCache<TagStore>( p, tags )
+{
+
+  this->cpuSidePort = new SRCpuSidePort(p->name + ".cpu_side", this,
+                                  "CpuSidePort");
+}
+

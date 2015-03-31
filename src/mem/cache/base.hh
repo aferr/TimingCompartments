@@ -78,6 +78,15 @@ class MSHR;
  */
 class BaseCache : public MemObject
 {
+  private:
+
+    void flushInternal(){
+	    flush(0);
+      Tick time = curTick() + params->context_sw_freq;
+      schedule( flushEvent, time);
+    }
+
+
     /**
      * Indexes to enumerate the MSHR queues.
      */
@@ -87,6 +96,11 @@ class BaseCache : public MemObject
     };
 
   public:
+      void insertContextSwitches(){
+        if (!flushEvent.scheduled()) schedule(flushEvent, params->context_sw_freq);
+      }
+	  
+    virtual void flush( int tcid ){}
     /**
      * Reasons for caches to be blocked.
      */
@@ -94,6 +108,7 @@ class BaseCache : public MemObject
         Blocked_NoMSHRs = MSHRQueue_MSHRs,
         Blocked_NoWBBuffers = MSHRQueue_WriteBuffer,
         Blocked_NoTargets,
+        Blocked_DrainingWritebacks,
         NUM_BLOCKED_CAUSES
     };
 
@@ -107,9 +122,23 @@ class BaseCache : public MemObject
         NUM_REQUEST_CAUSES
     };
 
-  protected:
 
-    /**
+
+  protected:
+    virtual MSHRQueue* getMSHRQueue( int threadID ){
+        return &mshrQueue;
+    }
+    virtual MSHRQueue* getWriteBuffer( int threadID ){
+        return &writeBuffer;
+    }
+	
+	// virtual bool isSplitMSHR() {return false;}
+	// 
+	// virtual bool isSplitRPort() {return false;}
+	
+	virtual int get_num_tcs() {return 1;}
+
+    /** g
      * A cache master port is used for the memory-side port of the
      * cache, and in addition to the basic timing port that only sends
      * response packets through a transmit list, it also offers the
@@ -128,10 +157,16 @@ class BaseCache : public MemObject
          * that we could already have a retry or a transmit list of
          * responses outstanding.
          */
-        void requestBus(RequestCause cause, Tick time)
+        void requestBus(RequestCause cause, Tick time, bool isInteresting)
         {
             DPRINTF(CachePort, "Asserting bus request for cause %d\n", cause);
-            queue.schedSendEvent(time);
+            queue.schedSendEvent(time, isInteresting);
+        }
+		
+		virtual void requestBus(RequestCause cause, Tick time, int threadID,
+        bool isInteresting)
+        {
+            requestBus( cause, time, isInteresting );
         }
 
       protected:
@@ -200,14 +235,26 @@ class BaseCache : public MemObject
     MSHR *allocateBufferInternal(MSHRQueue *mq, Addr addr, int size,
                                  PacketPtr pkt, Tick time, bool requestBus)
     {
-        MSHR *mshr = mq->allocate(addr, size, pkt, time, order++);
+		MSHR *mshr = mq->allocate(addr, size, pkt, time, order++);
 
         if (mq->isFull()) {
             setBlocked((BlockedCause)mq->index);
         }
 
         if (requestBus) {
-            requestMemSideBus((RequestCause)mq->index, time);
+#ifdef DEBUG_TP
+            bool interesting_cond = (addr == interesting) && (params->split_mshrq)
+                && (pkt->threadID==0);
+            if( interesting_cond ){
+                printf("reqMemSide for interesting with time %lu with curTick %lu\n",
+                        time,
+                        curTick());
+            }
+            requestMemSideBus((RequestCause)mq->index, time, pkt->threadID,
+                    interesting_cond);
+#else
+            requestMemSideBus((RequestCause)mq->index, time, pkt->threadID);
+#endif
         }
 
         return mshr;
@@ -267,6 +314,8 @@ class BaseCache : public MemObject
      * The address range to which the cache responds on the CPU side.
      * Normally this is all possible memory addresses. */
     AddrRangeList addrRanges;
+	
+	EventWrapper<BaseCache,&BaseCache::flushInternal> flushEvent;
 
   public:
     /** System we are currently operating in. */
@@ -417,6 +466,7 @@ class BaseCache : public MemObject
 
   public:
     typedef BaseCacheParams Params;
+    const Params * params;
     BaseCache(const Params *p);
     ~BaseCache() {}
 
@@ -444,7 +494,7 @@ class BaseCache : public MemObject
     MSHR *allocateMissBuffer(PacketPtr pkt, Tick time, bool requestBus)
     {
         assert(!pkt->req->isUncacheable());
-        return allocateBufferInternal(&mshrQueue,
+        return allocateBufferInternal(getMSHRQueue(pkt->threadID),
                                       blockAlign(pkt->getAddr()), blkSize,
                                       pkt, time, requestBus);
     }
@@ -452,7 +502,7 @@ class BaseCache : public MemObject
     MSHR *allocateWriteBuffer(PacketPtr pkt, Tick time, bool requestBus)
     {
         assert(pkt->isWrite() && !pkt->isRead());
-        return allocateBufferInternal(&writeBuffer,
+        return allocateBufferInternal(getWriteBuffer( pkt->threadID ),
                                       pkt->getAddr(), pkt->getSize(),
                                       pkt, time, requestBus);
     }
@@ -461,7 +511,7 @@ class BaseCache : public MemObject
     {
         assert(pkt->req->isUncacheable());
         assert(pkt->isRead());
-        return allocateBufferInternal(&mshrQueue,
+        return allocateBufferInternal(getMSHRQueue( pkt->threadID ),
                                       pkt->getAddr(), pkt->getSize(),
                                       pkt, time, requestBus);
     }
@@ -514,9 +564,10 @@ class BaseCache : public MemObject
      * @param cause The reason for the request.
      * @param time The time to make the request.
      */
-    void requestMemSideBus(RequestCause cause, Tick time)
+    void requestMemSideBus(RequestCause cause, Tick time, int threadID,
+        bool isInteresting=false)
     {
-        memSidePort->requestBus(cause, time);
+      memSidePort->requestBus(cause, time, threadID, isInteresting);
     }
 
     /**

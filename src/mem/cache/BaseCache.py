@@ -54,7 +54,7 @@ class BaseCache(MemObject):
     trace_addr = Param.Addr(0, "address to trace")
     two_queue = Param.Bool(False,
         "whether the lifo should have two queue replacement")
-    write_buffers = Param.Int(8, "number of write buffers")
+    write_buffers = Param.Int(100000, "number of write buffers")
     prefetch_on_access = Param.Bool(False,
          "notify the hardware prefetcher on every access (not just misses)")
     prefetcher = Param.BasePrefetcher(NULL,"Prefetcher attached to cache")
@@ -62,3 +62,16 @@ class BaseCache(MemObject):
     mem_side = MasterPort("Port on side closer to MEM")
     addr_ranges = VectorParam.AddrRange([AllMemory], "The address range for the CPU-side port")
     system = Param.System(Parent.any, "System we belong to")
+    do_cache_trace = Param.Bool(False, "should a cache trace be saved?")
+    l3_trace_file  = Param.String("l3trace.txt", "l3 trace output file")
+    num_tcs        = Param.Unsigned(2, "number of timing compartments" );
+    use_set_part   = Param.Bool(False, "Use set partitioning in L3?")
+    use_way_part   = Param.Bool(False, "Use way partitioning in L3?")
+    split_mshrq    = Param.Bool(False, "Use MSHR Queue per TC?")
+    split_rport    = Param.Bool(False, "Use Split Response Port Queue per TC?")
+    do_flush       = Param.Bool(False, "Flush this particular cache on context switches")
+    do_flush_insecure = Param.Bool(False, "Flush the insecure cache")
+    flushRatio     = Param.Float(1.0, "Flusing ratio of the insecure cache.")
+    context_sw_freq = Param.Addr(1000, "Context switch frequency in us")
+    cw_first       = Param.Bool(True, "Use critical word first timing")
+    reserve_flush  = Param.Bool(True, "Use reserve flush instead of blocking")

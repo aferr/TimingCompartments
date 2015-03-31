@@ -47,10 +47,12 @@
 
 using namespace std;
 
-PacketQueue::PacketQueue(EventManager& _em, const std::string& _label)
-    : em(_em), sendEvent(this), drainEvent(NULL), label(_label),
+PacketQueue::PacketQueue(EventManager& _em, const std::string& _label, int _ID)
+    : em(_em), sendEvent(this), drainEvent(NULL), label(_label), ID(_ID),
       waitingOnRetry(false)
 {
+	//printf("SendEvent initialized %d\n", sendEvent.initialized());
+	//cout<< _label << endl;
 }
 
 PacketQueue::~PacketQueue()
@@ -61,8 +63,9 @@ void
 PacketQueue::retry()
 {
     DPRINTF(PacketQueue, "Queue %s received retry\n", name());
-    assert(waitingOnRetry);
-    sendDeferredPacket();
+    //assert(waitingOnRetry);
+    //printf("Queue %s received retry @ %llu\n", name().c_str(), curTick());
+	sendDeferredPacket();
 }
 
 bool
@@ -87,7 +90,7 @@ PacketQueue::checkFunctional(PacketPtr pkt)
 }
 
 void
-PacketQueue::schedSendEvent(Tick when)
+PacketQueue::schedSendEvent(Tick when, bool isInteresting)
 {
     // if we are waiting on a retry, do not schedule a send event, and
     // instead rely on retry being called
@@ -96,17 +99,32 @@ PacketQueue::schedSendEvent(Tick when)
         return;
     }
 
-    if (!sendEvent.scheduled()) {
+    // if( isInteresting ){
+    //   printf( "interesting schedEvent when=%lu curTick=%lu\n",
+    //        when, curTick() );
+    // }
+  
+    //printf("schedule send Event @ cycle %llu\n", when);
+	  //if (sendEvent.scheduled()) printf("Event scheduled @ cycle %llu\n", when);
+	  if (!sendEvent.scheduled()) {
+        // if( isEra() ) printf("schedSendEvent at %lu\n",when);
+		  //printf("schedule send Event @ cycle %llu\n", when);
         em.schedule(&sendEvent, when);
     } else if (sendEvent.when() > when) {
-        em.reschedule(&sendEvent, when);
+        // if( isEra() ){
+        //    printf("scendEvent was scheduled at %lu, rescheduled at %lu\n",
+        //            sendEvent.when(), when);
+        // }
+        //printf("Event rescheduled @ cycle %llu\n", when);
+      em.reschedule(&sendEvent, when);
     }
 }
 
 void
 PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop)
 {
-    // we can still send a packet before the end of this tick
+    //printf("schedu send Timing %llx @ cycle %llu\n", pkt->getAddr(), when);
+	// we can still send a packet before the end of this tick
     assert(when >= curTick());
 
     // express snoops should never be queued
@@ -119,7 +137,15 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop)
         // and could in theory put a new packet at the head of the
         // transmit list before retrying the existing packet
         transmitList.push_front(DeferredPacket(when, pkt, send_as_snoop));
-        schedSendEvent(when);
+#ifdef DEBUG_TP
+        // if(pkt->getAddr()==interesting && pkt->threadID==0){
+        //   printf("interesting schedSendTiming->schedSendEvent @ %lu\n",
+        //       curTick());
+        // }
+        schedSendEvent(when,(pkt->getAddr())==interesting);
+#else
+        schedSendEvent(when,false);
+#endif
         return;
     }
 
@@ -139,16 +165,26 @@ PacketQueue::schedSendTiming(PacketPtr pkt, Tick when, bool send_as_snoop)
 
 void PacketQueue::trySendTiming()
 {
-    assert(deferredPacketReady());
+    //printf("trySendTiming @ cycle %llu\n", curTick());
+	assert(deferredPacketReady());
 
     // take the next packet off the list here, as we might return to
     // ourselves through the sendTiming call below
     DeferredPacket dp = transmitList.front();
     transmitList.pop_front();
 
+#ifdef DEBUG_TP
+    // if( dp.pkt->getAddr() == interesting ){
+    //   printf("interesting trySendTiming within PQ @%lu, dest %i\n",
+    //       curTick(), dp.pkt->getDest());
+    // }
+#endif
+
     // use the appropriate implementation of sendTiming based on the
     // type of port associated with the queue, and whether the packet
     // is to be sent as a snoop or not
+	// if (dp.pkt->threadID == 1)
+// 		printf("Request %llx from 1 call sendTiming @ cycle %llu\n SendAsSnoop: %d\n", dp.pkt->getAddr(), curTick(), dp.sendAsSnoop);
     waitingOnRetry = !sendTiming(dp.pkt, dp.sendAsSnoop);
 
     if (waitingOnRetry) {
@@ -200,6 +236,7 @@ void
 PacketQueue::processSendEvent()
 {
     assert(!waitingOnRetry);
+	//printf("processSendEvent called @ %llu\n", curTick());
     sendDeferredPacket();
 }
 
@@ -214,8 +251,8 @@ PacketQueue::drain(Event *de)
 }
 
 MasterPacketQueue::MasterPacketQueue(EventManager& _em, MasterPort& _masterPort,
-                                     const std::string _label)
-    : PacketQueue(_em, _label), masterPort(_masterPort)
+                                     const std::string _label, int ID)
+    : PacketQueue(_em, _label, ID), masterPort(_masterPort)
 {
 }
 
@@ -230,8 +267,8 @@ MasterPacketQueue::sendTiming(PacketPtr pkt, bool send_as_snoop)
 }
 
 SlavePacketQueue::SlavePacketQueue(EventManager& _em, SlavePort& _slavePort,
-                                   const std::string _label)
-    : PacketQueue(_em, _label), slavePort(_slavePort)
+                                   const std::string _label, int _ID)
+    : PacketQueue(_em, _label, _ID), slavePort(_slavePort)
 {
 }
 

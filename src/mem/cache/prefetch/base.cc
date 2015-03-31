@@ -43,6 +43,7 @@
 #include "mem/cache/base.hh"
 #include "mem/request.hh"
 #include "sim/system.hh"
+#include "stdio.h"
 
 BasePrefetcher::BasePrefetcher(const Params *p)
     : SimObject(p), size(p->size), latency(p->latency), degree(p->degree),
@@ -235,7 +236,8 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
 
             // create a prefetch memreq
             Request *prefetchReq = new Request(*addrIter, blkSize, 0, masterId);
-            PacketPtr prefetch =
+            fprintf(stderr, "panic: prefetch called\n");
+			PacketPtr prefetch =
                 new Packet(prefetchReq, MemCmd::HardPFReq);
             prefetch->allocate();
             prefetch->req->setThreadContext(pkt->req->contextId(),

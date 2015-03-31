@@ -48,9 +48,14 @@
 using namespace std;
 
 DRAMSim2Wrapper::DRAMSim2Wrapper(const Params* p) :
-    AbstractMemory(p), port(name() + ".port", this), 
+    AbstractMemory(p), numPids(p->numPids),
     lat(p->latency), lat_var(p->latency_var)
 {
+    port = p->split_ports ?
+        new SplitMemoryPort( name() + ".port", this, p->numPids ) :
+        new MemoryPort( name() + ".port", this, p->numPids );
+
+    tracePrinter = new TracePrinter( p->trace_file, p );
 }
 
 void
@@ -58,8 +63,8 @@ DRAMSim2Wrapper::init()
 {
     // allow unconnected memories as this is used in several ruby
     // systems at the moment
-    if (port.isConnected()) {
-        port.sendRangeChange();
+    if (port->isConnected()) {
+        port->sendRangeChange();
     }
 }
 
@@ -95,14 +100,14 @@ DRAMSim2Wrapper::getSlavePort(const std::string &if_name, int idx)
     if (if_name != "port") {
         return MemObject::getSlavePort(if_name, idx);
     } else {
-        return port;
+        return *port;
     }
 }
 
 unsigned int
 DRAMSim2Wrapper::drain(Event *de)
 {
-    int count = port.drain(de);
+    int count = port->drain(de);
 
     if (count)
         changeState(Draining);
@@ -112,9 +117,15 @@ DRAMSim2Wrapper::drain(Event *de)
 }
 
 DRAMSim2Wrapper::MemoryPort::MemoryPort(const std::string& _name,
-                                     DRAMSim2Wrapper* _memory)
+                                     DRAMSim2Wrapper* _memory, int numPids)
     : SimpleTimingPort(_name, _memory), memory(_memory)
-{ }
+{ 	
+    respQueues = new SlavePacketQueue*[numPids];
+    for( int i=0; i < numPids; i++ ){
+        respQueues[i] = new SlavePacketQueue( *_memory, *this, "SlavePacketQueue", i);
+    }
+	//printf("memory port is called\n");
+}
 
 AddrRangeList
 DRAMSim2Wrapper::MemoryPort::getAddrRanges() const

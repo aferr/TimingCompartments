@@ -13,8 +13,7 @@
  *
  * Copyright (c) 2002-2005 The Regents of The University of Michigan
  * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
+ * * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
  * met: redistributions of source code must retain the above copyright
  * notice, this list of conditions and the following disclaimer;
@@ -52,11 +51,17 @@
 #ifndef __CACHE_HH__
 #define __CACHE_HH__
 
+//#define DEBUGI
+
 #include "base/misc.hh" // fatal, panic, and warn
 #include "mem/cache/base.hh"
 #include "mem/cache/blk.hh"
 #include "mem/cache/mshr.hh"
 #include "sim/eventq.hh"
+#include "mem/trace_printer.hh"
+#include "params/BaseCache.hh"
+#include "mem/rr_bus.hh"
+#include "stdio.h"
 
 //Forward decleration
 class BasePrefetcher;
@@ -69,11 +74,75 @@ class BasePrefetcher;
 template <class TagStore>
 class Cache : public BaseCache
 {
+  private:
+    bool isInteresting( PacketPtr pkt ){
+      return (pkt->getAddr() == interesting && params->split_mshrq &&
+              pkt->threadID==0);
+    }
+
+    int
+    tid_from_addr( Addr addr ){
+        if( addr < 2 * pow( 1024, 3 ) ) return 0;
+        else return 1;
+    }
+
+    int
+    tid_with_bus_quantum(){
+        // WARNING this assumes the bus clock is 1Ghz (the default option)
+        // TODO 1000 caused starvation, should find something more sensible
+        return (nextCycle() / 1000) % params->num_tcs;
+    }
+
   public:
     /** Define the type of cache block to use. */
     typedef typename TagStore::BlkType BlkType;
     /** A typedef for a list of BlkType pointers. */
     typedef typename TagStore::BlkList BlkList;
+
+    TracePrinter * tracePrinter;
+
+    const Params *params;
+
+    std::string printWritebacks(int tcid=0){
+      std::string s = "Writebacks:\n" +
+        getWriteBuffer(tcid)->print_allocated();
+      return s;
+    }
+
+    virtual void flush( int tcid ){
+      tags->flush(tcid);
+      memSidePort->contextSwitch(tcid);
+      if( params->reserve_flush ){
+        if( getWriteBuffer(tcid)->havePending() ){
+          functionalDrainWritebacks(tcid);
+        }
+      } else {
+        if( getWriteBuffer(tcid)->havePending() ){
+          drainWritebacks(tcid);
+          setBlocked(Blocked_DrainingWritebacks);
+        }
+      }
+    }
+
+
+    void drainWritebacks( int tcid ){
+      for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
+        memSidePort->requestBus(Request_WB, nextCycle(), false);
+      }
+    }
+
+    void functionalDrainWritebacks( int tcid ){
+      for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
+        MSHR *nextMSHR = getWriteBuffer(tcid)->getNextMSHRFunctional();
+        while( nextMSHR->hasTargets() ){
+          memSidePort->sendFunctional( nextMSHR->getTarget()->pkt );
+          nextMSHR->popTarget();
+        }
+        getWriteBuffer(tcid)->deallocate(nextMSHR);
+      }
+    }
+
+    virtual bool isL3(){ return params->split_mshrq; }
 
   protected:
 
@@ -126,8 +195,8 @@ class Cache : public BaseCache
       public:
 
         MemSidePacketQueue(Cache<TagStore> &cache, MasterPort &port,
-                           const std::string &label) :
-            MasterPacketQueue(cache, port, label), cache(cache) { }
+                           const std::string &label, int ID) :
+            MasterPacketQueue(cache, port, label, ID), cache(cache) { ID=ID; }
 
         /**
          * Override the normal sendDeferredPacket and do not only
@@ -135,6 +204,15 @@ class Cache : public BaseCache
          * requests.
          */
         virtual void sendDeferredPacket();
+
+        virtual std::string print_elements(){
+            MSHR * m = cache.getNextMSHR(ID);
+            if(m){
+                return m->to_string();
+            } else {
+                return "null";
+            }
+        }
 
     };
 
@@ -153,6 +231,7 @@ class Cache : public BaseCache
         Cache<TagStore> *cache;
 
       protected:
+
 
         virtual void recvTimingSnoopReq(PacketPtr pkt);
 
@@ -219,7 +298,7 @@ class Cache : public BaseCache
      * any to provided packet list.  Return free block frame.  May
      * return NULL if there are no replaceable blocks at the moment.
      */
-    BlkType *allocateBlock(Addr addr, PacketList &writebacks);
+    BlkType *allocateBlock(Addr addr, PacketList &writebacks, uint64_t tid);
 
     /**
      * Populates a cache block and handles all outstanding requests for the
@@ -249,14 +328,14 @@ class Cache : public BaseCache
     void handleSnoop(PacketPtr ptk, BlkType *blk,
                      bool is_timing, bool is_deferred, bool pending_inval);
 
+  public:
     /**
      * Create a writeback request for the given block.
      * @param blk The block to writeback.
      * @return The writeback request for the block.
      */
-    PacketPtr writebackBlk(BlkType *blk);
+    PacketPtr writebackBlk(BlkType *blk, int threadID);
 
-  public:
     /** Instantiates a basic cache object. */
     Cache(const Params *p, TagStore *tags);
 
@@ -330,14 +409,14 @@ class Cache : public BaseCache
      * from the prefetcher.  This function is responsible for
      * prioritizing among those sources on the fly.
      */
-    MSHR *getNextMSHR();
+    MSHR *getNextMSHR( int threadID );
 
     /**
      * Selects an outstanding request to service.  Called when the
      * cache gets granted the downstream bus in timing mode.
      * @return The request to service, NULL if none found.
      */
-    PacketPtr getTimingPacket();
+    virtual PacketPtr getTimingPacket( int threadID );
 
     /**
      * Marks a request as in service (sent on the bus). This can have side
@@ -356,21 +435,26 @@ class Cache : public BaseCache
     }
 
     CacheBlk *findBlock(Addr addr) {
-        return tags->findBlock(addr);
+        fprintf(stderr,
+            "\x1B[31m a bad function: cache.hh findBlock(addr)\n\x1B[0m");
+        return tags->findBlock(addr,0);
     }
 
     bool inCache(Addr addr) {
-        return (tags->findBlock(addr) != 0);
+        fprintf(stderr,
+            "\x1B[31m a bad function: cache.hh inCache(addr)\n\x1B[0m");
+        return (tags->findBlock(addr,0) != 0);
     }
 
     bool inMissQueue(Addr addr) {
-        return (mshrQueue.findMatch(addr) != 0);
+        return ( getMSHRQueue( tid_from_addr( addr ) )->
+                findMatch(addr) != 0 );
     }
 
     /**
      * Find next request ready time from among possible sources.
      */
-    Tick nextMSHRReadyTime();
+    Tick nextMSHRReadyTime( int threadID );
 
     /** serialize the state of the caches
      * We currently don't support checkpointing cache state, so this panics.

@@ -67,10 +67,12 @@ class QueuedSlavePort : public SlavePort
      /** This function is notification that the device should attempt to send a
       * packet again. */
     virtual void recvRetry() { queue.retry(); }
+	
+	virtual void recvRetry(int threadID) { recvRetry(); }
 
   public:
 
-    /**
+	/**
      * Create a QueuedPort with a given name, owner, and a supplied
      * implementation of a packet queue. The external definition of
      * the queue enables e.g. the cache to implement a specific queue
@@ -90,8 +92,11 @@ class QueuedSlavePort : public SlavePort
      * @param pkt Packet to send
      * @param when Absolute time (in ticks) to send packet
      */
-    void schedTimingResp(PacketPtr pkt, Tick when)
-    { queue.schedSendTiming(pkt, when); }
+    virtual void schedTimingResp(PacketPtr pkt, Tick when)
+	{ queue.schedSendTiming(pkt, when); }
+	
+    virtual void schedTimingResp(PacketPtr pkt, Tick when, int threadID)
+    { schedTimingResp( pkt, when ); }
 
     /** Check the list of buffered packets against the supplied
      * functional request. */
@@ -117,10 +122,12 @@ class QueuedMasterPort : public MasterPort
      /** This function is notification that the device should attempt to send a
       * packet again. */
     virtual void recvRetry() { queue.retry(); }
+	
+	virtual void recvRetry(int threadID) { recvRetry(); }
 
   public:
 
-    /**
+	/**
      * Create a QueuedPort with a given name, owner, and a supplied
      * implementation of a packet queue. The external definition of
      * the queue enables e.g. the cache to implement a specific queue
@@ -142,6 +149,10 @@ class QueuedMasterPort : public MasterPort
      */
     void schedTimingReq(PacketPtr pkt, Tick when)
     { queue.schedSendTiming(pkt, when); }
+
+    virtual void schedTimingResp(PacketPtr pkt, Tick when, int threadID){
+        schedTimingReq( pkt, when );
+    }
 
     /**
      * Schedule the sending of a timing snoop response.

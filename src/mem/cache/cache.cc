@@ -42,6 +42,14 @@
 #include "mem/cache/tags/lru.hh"
 #endif
 
+#if defined(USE_CACHE_WPLRU)
+#include "mem/cache/tags/wplru.hh"
+#endif
+
+#if defined(USE_CACHE_SPLRU)
+#include "mem/cache/tags/splru.hh"
+#endif
+
 #if defined(USE_CACHE_FALRU)
 #include "mem/cache/tags/fa_lru.hh"
 #endif
@@ -58,14 +66,32 @@
 
 #if defined(USE_CACHE_FALRU)
 template class Cache<FALRU>;
+template class SplitMSHRCache<FALRU>;
+template class SplitRPortCache<FALRU>;
 #endif
 
 #if defined(USE_CACHE_IIC)
 template class Cache<IIC>;
+template class SplitMSHRCache<IIC>;
+template class SplitRPortCache<IIC>;
 #endif
 
 #if defined(USE_CACHE_LRU)
 template class Cache<LRU>;
+template class SplitMSHRCache<LRU>;
+template class SplitRPortCache<LRU>;
+#endif
+
+#if defined(USE_CACHE_WPLRU)
+template class Cache<WPLRU>;
+template class SplitMSHRCache<WPLRU>;
+template class SplitRPortCache<WPLRU>;
+#endif
+
+#if defined(USE_CACHE_SPLRU)
+template class Cache<SPLRU>;
+template class SplitMSHRCache<SPLRU>;
+template class SplitRPortCache<SPLRU>;
 #endif
 
 #endif //DOXYGEN_SHOULD_SKIP_THIS

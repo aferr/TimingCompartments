@@ -1,9 +1,12 @@
 #include "MemoryControllerTP.h"
-#include "MemoryController.h"
 #include "CommandQueueTP.h"
 #include "AddressMapping.h"
 #include <iomanip>
 using namespace DRAMSim;
+
+bool isInteresting( Transaction* trans ){
+    return trans->address == interesting;
+}
 
 MemoryControllerTP::MemoryControllerTP(MemorySystem *parent, 
         CSVWriter &csvOut_, ostream &dramsim_log_, 
@@ -11,13 +14,25 @@ MemoryControllerTP::MemoryControllerTP(MemorySystem *parent,
         unsigned tpTurnLength,
         bool genTrace_,
         const string &traceFilename_,
-        int num_pids_) :
-    MemoryController(parent,csvOut_,dramsim_log_,outputFilename_, genTrace_, traceFilename_, num_pids_)
+        int num_pids_,
+        bool fixAddr,
+        bool diffPeriod,
+        int p0Period,
+        int p1Period,
+        int offset) :
+    MemoryController(
+        parent,csvOut_,
+        dramsim_log_,outputFilename_,
+        genTrace_,
+        traceFilename_,
+        num_pids_,
+        fixAddr)
 {
 
-    commandQueue = new CommandQueueTP(bankStates,dramsim_log_,tpTurnLength,num_pids_); 
+    commandQueue = new CommandQueueTP(bankStates,dramsim_log_,tpTurnLength,num_pids_, fixAddr, diffPeriod, p0Period, p1Period, offset); 
 
     // reserve for each process
+    transactionQueues = new vector<Transaction *>[num_pids];
     for (int i=0;i<num_pids;i++){
         transactionQueues[i].reserve(TRANS_QUEUE_DEPTH);
     }
@@ -57,6 +72,13 @@ void MemoryControllerTP::updateTransactionQueue()
             //	will eventually add policies here
             Transaction *transaction = transactionQueues[j][i];
 
+#ifdef DEBUG_TP
+            if( isInteresting( transaction ) ){
+               printf( "popping interesting transaction %lu\n",
+                      currentClockCycle ); 
+            }
+#endif
+
             //map address to rank,bank,row,col
             unsigned newTransactionChan, newTransactionRank, 
                      newTransactionBank, newTransactionRow, 
@@ -75,6 +97,12 @@ void MemoryControllerTP::updateTransactionQueue()
                         newTransactionBank, j))
             {
 
+#ifdef DEBUG_TP
+                if( isInteresting( transaction ) ){
+                   printf( "added interesting to commandqueue at %lu\n",
+                          currentClockCycle ); 
+                }
+#endif
                 if (DEBUG_ADDR_MAP) {
                     PRINTN("== New Transaction - Mapping Address [0x" << hex 
                             << transaction->address << dec << "]");

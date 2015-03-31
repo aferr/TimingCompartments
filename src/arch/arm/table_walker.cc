@@ -47,6 +47,7 @@
 #include "debug/TLB.hh"
 #include "debug/TLBVerbose.hh"
 #include "sim/system.hh"
+#include "stdio.h"
 
 using namespace ArmISA;
 
@@ -194,7 +195,8 @@ TableWalker::processWalk()
 {
     Addr ttbr = 0;
 
-    // If translation isn't enabled, we shouldn't be here
+    printf("table walker called\n");
+	// If translation isn't enabled, we shouldn't be here
     assert(currState->sctlr.m);
 
     DPRINTF(TLB, "Begining table walk for address %#x, TTBCR: %#x, bits:%#x\n",
@@ -254,7 +256,8 @@ TableWalker::processWalk()
         f = currState->fault;
     } else {
         RequestPtr req = new Request(l1desc_addr, sizeof(uint32_t), flag, masterId);
-        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
+        uint64_t pid = currState->tc->getProcessPtr()->__pid;
+		PacketPtr pkt = new Packet(req, MemCmd::ReadReq, pid, pid, pid);
         pkt->dataStatic((uint8_t*)&currState->l1Desc.data);
         port.sendFunctional(pkt);
         doL1Descriptor();
@@ -504,7 +507,8 @@ TableWalker::doL1Descriptor()
             currState->vaddr, currState->l1Desc.data);
     TlbEntry te;
 
-    switch (currState->l1Desc.type()) {
+    printf("doL1Descriptor called\n");
+	switch (currState->l1Desc.type()) {
       case L1Descriptor::Ignore:
       case L1Descriptor::Reserved:
         if (!currState->timing) {
@@ -599,7 +603,8 @@ TableWalker::doL1Descriptor()
         } else {
             RequestPtr req = new Request(l2desc_addr, sizeof(uint32_t), 0,
                                          masterId);
-            PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
+            uint64_t pid = currState->tc->getProcessPtr()->__pid;
+			PacketPtr pkt = new Packet(req, MemCmd::ReadReq, pid, pid, pid);
             pkt->dataStatic((uint8_t*)&currState->l2Desc.data);
             port.sendFunctional(pkt);
             doL2Descriptor();

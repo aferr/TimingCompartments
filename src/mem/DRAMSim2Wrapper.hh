@@ -51,7 +51,10 @@
 
 #include "mem/abstract_mem.hh"
 #include "mem/tport.hh"
+#include "mem/trace_printer.hh"
 #include "params/DRAMSim2Wrapper.hh"
+
+#include "MultiChannelMemorySystem.h"
 
 /**
  * The simple memory is a basic single-ported memory controller with
@@ -59,18 +62,28 @@
  * variance added to it. It uses a SimpleTimingPort to implement the
  * timing accesses.
  */
+
+extern DRAMSim::MultiChannelMemorySystem *dramsim2;
 class DRAMSim2Wrapper : public AbstractMemory
 {
 
   public:
 
+    void updateDRAMSim2(){
+            while ( (double)dramsim2->currentClockCycle
+                    <= (double)(curTick()) / 1000.0 / tCK) {
+                dramsim2->update();
+            }
+    }
+
     class MemoryPort : public SimpleTimingPort
     {
 
       public:
+        SlavePacketQueue** respQueues;
 
         DRAMSim2Wrapper* memory;
-        MemoryPort(const std::string& _name, DRAMSim2Wrapper* _memory);
+        MemoryPort(const std::string& _name, DRAMSim2Wrapper* _memory, int numPids);
         void removePendingDelete()
         {
             for (int x = 0; x < pendingDelete.size(); x++)
@@ -81,6 +94,16 @@ class DRAMSim2Wrapper : public AbstractMemory
         {
             pendingDelete.push_back(pkt);
         }
+
+        virtual void schedTimingResp(PacketPtr pkt, Tick when, int threadID)
+        {
+            QueuedSlavePort::schedTimingResp( pkt, when, threadID );
+        }
+
+        virtual void schedTimingResp(PacketPtr pkt, Tick when ){
+            QueuedSlavePort::schedTimingResp( pkt, when );
+        }
+        virtual void recvRetry() { QueuedSlavePort::recvRetry(); }
 
       protected:
 
@@ -94,12 +117,35 @@ class DRAMSim2Wrapper : public AbstractMemory
 
     };
 
-    MemoryPort port;
+    class SplitMemoryPort : public MemoryPort
+    {
+        public:
+        SplitMemoryPort( const std::string& _name, DRAMSim2Wrapper* _memory,
+                int numPids )
+            : MemoryPort( _name, _memory, numPids )
+        {}
+
+        virtual void schedTimingResp(PacketPtr pkt, Tick when, int threadID)
+        { 
+            memory->tracePrinter->addTrace( pkt, "split schedSendTiming" );
+            this->respQueues[threadID]->schedSendTiming(pkt, when);
+        }
+
+        virtual void recvRetry( int threadID ){
+            respQueues[threadID]->retry();
+        }
+
+    };
+
+    int numPids;
+	MemoryPort* port;
 
     Tick lat;
     Tick lat_var;
 
+
   public:
+    TracePrinter * tracePrinter;
 
     typedef DRAMSim2WrapperParams Params;
     DRAMSim2Wrapper(const Params *p);

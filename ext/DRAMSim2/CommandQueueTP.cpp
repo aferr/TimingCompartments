@@ -1,18 +1,19 @@
-#include "CommandQueue.h"
 #include "CommandQueueTP.h"
-#include "MemoryController.h"
-
-#define interesting 0x2e065700
-//#define DEBUG_TP
 
 using namespace DRAMSim;
 
 CommandQueueTP::CommandQueueTP(vector< vector<BankState> > &states, 
         ostream &dramsim_log_, unsigned tpTurnLength_,
-        int num_pids_):
+        int num_pids_, bool fixAddr_,
+        bool diffPeriod_, int p0Period_, int p1Period_, int offset_):
     CommandQueue(states,dramsim_log_,num_pids_)
 {
+    fixAddr = fixAddr_;
     tpTurnLength = tpTurnLength_;
+    diffPeriod = diffPeriod_;
+    p0Period = p0Period_;
+    p1Period = p1Period_;
+	offset = offset_;
 #ifdef DEBUG_TP
     cout << "TP Debugging is on." <<endl;
 #endif
@@ -127,8 +128,8 @@ void CommandQueueTP::refreshPopClosePage(BusPacket **busPacket, bool &
         *busPacket = new BusPacket(REFRESH, 0, 0, 0, refreshRank, 0, 0, 
                 dramsim_log);
 #ifdef DEBUG_TP
-        PRINTN("Refresh at " << currentClockCycle << " for rank " 
-                << refreshRank << endl);
+        // PRINTN("Refresh at " << currentClockCycle << " for rank " 
+        //         << refreshRank << endl);
 #endif /*DEBUG_TP*/
         refreshRank = -1;
         refreshWaiting = false;
@@ -139,7 +140,6 @@ void CommandQueueTP::refreshPopClosePage(BusPacket **busPacket, bool &
 bool CommandQueueTP::normalPopClosePage(BusPacket **busPacket, bool 
         &sendingREF)
 {
-
     bool foundIssuable = false;
     unsigned startingRank = nextRank;
     unsigned startingBank = nextBank;
@@ -150,11 +150,13 @@ bool CommandQueueTP::normalPopClosePage(BusPacket **busPacket, bool
         startingRank = nextRank;
         startingBank = nextBank;
 #ifdef DEBUG_TP
+        if( hasInteresting() ){
         cout << endl << "==========================================="<<endl;
         cout << "Starting turn of length 2**"<<tpTurnLength<<" with PID "<<
             getCurrentPID() <<" at cycle "<< currentClockCycle << endl;
         cout << endl;
         print();
+        }
 #endif /*DEBUG_TP*/
     }
     lastPID = getCurrentPID();
@@ -208,13 +210,15 @@ bool CommandQueueTP::normalPopClosePage(BusPacket **busPacket, bool
                         continue;
 
                     *busPacket = queue[i];
+					//cout << "popped " << queue[i]->physicalAddress << " @ " << currentClockCycle << endl;
 
                     queue.erase(queue.begin()+i);
                     foundIssuable = true;
                     break;
                 }
 #ifdef DEBUG_TP
-                else if(queue[i]->physicalAddress==interesting)
+                else if( queue[i]->physicalAddress==interesting
+                        && lastPopTime!= currentClockCycle )
                 {
                     string bptype = (queue[i]->busPacketType==ACTIVATE) ?
                         "activate" : "r/w";
@@ -225,16 +229,17 @@ bool CommandQueueTP::normalPopClosePage(BusPacket **busPacket, bool
                         <<" startingBank " << startingBank << endl;
                     printf("refreshRank %u\n",refreshRank);
                     bankStates[queue[i]->rank][queue[i]->bank].print();
+                    print();
                     lastPopTime = currentClockCycle;
                 }
 #endif /*DEBUG_TP*/
             }
         }
 #ifdef DEBUG_TP 
-        else if(hasInteresting() && refreshWaiting && nextRank ==refreshRank){
-            //  PRINTN("Blocked by refreshRank at "<<currentClockCycle<<
-            //         " with turn "<<currentPID<<endl);
-        }
+        // else if(hasInteresting() && refreshWaiting && nextRank ==refreshRank){
+        //     PRINTN("Blocked by refreshRank at "<<currentClockCycle<<
+        //              " with turn "<<currentPID<<endl);
+        // }
 #endif /*DEBUG_TP*/
 
         //if we found something, break out of do-while
@@ -271,15 +276,38 @@ void CommandQueueTP::print()
 }
 
 unsigned CommandQueueTP::getCurrentPID(){
-    return (currentClockCycle >> tpTurnLength) % num_pids;
+  unsigned ccc_ = currentClockCycle - offset;
+  unsigned schedule_time = ccc_ % (p0Period + (num_pids-1) * p1Period);
+  if( schedule_time < p0Period ) return 0;
+  return (schedule_time - p0Period) / p1Period + 1;
 }
 
 bool CommandQueueTP::isBufferTime(){
-    unsigned tlength = 1<<tpTurnLength;
-    uint64_t turnBegin = currentClockCycle & (-1<<tpTurnLength);
-    uint64_t dead_time = (int(turnBegin / (REFRESH_PERIOD/NUM_RANKS/tCK)) < 
-            int((turnBegin+tlength-1) / (REFRESH_PERIOD/NUM_RANKS/tCK))) ? TP_BUFFER_TIME : WORST_CASE_DELAY;
-    return (tlength - (currentClockCycle & (tlength - 1))) <= dead_time;
+  unsigned ccc_ = currentClockCycle - offset;
+  unsigned current_tc = getCurrentPID();
+  unsigned schedule_length = p0Period + p1Period * (num_pids - 1);
+  unsigned schedule_start = ccc_ - ( ccc_ % schedule_length );
+
+  unsigned turn_start = current_tc == 0 ?
+    schedule_start :
+    schedule_start + p0Period + p1Period * (current_tc-1);
+  unsigned turn_end = current_tc == 0 ?
+    turn_start + p0Period :
+    turn_start + p1Period;
+
+  // Time between refreshes to ANY rank.
+  unsigned refresh_period = REFRESH_PERIOD/NUM_RANKS/tCK;
+  unsigned next_refresh = ccc_ + refresh_period - (ccc_ % refresh_period);
+ 
+  unsigned tlength = current_tc == 0 ? p0Period : p1Period;
+
+  //TODO It returns a bool you tool
+  unsigned deadtime = (turn_start <= next_refresh && next_refresh < turn_end) ?
+    refresh_deadtime( tlength ) :
+    normal_deadtime( tlength );
+
+  return ccc_ >= (turn_end - deadtime);
+
 }
 
 #ifdef DEBUG_TP

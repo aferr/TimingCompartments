@@ -35,7 +35,7 @@
 //Class file for memory controller object
 //
 
-//#define DEBUG_TP
+// #define DEBUG_TP
 
 #include "MemoryController.h"
 #include "MemorySystem.h"
@@ -65,7 +65,7 @@ using namespace DRAMSim;
 
 MemoryController::MemoryController(MemorySystem *parent, CSVWriter &csvOut_,
         ostream &dramsim_log_, const string &outputFilename_, bool genTrace_,
-        const string &traceFilename_, int num_pids_) :
+        const string &traceFilename_, int num_pids_, bool fixAddr) :
     dramsim_log(dramsim_log_),
     bankStates(NUM_RANKS, vector<BankState>(NUM_BANKS, dramsim_log)),
     //commandQueue(bankStates, dramsim_log_),
@@ -232,6 +232,12 @@ void MemoryController::update()
             //inform upper levels that a write is done
             if (parentMemorySystem->WriteDataDone!=NULL)
             {
+#ifdef DEBUG_TP
+                if( outgoingDataPacket -> physicalAddress == interesting ){
+                    cout << "returning interesting write to GEM5 @ "
+                        << currentClockCycle << endl;
+                }
+#endif /*DEBUG_TP*/
                 (*parentMemorySystem->WriteDataDone)(parentMemorySystem->systemID,outgoingDataPacket->physicalAddress, currentClockCycle, outgoingDataPacket->threadID);
             }
 
@@ -836,6 +842,12 @@ void MemoryController::updateReturnTransactions()
                 addressMapping(returnTransaction[0]->address,chan,rank,bank,row,col);
                 //insertHistogram(currentClockCycle-pendingReadTransactions[i]->timeAdded,rank,bank);
                 //return latency
+#ifdef DEBUG_TP
+                if( returnTransaction[0]->address == interesting ){
+                    cout << "returning interesting read to GEM5 @ "
+                        << currentClockCycle << endl;
+                }
+#endif /*DEBUG_TP*/
                 returnReadData(pendingReadTransactions[i]);
                 //Formerly outputs just if transaction->threadID==0
                 /*
