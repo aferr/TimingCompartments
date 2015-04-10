@@ -62,6 +62,7 @@ $mpworkloads = {
 
 $workload_names = $mpworkloads.keys.map { |k| k.to_s }
 $new_names = $workload_names
+
 #-------------------------------------------------------------------------------
 # Filenames
 #-------------------------------------------------------------------------------
@@ -86,18 +87,20 @@ end
 
 def single_stdo( p={} )
   p={dir: "results"}.merge p
-  "#{p[:dir]}/stdout_none_1cpus_#{p[:bench]}64_#{64}.out"
+  "#{p[:dir]}/stdout_none_1cpus_#{p[:bench]}_.out"
 end
 
 def single_m5out p={}
-  p={dir: "results"}.merge p
-  "#{p[:dir]}/none_1cpus_#{p[:bench]}64_#{64}_stats.txt"
+  p={dir: "m5out"}.merge p
+  "#{p[:dir]}/none_1cpus_#{p[:bench]}__stats.txt"
 end
-
 
 # This can be memoized or eagerly constructed later.
 def single_time( p={} )
-  find_time single_m5out p
+  find_time single_m5out(p), p.merge(
+    insts_regex: /system.switch_cpus.commit.committedInsts\s*(\d*)/,
+    ticks_regex: /system.switch_cpus.numCycles\s*(\d*)/ 
+  )
 end
 
 #-------------------------------------------------------------------------------
@@ -118,15 +121,17 @@ def get_m5out_stat(filename, opts={})
   0
 end
 
-
 def find_time(filename, opts = {} )
+  o = {
+    insts_regex: /system.switch_cpus1.commit.committedInsts\s*(\d*)/,
+    ticks_regex: /system.switch_cpus1.numCycles\s*(\d*)/ 
+  }.merge opts
   (puts filename.red; return nil) unless File.exists? filename
-  insts_regex = /sim_insts\s*(\d*)/
-  ticks_regex = /sim_ticks\s*(\d*)/
+  insts_regex = o[:insts_regex]
+  ticks_regex = o[:ticks_regex]
   insts = nil
   ticks = nil
   File.open(filename,'r') do |f|
-    #timingregex = /Exiting @ tick (\d*)\w* because a\w*/
     f.each_line.to_a.reverse.each do |l|
         insts = l.match(insts_regex)[1].to_f if insts.nil? && l =~ insts_regex
         ticks = l.match(ticks_regex)[1].to_f if ticks.nil? && l =~ ticks_regex 
@@ -137,21 +142,16 @@ def find_time(filename, opts = {} )
   ticks / insts
 end
 
-def find_time_old(filename, opts = {} )
-  (puts filename.red; return nil) unless File.exists? filename
-  time = nil
-  File.open(filename,'r') do |f|
-    #timingregex = /Exiting @ tick (\d*)\w* because a\w*/
-    timingregex = /Exiting @ tick (\d*)\w* because a\w*/
-    f.each_line do |line|
-      return line.match(timingregex)[1].to_f if line =~ timingregex
+def find_stat filename, regex, opts = {}
+    o = opts
+    (puts filename.red; return nil) unless File.exists? filename
+    File.open(filename,'r') do |f|
+      f.each_line.to_a.reverse.each do |l|
+          return l.match(regex)[1].to_f if l =~ regex 
+      end
     end
-  end
-  puts filename.blue
-  time
+    (puts filename.blue; return nil) 
 end
-
-
 
 def get_datum( filename, regex )
     unless File.exists? filename
@@ -170,13 +170,20 @@ end
 #-------------------------------------------------------------------------------
 # System Throughput
 def stp( p={} )
-  wl = p[:workload]
-  s = p[:numcpus].times.map do |i|
-    tisp = single_time p.merge(bench: benchmarks_in(wl)[i%2], )
-    timp = find_time m5out_file(i%2 == 1 ? p.merge(workload: wl.to_s + 'r') : p)
-    (tisp.nil? || timp.nil?) ? [] : tisp/timp
-  end
-  s.include?([]) ? 0 : s.reduce(:+)
+    wl = p[:workload]
+    single_reg = /system.switch_cpus.cpi\s*(\d*\.\d*)/
+    single_times = (benchmarks_in(wl).map do |b|
+        find_stat (single_m5out p.merge(bench: b)), single_reg
+    end * (p[:numcpus]/2)).flatten
+    s = p[:numcpus].times.map do |i|
+        tisp = single_times[i]
+        multi_reg = /system.switch_cpus0.cpi\s*(\d*\.\d*)/
+        timp = find_stat (m5out_file p.merge(
+          i%2 == 1 ? p.merge(workload: wl.to_s + 'r') : p
+        )), multi_reg
+        (tisp.nil? || timp.nil?) ? [] : tisp/timp
+    end
+    s.include?([]) ? 0 : s.reduce(:+)
 end
 
 # Average Normalized Turnaround Time

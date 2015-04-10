@@ -98,8 +98,8 @@ def dump():
     curTick = m5.curTick()
 
     global lastDump
-    assert lastDump <= curTick
-    if lastDump == curTick:
+    #assert lastDump <= curTick
+    if lastDump >= curTick:
         return
     lastDump = curTick
 

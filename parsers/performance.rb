@@ -363,21 +363,18 @@ if __FILE__ == $0
 
   abs_o = {
     x_labels: $new_names,
-    x_title: "System Throughput",
-    core_set: [2],
+    y_title: "System Throughput",
+    core_set: [8],
     dir: in_dir,
     out_dir: out_dir,
-    numcpus: 2,
+    numcpus: 8,
     scheme: "none",
     fun: method(:stp_data_of),
     mname: "stp",
-    h: 360,
-    w: 864,
-    font: "18px arial"
   }
 
   abs_baseline abs_o
-  abs_ntc abs_o
+  # abs_ntc abs_o
   # abs_2tc abs_o
   # abs_breakdown abs_o
   # abs_blocking_wb abs_o
@@ -393,22 +390,19 @@ if __FILE__ == $0
     scheme: "none",
     fun: method(:stp_data_of),
     mname: "stp",
-    h: 340,
-    w: 864,
-    font: "18px arial"
   }
 
-  norm_ntc normo
-  norm_2tc normo
-  norm_breakdown normo
+  # norm_ntc normo
+  # norm_2tc normo
+  # norm_breakdown normo
   
   # norm_flushing_bw  normo
   # norm_flushing_rbw normo
   # norm_flushing_partial normo
 
-  paramo = normo.merge(bar_width: 1)
-  norm_params paramo
-  norm_params_nocwf paramo
+  # paramo = normo.merge(bar_width: 1)
+  # norm_params paramo
+  # norm_params_nocwf paramo
 
   # svg2pdf out_dir
 
