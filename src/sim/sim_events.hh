@@ -81,9 +81,11 @@ class CountedExitEvent : public Event
   private:
     std::string cause;  // string explaining why we're terminating
     int &downCounter;   // decrement & terminate if zero
+    int reset_val;
 
   public:
-    CountedExitEvent(const std::string &_cause, int &_downCounter);
+    CountedExitEvent(const std::string &_cause, int &_downCounter,
+            int reset_val=0);
 
     void process();     // process event
 

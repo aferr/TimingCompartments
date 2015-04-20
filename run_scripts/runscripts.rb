@@ -7,6 +7,7 @@ module RunScripts
 #directories
 $gem5home = Dir.new(Dir.pwd)
 $specint_dir = (Dir.pwd+"/benchmarks/spec2k6bin/specint")
+$synthbench_dir = (Dir.pwd+"/benchmarks/synthetic")
 $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
 #Gem5 options
@@ -57,7 +58,6 @@ $p0periods = [64,96,128,192,256]
 $mpworkloads = {
   # integer workloads
   mcf_bz2: %w[ mcf bzip2 ],
-  bz2_mcf: %w[ bzip2 mcf ],
   mcf_xln: %w[ mcf xalan ],
   mcf_mcf: %w[ mcf mcf ],
   mcf_lib: %w[mcf libquantum],
@@ -68,20 +68,20 @@ $mpworkloads = {
   lib_ast: %w[ libquantum astar ],
   mcf_h264: %w[ mcf h264ref ],
   lib_sjg: %w[ libquantum sjeng ],
-  xln_gcc: %w[ xalan gcc ],
-  gcc_gob: %w[ gcc gobmk ],
+  # xln_gcc: %w[ xalan gcc ],
+  # gcc_gob: %w[ gcc gobmk ],
   sjg_sgj: %w[ sjeng sjeng ],
   ast_h264: %w[ astar h264ref ],
   h264_hmm: %w[ h264ref hmmer ],
   ast_ast: %w[ astar astar],
 
   # Float workloads
-  milc_milc: %w[milc milc],
-  namd_namd: %w[namd namd],
-  deal_deal: %w[dealII dealII],
-  splx_splx: %w[soplex soplex],
-  pov_pov: %w[povray povray],
-  lbm_lbm: %w[lbm lbm],
+  # milc_milc: %w[milc milc],
+  # namd_namd: %w[namd namd],
+  # deal_deal: %w[dealII dealII],
+  # splx_splx: %w[soplex soplex],
+  # pov_pov: %w[povray povray],
+  # lbm_lbm: %w[lbm lbm],
   # spx_spx: %w[sphinx3 sphinx3]
 
 }
@@ -130,11 +130,8 @@ $specinvoke = {
 $specint = $specinvoke.keys.sort
 
 $synthinvoke = {
-    "hardstride1" => "#{$synthbench_dir}hardstride -d #{$duration} -p 1",
-    "randmem1"    => "#{$synthbench_dir}randmem -d #{$duration} -p 1",
-    #"randmem10"   => "#{$synthbench_dir}randmem -d #{$duration} -p 10",
-    #"randmem100"  => "#{$synthbench_dir}randmem -d #{$duration} -p 100",
-    "nothing"     => "#{$synthbench_dir}nothing"
+    "hardstride" => "#{$synthbench_dir}/hardstride",
+    "nothing"     => "#{$synthbench_dir}/nothing"
 }
 $synthb = $synthinvoke.keys.sort
 
@@ -167,10 +164,10 @@ def sav_script( options = {} )
 
     options = {
         #TP Minimum: 
-        tl0: 64,
-        tl1: 64,
-        tl2: 64,
-        tl3: 64,
+        tl0: 44,
+        tl1: 44,
+        tl2: 44,
+        tl3: 44,
         #FA Minimum:
         # tl0: 18,
         # tl1: 18,
@@ -251,7 +248,7 @@ def sav_script( options = {} )
 
     o = options
 
-    filename = "#{scheme}_#{numcpus}cpus_#{p0}#{tl0}_#{p1}#{tl1}"
+    filename = "#{scheme}_#{numcpus}cpus_#{p0}_#{p1}"
     filename = "#{scheme}_#{numcpus}cpus_#{o[:wl_name]}" unless o[:wl_name].nil?
 
     filename = "#{options[:nametag]}_"+filename if options[:nametag]
@@ -358,7 +355,7 @@ def sav_script( options = {} )
     script.puts("   --p0period=#{tl0} \\")
     script.puts("   --p1period=#{tl1} \\")
 
-    script.puts("    >! #{result_dir}/stdout_#{filename}.out")
+    script.puts("    > #{result_dir}/stdout_#{filename}.out")
     script_abspath = File.expand_path(script.path)
     script.close
 
@@ -376,48 +373,6 @@ def sav_script( options = {} )
     [success,filename]
 end
 
-def iterate_and_submit opts={}, &block
-    o = {
-        cpus: %w[detailed],
-        schemes: $schemes,
-        benchmarks: $specint,
-        runmode: :qsub,
-        threads: 4
-    }.merge opts
-
-    o[:otherbench] = o[:benchmarks] if o[:otherbench].nil?
-
-    f = []
-
-    submit = block_given? ?
-      block :
-      ( lambda do |param, p0, other|
-          r = sav_script(param.merge(p0: p0, p1: other))
-          (r[0] && [] ) || r[1]
-        end
-      )
-      
-    o[:cpus].product(o[:schemes]).each do |cpu, scheme|
-      o[:benchmarks].product(o[:otherbench]).each_slice(o[:threads]) do |i|
-        threads=[]
-        o.merge!(scheme: scheme, cpu: cpu)
-        i.each do |p0,other|
-          threads << Thread.new { f << submit.call(o, p0, other) }
-        end
-        threads.each { |t| t.join }
-      end
-    end
-    puts f.flatten.to_s.red
-end
-
-def parallel_local opts={}
-  iterate_and_submit opts
-end
-
-def qsub_fast opts={}
-  iterate_and_submit ({runmode: :qsub, threads: 1}).merge(opts)
-end
-
 def single opts={}
     o = {
         cpu: "detailed",
@@ -427,65 +382,12 @@ def single opts={}
         threads: 1
     }.merge opts
 
-    #f = []
-
     o[:benchmarks].each do |b|
         sav_script o.merge(p0: b)
     end
 
-    # o[:schemes].product(o[:benchmarks]).each_slice(o[:threads]) do |i|
-    #   t={}
-    #   i.each do |scheme,p0|
-    #     t[i] = Thread.new do
-    #       r=sav_script(o.merge(p0: p0))
-    #       f << r[1] unless r[0]
-    #     end
-    #   end
-    #   t.each { |_,v| v.join }
-    # end
-    # puts f.flatten.to_s.red
 end
 
-def single_qsub opts={}
-  single opts.merge(runmode: :qsub)
-end
-
-def parallel_local_scaling opts={}
-  iterate_and_submit(opts) do |param, p0, other|
-    f = []
-    p = param.merge(p0: p0)
-    #2
-    p = p.merge(p1: other)
-    p = p.merge coordinate(n:2) if opts[:coordination]
-    r = opts[:skip2]? [true,""] : sav_script(p)
-    f << r[1] unless r[0]
-    #3
-    p = p.merge(p2: other)
-    p = p.merge coordinate(n:3) if opts[:coordination]
-    r = opts[:skip3]? [true,""] : sav_script(p)
-    f << r[1] unless r[0]
-    #4
-    p = p.merge(p3: other)
-    p = p.merge coordinate(n:4) if opts[:coordination]
-    r = opts[:skip4]? [true,""] : sav_script(p)
-    f << r[1] unless r[0]
-    f
-  end
-end
-
-def scale_to opts={}
-  opts = { num_wl: 2 }.merge opts
-  iterate_and_submit(opts) do |param, p0, other|
-    f = []
-    p = param.merge(p0: p0)
-    1.upto(opts[:num_wl]-1) do |n|
-      p = p.merge( "p#{n}".to_sym => other ) 
-      r = (eval "opts[:skip#{n+1}]") ? [true,""] : sav_script(p)
-      f << r[1] unless r[0]
-    end
-    f
-  end
-end
 
 def iterate_mp o={}
   o = {
@@ -498,7 +400,6 @@ def iterate_mp o={}
 
   2.upto(o[:num_wl]) do |n|
     wls = workloads_of_size n, o[:workloads]
-    wls = wls.merge(rotated_workloads wls)
     wls.keys.each do |wl|
       p = o.merge(wl_name: wl)
       wls[wl].each_with_index do |benchmark,i|
@@ -508,10 +409,6 @@ def iterate_mp o={}
     end
   end
 
-end
-
-def qsub_scaling opts = {}
-  parallel_local_scaling opts.merge(runmode: :qsub)
 end
 
 end

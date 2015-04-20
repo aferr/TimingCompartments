@@ -12,8 +12,11 @@ def abs_baseline o={}
   r = o[:fun].call o.merge(
     core_set: [2,4,6,8]
   )
-  gb = grouped_bar r.transpose, o.merge(legend: [2,4,6,8])
+  gb = grouped_bar r, o.merge(legend: [2,4,6,8].map { |i| "#{i} Cores"} )
+  csv = grouped_csv r.transpose, o.merge(
+    legend: [2,4,6,8].map { |i| "#{i} Cores"})
   string_to_f gb, "#{o[:out_dir]}/baseline_#{o[:mname]}.svg"
+  string_to_f csv, "#{o[:out_dir]}/baseline_#{o[:mname]}.csv"
 end
 
 def abs_ntc o={}
@@ -21,18 +24,22 @@ def abs_ntc o={}
     scheme: "tp",
     core_set: [2,4,6,8],
   )
-  gb = grouped_bar r.transpose, o.merge(legend: [2,4,6,8])
+  gb = grouped_bar r, o.merge(legend: [2,4,6,8])
+  csv = grouped_csv r.transpose, o.merge(legend: [2,4,6,8])
   string_to_f gb, "#{o[:out_dir]}/ntc_#{o[:mname]}.svg"
+  string_to_f csv, "#{o[:out_dir]}/ntc_#{o[:mname]}.csv"
 end
 
 def abs_2tc o={}
   r = o[:fun].call o.merge(
     scheme: "tp",
     nametag: "2tc",
-    core_set: [3,4]
+    core_set: [4,6,8]
   )
-  gb = grouped_bar r.transpose, o.merge(legend: [2,3,4])
+  gb = grouped_bar r, o.merge(legend: [4,6,8])
+  csv = grouped_csv r.transpose, o.merge(legend: [4,6,8])
   string_to_f gb, "#{o[:out_dir]}/n_core_2_tc_#{o[:mname]}.svg"
+  string_to_f csv, "#{o[:out_dir]}/n_core_2_tc_#{o[:mname]}.csv"
 end
 
 def abs_breakdown o={}
@@ -363,19 +370,19 @@ if __FILE__ == $0
 
   abs_o = {
     x_labels: $new_names,
-    y_title: "System Throughput",
-    core_set: [8],
+    y_label: "System Throughput",
+    core_set: [2],
     dir: in_dir,
     out_dir: out_dir,
-    numcpus: 8,
+    numcpus: 2,
     scheme: "none",
     fun: method(:stp_data_of),
     mname: "stp",
   }
 
-  abs_baseline abs_o
-  # abs_ntc abs_o
-  # abs_2tc abs_o
+  #abs_baseline abs_o
+  abs_ntc abs_o
+  abs_2tc abs_o
   # abs_breakdown abs_o
   # abs_blocking_wb abs_o
   # abs_reserved_wb abs_o

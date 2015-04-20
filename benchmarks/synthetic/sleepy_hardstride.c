@@ -18,6 +18,7 @@ int main(int argc, char **argv) {
         tmp += mem[read_addr];
         elapsed += DELAY_OPS;
         count += 16;
+        usleep(10);
     }
 	printf("Sum is %d\n", tmp);
 }

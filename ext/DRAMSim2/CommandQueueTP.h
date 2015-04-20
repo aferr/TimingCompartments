@@ -43,11 +43,13 @@ namespace DRAMSim
             bool isBufferTime();
 
             virtual int normal_deadtime(int tlength){
-              return tlength - (tlength - WORST_CASE_DELAY)/10;
+              //return tlength - (tlength - WORST_CASE_DELAY)/10;
+              return WORST_CASE_DELAY;
             }
 
             virtual int refresh_deadtime(int tlength){
-              return tlength - (tlength - TP_BUFFER_TIME)/10;
+              //return tlength - (tlength - TP_BUFFER_TIME)/10;
+              return TP_BUFFER_TIME;
             }
     };
 }

@@ -24,6 +24,7 @@ system = System(cpu = [CPUClass(cpu_id=i) for i in xrange(options.num_cpus)],
                 membus =  systembus,
                 mem_mode = test_mem_mode,
                 numPids = options.numpids,
+                numCpus = options.num_cpus,
                 fast_forward = (options.fast_forward != None),
                 fixAddr = options.fixaddr)
 

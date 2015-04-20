@@ -15,7 +15,6 @@ module RunScripts
     end
     
     def ncore_ntc
-      puts $secure_opts
       iterate_mp $secure_opts.merge(
         num_wl: 8,
         skip3: false
@@ -56,7 +55,8 @@ module RunScripts
 
     def ncore_2tc
       o = $secure_opts.merge(
-        nametag: "2tc"
+        nametag: "2tc",
+        runmode: :fake
       )
 
       # 4 Cores 2 TCs
