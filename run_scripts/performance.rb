@@ -9,7 +9,6 @@ module RunScripts
     def baseline
       iterate_mp(
         scheme: "none",
-        skip3: false,
         num_wl: 8,
       )
     end
@@ -17,7 +16,6 @@ module RunScripts
     def ncore_ntc
       iterate_mp $secure_opts.merge(
         num_wl: 8,
-        skip3: false
       )
     end
 
@@ -222,50 +220,22 @@ module RunScripts
 
       # Optimized L2 Miss Path
       iterate_mp o.merge $opt_l2_miss
-      iterate_mp o.merge $opt_l2_miss.merge(
-        nametag: "l2miss_opt_nocwf",
-        nocwf: true
-      )
 
       # Worst L2 Miss Path
       iterate_mp o.merge $bad_l2_miss
-      iterate_mp o.merge $bad_l2_miss.merge(
-        nametag: "l2miss_max_nocwf",
-        nocwf: true
-      )
 
       # Optimized L3 Hit Path
       iterate_mp o.merge $opt_l3_hit
-      iterate_mp o.merge $opt_l3_hit.merge(
-        nametag: "l3hit_opt_nocwf",
-        nocwf: true
-      )
 
       # Worst L3 Hit Path
       iterate_mp o.merge $bad_l3_hit
-      iterate_mp o.merge $bad_l3_hit.merge(
-        nametag: "l3hit_max_nocwf",
-        nocwf: true
-      )
 
       # Optimized L3 Miss Path
       iterate_mp o.merge $opt_l3_miss
-      iterate_mp o.merge $opt_l3_miss.merge(
-        nametag: "l3miss_opt_nocwf",
-        nocwf: true
-      )
 
       # Worst L3 Miss Path
       iterate_mp o.merge $bad_l3_miss
-      iterate_mp o.merge $bad_l3_miss.merge(
-        nametag: "l3miss_max_nocwf",
-        nocwf: true
-      )
 
-      iterate_mp o.merge(
-        nametag: "nocwf",
-        nocwf: true
-      )
     end
 
 end

@@ -25,7 +25,7 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Functionality
 #------------------------------------------------------------------------------
-  test_baseline
+# test_baseline
 # test_secure
 # test_only_mc
 # test_only_rrbus
@@ -35,11 +35,11 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Performance
 #----------------------------------------------------------------------------
-# single 
-# breakdown
-# baseline
+  single 
+  breakdown
+  baseline
 # ncore_2tc
-# ncore_ntc
+  ncore_ntc
 # flush_overhead
 # coordination
 # parameter_tests

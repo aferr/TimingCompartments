@@ -6,8 +6,9 @@ require 'colored'
 module RunScripts
 #directories
 $gem5home = Dir.new(Dir.pwd)
-$specint_dir = (Dir.pwd+"/benchmarks/spec2k6bin/specint")
-$synthbench_dir = (Dir.pwd+"/benchmarks/synthetic")
+$specint_dir = ("benchmarks/spec2k6bin/specint")
+$specfp_dir = ("benchmarks/spec2k6bin/specfp")
+$synthbench_dir = ("benchmarks/synthetic")
 $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
 #Gem5 options
@@ -355,8 +356,8 @@ def sav_script( options = {} )
     script.puts("   --p0period=#{tl0} \\")
     script.puts("   --p1period=#{tl1} \\")
 
-    script.puts("    > #{result_dir}/stdout_#{filename}.out")
-    script_abspath = File.expand_path(script.path)
+    script.puts("    >! #{result_dir}/stdout_#{filename}.out")
+    script_abspath = script.path
     script.close
 
 
