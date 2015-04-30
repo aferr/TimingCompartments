@@ -132,10 +132,7 @@ public:
      * Invalidate the given block.
      * @param blk The block to invalidate.
      */
-    void invalidateBlk(BlkType *blk){
-        invalidateBlk( blk, 0 );
-    }
-    void invalidateBlk(BlkType *blk, uint64_t tid);
+    virtual void invalidateBlk(BlkType *blk, uint64_t tid);
 
     /**
      * Access block and update replacement data.  May not succeed, in which case
@@ -146,10 +143,7 @@ public:
      * @param lat The access latency.
      * @return Pointer to the cache block if found.
      */
-    BlkType* accessBlock(Addr addr, int &lat, int context_src){
-        return accessBlock( addr, lat, context_src, 0 );
-    }
-    BlkType* accessBlock(Addr addr, int &lat, int context_src, uint64_t tid);
+    virtual BlkType* accessBlock(Addr addr, int &lat, int context_src, uint64_t tid);
 
     /**
      * Finds the given address in the cache, do not update replacement data.
@@ -158,10 +152,7 @@ public:
      * @param asid The address space ID.
      * @return Pointer to the cache block if found.
      */
-    BlkType* findBlock(Addr addr){
-        return findBlock( addr, 0 );
-    }
-    BlkType* findBlock(Addr addr, uint64_t tid);
+    virtual BlkType* findBlock(Addr addr, uint64_t tid);
 
     /**
      * Find a block to evict for the address provided.
@@ -169,10 +160,7 @@ public:
      * @param writebacks List for any writebacks to be performed.
      * @return The candidate block.
      */
-    BlkType* findVictim(Addr addr, PacketList &writebacks){
-        return findVictim( addr, writebacks, 0 );
-    }
-    BlkType* findVictim(Addr addr, PacketList &writebacks, uint64_t tid);
+    virtual BlkType* findVictim(Addr addr, PacketList &writebacks, uint64_t tid);
 
     /**
      * Insert the new block into the cache.  For LRU this means inserting into
@@ -180,10 +168,7 @@ public:
      * @param addr The address to update.
      * @param blk The block to update.
      */
-     void insertBlock(Addr addr, BlkType *blk, int context_src){
-         insertBlock( addr, blk, context_src, 0 );
-     }
-     void insertBlock(Addr addr, BlkType *blk, int context_src, uint64_t tid);
+     virtual void insertBlock(Addr addr, BlkType *blk, int context_src, uint64_t tid);
 
 
      /*
@@ -192,10 +177,6 @@ public:
       * this method and actually use the tid to do partitioning.
       */
     virtual CacheSet get_set( int setnum, uint64_t tid, Addr addr );
-
-    virtual int assoc_of_tc( int tcid ){ return assoc; }
-
-    virtual void init_sets();
 
     /**
      * Generate the tag from the given address.
@@ -260,7 +241,7 @@ public:
      *iterated through all blocks and clear all locks
      *Needed to clear all lock tracking at once
      */
-    virtual void clearLocks();
+    virtual void clearLocks(uint64_t tid);
 
     /**
      * Called at end of simulation to complete average block reference stats.

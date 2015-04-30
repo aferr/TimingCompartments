@@ -71,18 +71,7 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
     warmedUp = false;
     /** @todo Make warmup percentage a parameter. */
     warmupBound = numSets * assoc;
-    
-    init_sets();
-}
 
-CacheSet
-LRU::get_set( int setnum, uint64_t tid, Addr addr ){
-    return sets[setnum];
-}
-
-
-void
-LRU::init_sets(){
     sets = new CacheSet[numSets];
     blks = new BlkType[numSets * assoc];
     // allocate data storage in one big chunk
@@ -117,6 +106,12 @@ LRU::init_sets(){
             blk->set = i;
         }
     }
+    
+}
+
+CacheSet
+LRU::get_set( int setnum, uint64_t tid, Addr addr ){
+    return sets[setnum];
 }
 
 LRU::~LRU()
@@ -164,7 +159,7 @@ LRU::findVictim(Addr addr, PacketList &writebacks, uint64_t tid)
 {
     unsigned set = extractSet(addr);
     // grab a replacement candidate
-    BlkType *blk = get_set(set,tid,addr).blks[assoc_of_tc(tid)-1];
+    BlkType *blk = get_set(set,tid,addr).blks[assoc-1];
 
     if (blk->isValid()) {
         DPRINTF(CacheRepl, "set %x: selecting blk %x for replacement\n",
@@ -254,7 +249,7 @@ void LRU::flush(uint64_t tid=0 ){
 }
 
 void
-LRU::clearLocks()
+LRU::clearLocks(uint64_t tcid)
 {
     for (int i = 0; i < numBlocks; i++){
         blks[i].clearLoadLocks();
