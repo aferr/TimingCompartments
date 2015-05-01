@@ -24,7 +24,11 @@ WPLRU::WPLRU( unsigned _numSets,
 }
         
 CacheSet WPLRU::get_set( int setnum, uint64_t tcid, Addr addr ){
-    return lru_tags[tcid]->get_set(setnum, tcid, addr);
+    if(has_reset){
+        return lru_tags[tcid]->get_set(setnum, tcid, addr);
+    } else {
+        return LRU::get_set(setnum, tcid, addr);
+    }
 }
 
 int
