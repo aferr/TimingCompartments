@@ -123,7 +123,8 @@ class BaseBufferArg {
     //
     virtual bool copyIn(SETranslatingPortProxy &memproxy)
     {
-        memproxy.readBlob(addr, bufPtr, size);
+        int tcid = memproxy.process->__pid;
+        memproxy.readBlob(addr, bufPtr, size, tcid);
         return true;    // no EFAULT detection for now
     }
 
@@ -132,7 +133,8 @@ class BaseBufferArg {
     //
     virtual bool copyOut(SETranslatingPortProxy &memproxy)
     {
-        memproxy.writeBlob(addr, bufPtr, size);
+        int tcid = memproxy.process->__pid;
+        memproxy.writeBlob(addr, bufPtr, size, tcid);
         return true;    // no EFAULT detection for now
     }
 
@@ -366,7 +368,8 @@ futexFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         }
 
         uint8_t *buf = new uint8_t[sizeof(int)];
-        tc->getMemProxy().readBlob((Addr)uaddr, buf, (int)sizeof(int));
+        tc->getMemProxy().readBlob((Addr)uaddr, buf, (int)sizeof(int),
+                process->__pid);
         int mem_val = *((int *)buf);
         delete buf;
 
@@ -604,7 +607,8 @@ openFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index)))
+                process->getSyscallArg(tc, index),
+                process->__pid))
         return -EFAULT;
 
     if (path == "/dev/sysdev0") {
@@ -687,7 +691,8 @@ chmodFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index),
+                process->__pid)) {
         return -EFAULT;
     }
 
@@ -793,7 +798,8 @@ statFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index),
+                process->__pid)) {
         return -EFAULT;
     }
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -823,7 +829,8 @@ stat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index)))
+                process->getSyscallArg(tc, index),
+                process->__pid))
         return -EFAULT;
     Addr bufPtr = process->getSyscallArg(tc, index);
 
@@ -888,7 +895,8 @@ lstatFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index),
+                process->__pid)) {
         return -EFAULT;
     }
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -917,7 +925,8 @@ lstat64Func(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index),
+                process->__pid)) {
         return -EFAULT;
     }
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -978,7 +987,8 @@ statfsFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index),
+                process->__pid)) {
         return -EFAULT;
     }
     Addr bufPtr = process->getSyscallArg(tc, index);
@@ -1044,11 +1054,12 @@ writevFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         typename OS::tgt_iovec tiov;
 
         p.readBlob(tiov_base + i*sizeof(typename OS::tgt_iovec),
-                   (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec));
+                   (uint8_t*)&tiov, sizeof(typename OS::tgt_iovec),
+                   process->__pid);
         hiov[i].iov_len = TheISA::gtoh(tiov.iov_len);
         hiov[i].iov_base = new char [hiov[i].iov_len];
         p.readBlob(TheISA::gtoh(tiov.iov_base), (uint8_t *)hiov[i].iov_base,
-                   hiov[i].iov_len);
+                   hiov[i].iov_len,process->__pid);
     }
 
     int result = writev(process->sim_fd(fd), hiov, count);
@@ -1218,7 +1229,8 @@ utimesFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
 
     int index = 0;
     if (!tc->getMemProxy().tryReadString(path,
-                process->getSyscallArg(tc, index))) {
+                process->getSyscallArg(tc, index),
+                process->__pid)) {
         return -EFAULT;
     }
 
@@ -1337,7 +1349,8 @@ timeFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
         typename OS::time_t t = sec;
         t = TheISA::htog(t);
         SETranslatingPortProxy &p = tc->getMemProxy();
-        p.writeBlob(taddr, (uint8_t*)&t, (int)sizeof(typename OS::time_t));
+        p.writeBlob(taddr, (uint8_t*)&t, (int)sizeof(typename OS::time_t),
+                process->__pid);
     }
     return sec;
 }

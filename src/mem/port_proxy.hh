@@ -88,7 +88,7 @@ class PortProxy
     /** The actual physical port used by this proxy. */
     MasterPort &_port;
 
-    void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd) const;
+    void blobHelper(Addr addr, uint8_t *p, int size, MemCmd cmd, int tcid) const;
 
   public:
     PortProxy(MasterPort &port) : _port(port) { }
@@ -97,19 +97,19 @@ class PortProxy
     /**
      * Read size bytes memory at address and store in p.
      */
-    virtual void readBlob(Addr addr, uint8_t* p, int size) const
-    { blobHelper(addr, p, size, MemCmd::ReadReq); }
+    virtual void readBlob(Addr addr, uint8_t* p, int size, int tcid) const
+    { blobHelper(addr, p, size, MemCmd::ReadReq, tcid); }
 
     /**
      * Write size bytes from p to address.
      */
-    virtual void writeBlob(Addr addr, uint8_t* p, int size) const
-    { blobHelper(addr, p, size, MemCmd::WriteReq); }
+    virtual void writeBlob(Addr addr, uint8_t* p, int size, int tcid) const
+    { blobHelper(addr, p, size, MemCmd::WriteReq, tcid); }
 
     /**
      * Fill size bytes starting at addr with byte value val.
      */
-    virtual void memsetBlob(Addr addr, uint8_t v, int size) const;
+    virtual void memsetBlob(Addr addr, uint8_t v, int size, int tcid) const;
 
     /**
      * Read sizeof(T) bytes from address and return as object T.
@@ -146,7 +146,8 @@ T
 PortProxy::read(Addr address) const
 {
     T data;
-    readBlob(address, (uint8_t*)&data, sizeof(T));
+    assert(false);
+    readBlob(address, (uint8_t*)&data, sizeof(T),-1);
     return data;
 }
 
@@ -154,7 +155,8 @@ template <typename T>
 void
 PortProxy::write(Addr address, T data) const
 {
-    writeBlob(address, (uint8_t*)&data, sizeof(T));
+    assert(false);
+    writeBlob(address, (uint8_t*)&data, sizeof(T),-1);
 }
 
 #if THE_ISA != NO_ISA
@@ -163,7 +165,8 @@ T
 PortProxy::readGtoH(Addr address) const
 {
     T data;
-    readBlob(address, (uint8_t*)&data, sizeof(T));
+    assert(false);
+    readBlob(address, (uint8_t*)&data, sizeof(T),-1);
     return TheISA::gtoh(data);
 }
 
@@ -171,8 +174,9 @@ template <typename T>
 void
 PortProxy::writeHtoG(Addr address, T data) const
 {
+    assert(false);
     data = TheISA::htog(data);
-    writeBlob(address, (uint8_t*)&data, sizeof(T));
+    writeBlob(address, (uint8_t*)&data, sizeof(T), -1);
 }
 #endif
 

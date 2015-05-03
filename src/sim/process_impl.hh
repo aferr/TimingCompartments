@@ -49,15 +49,17 @@ copyStringArray(std::vector<std::string> &strings,
     for (std::vector<std::string>::size_type i = 0; i < strings.size(); ++i) {
         data_ptr_swap = TheISA::htog(data_ptr);
         memProxy.writeBlob(array_ptr, (uint8_t*)&data_ptr_swap,
-                sizeof(AddrType));
-        memProxy.writeString(data_ptr, strings[i].c_str());
+                sizeof(AddrType), memProxy.process->__pid);
+        memProxy.writeString(data_ptr, strings[i].c_str(),
+                memProxy.process->__pid);
         array_ptr += sizeof(AddrType);
         data_ptr += strings[i].size() + 1;
     }
     // add NULL terminator
     data_ptr = 0;
 
-    memProxy.writeBlob(array_ptr, (uint8_t*)&data_ptr, sizeof(AddrType));
+    memProxy.writeBlob(array_ptr, (uint8_t*)&data_ptr, sizeof(AddrType),
+            memProxy.process->__pid);
 }
 
 #endif

@@ -70,11 +70,13 @@ ObjectFile::loadSection(Section *sec, PortProxy& memProxy, Addr addrMask)
     if (sec->size != 0) {
         Addr addr = sec->baseAddr & addrMask;
         if (sec->fileImage) {
-            memProxy.writeBlob(addr, sec->fileImage, sec->size);
+            fprintf(stderr, "objectfile loadsection writeblob may incorrect\n");
+            memProxy.writeBlob(addr, sec->fileImage, sec->size, 0);
         }
         else {
             // no image: must be bss
-            memProxy.memsetBlob(addr, 0, sec->size);
+            fprintf(stderr, "objectfile loadsection writeblob may incorrect\n");
+            memProxy.memsetBlob(addr, 0, sec->size, 0);
         }
     }
     return true;

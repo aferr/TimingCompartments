@@ -113,6 +113,7 @@ class BaseCPU : public MemObject
     // therefore no setCpuId() method is provided
     int _cpuId;
 
+
     /** instruction side request id that must be placed in all requests */
     MasterID _instMasterId;
 
@@ -160,6 +161,7 @@ class BaseCPU : public MemObject
      * @return a reference to the data port
      */
     virtual CpuPort &getDataPort() = 0;
+    int tcid;
 
     /**
      * Purely virtual method that returns a reference to the instruction

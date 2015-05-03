@@ -73,7 +73,8 @@ HexFile::loadSections(PortProxy& memProxy)
         parseLine(Line, &MemAddr, &Data);
         if (MemAddr != 0) {
             // Now, write to memory
-            memProxy.writeBlob(MemAddr << 2, (uint8_t *)&Data, sizeof(Data));
+            assert(false);
+            memProxy.writeBlob(MemAddr << 2, (uint8_t *)&Data, sizeof(Data),-1);
         }
     }
     return true;

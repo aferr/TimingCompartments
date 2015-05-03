@@ -70,7 +70,8 @@ SimpleDisk::read(Addr addr, baddr_t block, int count) const
     for (int i = 0, j = 0; i < count; i += SectorSize, j++)
         image->read(data + i, block + j);
 
-    system->physProxy.writeBlob(addr, data, count);
+    assert(false);
+    system->physProxy.writeBlob(addr, data, count, -1);
 
     DPRINTF(SimpleDisk, "read  block=%#x len=%d\n", (uint64_t)block, count);
     DDUMP(SimpleDiskData, data, count);

@@ -166,24 +166,25 @@ brkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
         // might need to allocate some new pages
         for (ChunkGenerator gen(p->brk_point, new_brk - p->brk_point,
                     VMPageSize); !gen.done(); gen.next()) {
-            if (!p->pTable->translate(gen.addr()))
+            int tcid = tc->getCpuPtr()->tcid;
+            if (!p->pTable->translate(gen.addr())){
                 p->allocateMem(roundDown(gen.addr(), VMPageSize), VMPageSize);
 
             // if the address is already there, zero it out
-            else {
+            } else {
                 uint8_t zero  = 0;
                 SETranslatingPortProxy &tp = tc->getMemProxy();
 
                 // split non-page aligned accesses
                 Addr next_page = roundUp(gen.addr(), VMPageSize);
                 uint32_t size_needed = next_page - gen.addr();
-                tp.memsetBlob(gen.addr(), zero, size_needed);
+                tp.memsetBlob(gen.addr(), zero, size_needed, tcid);
                 if (gen.addr() + VMPageSize > next_page &&
                         next_page < new_brk &&
                         p->pTable->translate(next_page))
                 {
                     size_needed = VMPageSize - size_needed;
-                    tp.memsetBlob(next_page, zero, size_needed);
+                    tp.memsetBlob(next_page, zero, size_needed, tcid);
                 }
             }
         }
@@ -359,7 +360,8 @@ readlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index),
+                p->__pid))
         return (TheISA::IntReg)-EFAULT;
 
     // Adjust path for current working directory
@@ -383,7 +385,8 @@ unlinkFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index),
+                p->__pid))
         return (TheISA::IntReg)-EFAULT;
 
     // Adjust path for current working directory
@@ -400,7 +403,8 @@ mkdirFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index),
+                p->__pid))
         return (TheISA::IntReg)-EFAULT;
 
     // Adjust path for current working directory
@@ -418,12 +422,14 @@ renameFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string old_name;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(old_name, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(old_name, p->getSyscallArg(tc, index),
+                p->__pid))
         return -EFAULT;
 
     string new_name;
 
-    if (!tc->getMemProxy().tryReadString(new_name, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(new_name, p->getSyscallArg(tc, index),
+                p->__pid))
         return -EFAULT;
 
     // Adjust path for current working directory
@@ -440,7 +446,8 @@ truncateFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index),
+                p->__pid))
         return -EFAULT;
 
     off_t length = p->getSyscallArg(tc, index);
@@ -475,7 +482,8 @@ truncate64Func(SyscallDesc *desc, int num,
     int index = 0;
     string path;
 
-    if (!tc->getMemProxy().tryReadString(path, process->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(path, process->getSyscallArg(tc, index),
+                process->__pid))
         return -EFAULT;
 
     int64_t length = process->getSyscallArg(tc, index, 64);
@@ -528,7 +536,8 @@ chownFunc(SyscallDesc *desc, int num, LiveProcess *p, ThreadContext *tc)
     string path;
 
     int index = 0;
-    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index)))
+    if (!tc->getMemProxy().tryReadString(path, p->getSyscallArg(tc, index),
+                p->__pid))
         return -EFAULT;
 
     /* XXX endianess */

@@ -453,7 +453,8 @@ setTLSFunc(SyscallDesc *desc, int callnum, LiveProcess *process,
     uint32_t tlsPtr = process->getSyscallArg(tc, index);
 
     tc->getMemProxy().writeBlob(ArmLinuxProcess::commPage + 0x0ff0,
-                                (uint8_t *)&tlsPtr, sizeof(tlsPtr));
+                                (uint8_t *)&tlsPtr, sizeof(tlsPtr),
+                                process->__pid);
     tc->setMiscReg(MISCREG_TPIDRURO,tlsPtr);
     return 0;
 }
@@ -513,7 +514,8 @@ ArmLinuxProcess::initState()
     // Fill this page with swi -1 so we'll no if we land in it somewhere.
     for (Addr addr = 0; addr < PageBytes; addr += sizeof(swiNeg1)) {
         tc->getMemProxy().writeBlob(commPage + addr,
-                                    swiNeg1, sizeof(swiNeg1));
+                                    swiNeg1, sizeof(swiNeg1),
+                                    tc->getProcessPtr()->__pid);
     }
 
     uint8_t memory_barrier[] =
@@ -522,7 +524,8 @@ ArmLinuxProcess::initState()
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };
     tc->getMemProxy().writeBlob(commPage + 0x0fa0, memory_barrier,
-                                sizeof(memory_barrier));
+                                sizeof(memory_barrier),
+                                tc->getProcessPtr()->__pid);
 
     uint8_t cmpxchg[] =
     {
@@ -535,7 +538,8 @@ ArmLinuxProcess::initState()
         0x5f, 0xf0, 0x7f, 0xf5,  // dmb
         0x0e, 0xf0, 0xa0, 0xe1   // return
     };
-    tc->getMemProxy().writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg));
+    tc->getMemProxy().writeBlob(commPage + 0x0fc0, cmpxchg, sizeof(cmpxchg),
+            tc->getProcessPtr()->__pid);
 
     uint8_t get_tls[] =
     {
@@ -543,7 +547,8 @@ ArmLinuxProcess::initState()
         0x70, 0x0f, 0x1d, 0xee, // mrc p15, 0, r0, c13, c0, 3
         0x0e, 0xf0, 0xa0, 0xe1  // return
     };
-    tc->getMemProxy().writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls));
+    tc->getMemProxy().writeBlob(commPage + 0x0fe0, get_tls, sizeof(get_tls),
+            tc->getProcessPtr()->__pid);
 }
 
 ArmISA::IntReg
