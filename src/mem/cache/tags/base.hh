@@ -83,8 +83,6 @@ class BaseTags
     /** Per cycle average of the number of tags that hold valid data. */
     Stats::Average tagsInUse;
 
-    //These two stats were made public ONLY so they can be set easily in wplru
-      public:
     /** The total number of references to a block before it is replaced. */
     Stats::Scalar totalRefs;
 
@@ -94,7 +92,6 @@ class BaseTags
      * exits.
      */
     Stats::Scalar sampledRefs;
-      protected:
 
     /**
      * Average number of references to a block before is was replaced.
@@ -127,7 +124,7 @@ class BaseTags
      * objName.
      * @param _cache Pointer to parent cache.
      */
-    virtual void setCache(BaseCache *_cache);
+    void setCache(BaseCache *_cache);
 
     /**
      * Return the parent cache name.
@@ -142,7 +139,7 @@ class BaseTags
      * Register local statistics.
      * @param name The name to preceed each statistic name.
      */
-    virtual void regStats(const std::string &name);
+    void regStats(const std::string &name);
 
     /**
      * Average in the reference count for valid blocks when the simulation
