@@ -53,6 +53,7 @@
 #include "sim/byteswap.hh"
 #include "sim/process_impl.hh"
 #include "sim/system.hh"
+#include <stdio.h>
 
 using namespace std;
 using namespace ArmISA;
@@ -301,7 +302,7 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
         }
     }
 
-    fprntf(stderr, "warn: try changing arch/arm/process.cc to use __pid\n");
+    fprintf(stderr, "warn: try changing arch/arm/process.cc to use __pid\n");
     //Copy the aux stuff
     for(int x = 0; x < auxv.size(); x++)
     {

@@ -51,9 +51,11 @@
 #include "kern/linux/events.hh"
 #include "mem/fs_translating_port_proxy.hh"
 #include "mem/physical.hh"
+#include <stdio.h>
 
 using namespace ArmISA;
 using namespace Linux;
+using namespace std;
 
 LinuxArmSystem::LinuxArmSystem(Params *p)
     : ArmSystem(p)
