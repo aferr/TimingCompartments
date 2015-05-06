@@ -302,14 +302,13 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
         }
     }
 
-    fprintf(stderr, "warn: try changing arch/arm/process.cc to use __pid\n");
     //Copy the aux stuff
     for(int x = 0; x < auxv.size(); x++)
     {
         initVirtMem.writeBlob(auxv_array_base + x * 2 * intSize,
-                (uint8_t*)&(auxv[x].a_type), intSize, 0);
+                (uint8_t*)&(auxv[x].a_type), intSize, __pid);
         initVirtMem.writeBlob(auxv_array_base + (x * 2 + 1) * intSize,
-                (uint8_t*)&(auxv[x].a_val), intSize, 0);
+                (uint8_t*)&(auxv[x].a_val), intSize, __pid);
     }
     //Write out the terminating zeroed auxilliary vector
     const uint64_t zero = 0;
@@ -319,7 +318,7 @@ ArmLiveProcess::argsInit(int intSize, int pageSize)
     copyStringArray(envp, envp_array_base, env_data_base, initVirtMem);
     copyStringArray(argv, argv_array_base, arg_data_base, initVirtMem);
 
-    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize, 0);
+    initVirtMem.writeBlob(argc_base, (uint8_t*)&guestArgc, intSize, __pid);
 
     ThreadContext *tc = system->getThreadContext(contextIds[0]);
     //Set the stack pointer register
