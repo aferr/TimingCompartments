@@ -29,11 +29,16 @@ def benchmarks_in wl
 end
 
 $mpworkloads = {
+
+  #synthetic workloads
+  # nothing_hardstride: %w[nothing hardstride],
+  # hardstride_nothing: %w[hardstride nothing],
+
   # integer workloads
   mcf_bz2: %w[ mcf bzip2 ],
-  bz2_mcf: %w[ bzip2 mcf ],
-  mcf_xln: %w[ mcf xalan ],
-  mcf_mcf: %w[ mcf mcf ],
+  # bz2_mcf: %w[ bzip2 mcf ],
+  # mcf_xln: %w[ mcf xalan ], TODO RERUN
+  # mcf_mcf: %w[ mcf mcf ], TODO RERUN
   mcf_lib: %w[mcf libquantum],
   mcf_ast: %w[mcf astar],
   ast_mcf: %w[astar mcf],
@@ -42,12 +47,12 @@ $mpworkloads = {
   lib_ast: %w[ libquantum astar ],
   mcf_h264: %w[ mcf h264ref ],
   lib_sjg: %w[ libquantum sjeng ],
-  #xln_gcc: %w[ xalan gcc ],
-  #gcc_gob: %w[ gcc gobmk ],
+  # xln_gcc: %w[ xalan gcc ],
+  # gcc_gob: %w[ gcc gobmk ],
   sjg_sgj: %w[ sjeng sjeng ],
   ast_h264: %w[ astar h264ref ],
   h264_hmm: %w[ h264ref hmmer ],
-  ast_ast: %w[ astar astar],
+  #ast_ast: %w[ astar astar],
 
   # Float workloads
   # milc_milc: %w[milc milc],
@@ -109,7 +114,6 @@ end
 MEMLATENCY = /system.l20.overall_miss_latency::total\s*(\d*.\d*)/
 
 def get_m5out_stat(filename, opts={})
-  puts filename.to_s.blue
   (puts filename.red; return 0) unless File.exists? filename
   time = nil
   File.open(filename,'r') do |f|
@@ -119,6 +123,21 @@ def get_m5out_stat(filename, opts={})
   end
   puts filename.blue
   0
+end
+
+
+def find_time_old(filename, opts = {} )
+  (puts filename.red; return nil) unless File.exists? filename
+  time = nil
+  File.open(filename,'r') do |f|
+    #timingregex = /Exiting @ tick (\d*)\w* because a\w*/
+    timingregex = /Exiting @ tick (\d*)\w* because a\w*/
+    f.each_line do |line|
+      return line.match(timingregex)[1].to_f if line =~ timingregex
+    end
+  end
+  puts filename.blue
+  time
 end
 
 def find_time(filename, opts = {} )
@@ -142,13 +161,40 @@ def find_time(filename, opts = {} )
   ticks / insts
 end
 
+def find_time_cpu(filename, cpu, opts={})
+    term_reg = /term_cpu\s*#{cpu}/
+    multi_reg = /system.switch_cpus#{cpu}.cpi\s*(\d*\.\d*)/
+    found_term = false
+    File.open(filename, 'r') do |f|
+        f.each_line do |l|
+            found_term = true if l =~ term_reg
+            if l =~ multi_reg && found_term
+                return (l.match multi_reg)[1].to_f
+            end
+        end
+    end
+    (puts filename.to_s.red; return nil) 
+end
+
+def find_stat_cpu filename, regex, cpu, opts = {}
+    (puts filename.red; return nil) unless File.exists? filename
+    term_reg = /term_cpu\s*#{cpu}/
+    found_term = false
+    File.open(filename,'r') do |f|
+        f.each_line.each do |l|
+            found_term = true if l =~ term_reg
+            next unless found_term
+            return l.match(regex)[1].to_f if l =~ regex
+        end
+    end
+    (puts filename.blue; return nil) 
+end
+
+
 def find_stat filename, regex, opts = {}
-    o = opts
     (puts filename.red; return nil) unless File.exists? filename
     File.open(filename,'r') do |f|
-      f.each_line.to_a.reverse.each do |l|
-          return l.match(regex)[1].to_f if l =~ regex 
-      end
+        f.each_line.each { |l| return l.match(regex)[1].to_f if l =~ regex }
     end
     (puts filename.blue; return nil) 
 end
@@ -172,15 +218,12 @@ end
 def stp( p={} )
     wl = p[:workload]
     single_reg = /system.switch_cpus.cpi\s*(\d*\.\d*)/
-    single_times = (benchmarks_in(wl).map do |b|
+    single_times = ((p[:workloads][wl]).map do |b|
         find_stat (single_m5out p.merge(bench: b)), single_reg
     end * (p[:numcpus]/2)).flatten
     s = p[:numcpus].times.map do |i|
         tisp = single_times[i]
-        multi_reg = /system.switch_cpus0.cpi\s*(\d*\.\d*)/
-        timp = find_stat (m5out_file p.merge(
-          i%2 == 1 ? p.merge(workload: wl.to_s + 'r') : p
-        )), multi_reg
+        timp = find_time_cpu (m5out_file p), i
         (tisp.nil? || timp.nil?) ? [] : tisp/timp
     end
     s.include?([]) ? 0 : s.reduce(:+)
@@ -199,11 +242,9 @@ end
 
 def data_of p={}
   p[:core_set].inject([]) do |a1,cores|
-    a1 << $mpworkloads.keys.inject([]) do |a2,wl|
-      a2 << yield(p.merge(numcpus: cores, workload: wl))
-      a2
-    end
-    a1
+    a1 << p[:workloads].keys.inject([]) do |a2,wl|
+      a2 << yield(p.merge(numcpus: cores, workload: wl)); a2
+    end; a1
   end
 end
 
@@ -260,6 +301,5 @@ end
 
 if __FILE__ == $0
   include Parsers
-  p = { numcpus: 2, scheme: "tp", dir: "results", workload: :mmi}
-  puts stp p
+  puts stp(workload: :nothing_hardstride, scheme:"none", numcpus: 2)
 end
