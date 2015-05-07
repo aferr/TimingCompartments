@@ -48,6 +48,7 @@
 #include "cpu/thread_context.hh"
 #include "mem/physical.hh"
 #include "mem/fs_translating_port_proxy.hh"
+#include <stdio.h>
 
 using namespace std;
 using namespace Linux;
