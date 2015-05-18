@@ -308,6 +308,8 @@ def run(options, root, testsys, cpu_class, numpids):
             switch_cpus[i].system =  testsys
             switch_cpus[i].workload = testsys.cpu[i].workload
             switch_cpus[i].clock = testsys.cpu[i].clock
+            switch_cpus[i].cpu_id = testsys.cpu[i].cpu_id
+            switch_cpus[i].tcid = testsys.cpu[i].tcid
             # simulation period
             if options.maxinsts:
                 switch_cpus[i].max_insts_any_thread = options.maxinsts

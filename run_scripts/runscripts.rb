@@ -75,6 +75,14 @@ $mpworkloads = {
   ast_h264: %w[ astar h264ref ],
   h264_hmm: %w[ h264ref hmmer ],
   ast_ast: %w[ astar astar],
+ 
+  #New arbitrary 
+  bz2_h264: %w[bzip2 h264ref],
+  lib_gob: %w[libquantum gobmk],
+  sjg_gob: %w[sjeng gobmk],
+  sjg_h264: %w[sjeng h264ref],
+  hmm_sjg: %w[hmmer sjg],
+  bz2_h264: %w[bzip2 hmmer] 
 
   # Float workloads
   # milc_milc: %w[milc milc],
@@ -261,6 +269,7 @@ def sav_script( options = {} )
     script.puts("#!/bin/bash")
     script.puts("build/ARM/gem5.fast \\") unless debug
     script.puts("build/ARM/gem5.debug \\") if debug 
+    script.puts("--remote-gdb-port=0 \\")
     script.puts("--debug-flags=Cache \\") if cacheDebug
     script.puts("--debug-flags=MMU \\") if mmuDebug
     script.puts("--debug-flags=Bus,MMU,Cache\\") if options[:memdebug]
