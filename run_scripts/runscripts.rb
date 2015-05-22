@@ -365,7 +365,7 @@ def sav_script( options = {} )
     script.puts("   --p0period=#{tl0} \\")
     script.puts("   --p1period=#{tl1} \\")
 
-    script.puts("    >! #{result_dir}/stdout_#{filename}.out")
+    script.puts("    > #{result_dir}/stdout_#{filename}.out")
     script_abspath = script.path
     script.close
 
@@ -388,7 +388,7 @@ def single opts={}
         cpu: "detailed",
         schemes: %w[ none],
         scheme: "none",
-        benchmarks: $specint + $specfp,
+        benchmarks: $specint,
         threads: 1
     }.merge opts
 

@@ -10,12 +10,14 @@ module RunScripts
       iterate_mp(
         scheme: "none",
         num_wl: 8,
+        nametag: "tc2"
       )
     end
     
     def ncore_ntc
       iterate_mp $secure_opts.merge(
-        num_wl: 8,
+        num_wl: 4,
+        nametag: "fake_part"
       )
     end
 
@@ -32,19 +34,19 @@ module RunScripts
       }
 
       iterate_mp o.merge(
-        nametag: "only_rrbus",
+        nametag: "tc2_only_rrbus",
         rr_nc: true,
         split_rport: true,
       )
 
       # parallel_local o.merge(
       iterate_mp o.merge(
-        nametag: "only_waypart",
+        nametag: "tc2_only_waypart",
         waypart: true,
       )
 
       iterate_mp o.merge(
-        nametag: "only_mc",
+        nametag: "tc2_only_mc",
         schemes: %w[tp],
         scheme: "tp"
       )
@@ -53,19 +55,18 @@ module RunScripts
 
     def ncore_2tc
       o = $secure_opts.merge(
-        nametag: "2tc",
-        runmode: :fake
+        nametag: "tc2_2tc",
       )
 
       # 4 Cores 2 TCs
-      iterate_mp o.merge(
-        num_wl: 4,
-        skip2: true,
-        p0threadID: 0,
-        p1threadID: 0,
-        p2threadID: 1,
-        p3threadID: 1
-      )
+      # iterate_mp o.merge(
+      #   num_wl: 4,
+      #   skip2: true,
+      #   p0threadID: 0,
+      #   p1threadID: 0,
+      #   p2threadID: 1,
+      #   p3threadID: 1
+      # )
 
       # 6 Cores 2 TCs
       iterate_mp o.merge(
@@ -80,7 +81,7 @@ module RunScripts
         p5threadID: 1
       )
 
-      # 8 Cores 2 TCs
+      # # 8 Cores 2 TCs
       iterate_mp o.merge(
         num_wl: 8,
         skip2: true,
@@ -121,13 +122,42 @@ module RunScripts
 
       [bw, rbw, iw25, iw05, iw75].product([10,50,100]).each do |o,period|
         iterate_mp o.merge(
-            nametag: "flush#{period}ms_#{o[:wbtag]}",
+            nametag: "tc2_flush#{period}ms_#{o[:wbtag]}",
             context_sw_freq: period * 10**10,
             do_flush: true,
         )
       end
 
     end 
+
+    def flush_1core
+      bw = $secure_opts.merge(
+        wbtag: "bw",
+        reserve_flush: false
+      )
+
+      #Reserved Bandwidth Writeback
+      rbw = $secure_opts.merge(
+          wbtag: "rbw",
+          reserve_flush: true
+      )
+
+      #Insecure Writeback
+      iw25, iw05, iw75 = [0.25,0.5,0.75].map do |r|
+        {
+          wbtag: "iw#{r.to_s.sub(/\./,'')}",
+          flushRatio: r
+        }
+      end
+
+      [bw, rbw, iw25, iw05, iw75].product([10,50,100]).each do |o,period|
+        single o.merge(
+            nametag: "tc2_flush#{period}ms_#{o[:wbtag]}",
+            context_sw_freq: period * 10**10,
+            do_flush: true,
+        )
+      end
+    end
 
 ##############################################################################
 # Coordination
