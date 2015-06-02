@@ -129,6 +129,7 @@ MemTest::MemTest(const Params *p)
 
     accessRetry = false;
     dmaOutstanding = false;
+    tcid = p->tcid;
 }
 
 MasterPort &
@@ -328,7 +329,7 @@ MemTest::tick()
                 id, do_functional ? "functional " : "", req->getPaddr(),
                 blockAddr(req->getPaddr()), *result);
 
-        PacketPtr pkt = new Packet(req, MemCmd::ReadReq);
+        PacketPtr pkt = new Packet(req, MemCmd::ReadReq, tcid, tcid, tcid);
         pkt->dataDynamicArray(new uint8_t[req->getSize()]);
         MemTestSenderState *state = new MemTestSenderState(result);
         pkt->senderState = state;
@@ -359,7 +360,7 @@ MemTest::tick()
                 do_functional ? "functional " : "", req->getPaddr(),
                 blockAddr(req->getPaddr()), data & 0xff);
 
-        PacketPtr pkt = new Packet(req, MemCmd::WriteReq);
+        PacketPtr pkt = new Packet(req, MemCmd::WriteReq, tcid, tcid, tcid);
         uint8_t *pkt_data = new uint8_t[req->getSize()];
         pkt->dataDynamicArray(pkt_data);
         memcpy(pkt_data, &data, req->getSize());
@@ -390,7 +391,7 @@ MemTest::doRetry()
 void
 MemTest::printAddr(Addr a)
 {
-    cachePort.printAddr(a);
+    cachePort.printAddr(a, tcid);
 }
 
 

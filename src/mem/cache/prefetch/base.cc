@@ -171,6 +171,7 @@ BasePrefetcher::getPacket()
 Tick
 BasePrefetcher::notify(PacketPtr &pkt, Tick time)
 {
+    panic("BasePrefetcher::notify\n");
     if (!pkt->req->isUncacheable() && !(pkt->req->isInstFetch() && onlyData)) {
         // Calculate the blk address
         Addr blk_addr = pkt->getAddr() & ~(Addr)(blkSize-1);
@@ -238,7 +239,7 @@ BasePrefetcher::notify(PacketPtr &pkt, Tick time)
             Request *prefetchReq = new Request(*addrIter, blkSize, 0, masterId);
             fprintf(stderr, "panic: prefetch called\n");
 			PacketPtr prefetch =
-                new Packet(prefetchReq, MemCmd::HardPFReq);
+                new Packet(prefetchReq, MemCmd::HardPFReq, -1, -1, -1);
             prefetch->allocate();
             prefetch->req->setThreadContext(pkt->req->contextId(),
                                             pkt->req->threadId());

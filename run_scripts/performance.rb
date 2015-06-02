@@ -25,10 +25,7 @@ module RunScripts
         schemes: %w[none],
         scheme: "none",
         addrpar: true,
-        skip2: true,
-        skip4: true,
-        skip6: true,
-        num_wl: 8,
+        num_wl: 4,
       }
 
       iterate_mp o.merge(
@@ -65,19 +62,6 @@ module RunScripts
         p1threadID: 0,
         p2threadID: 1,
         p3threadID: 1
-      )
-
-      # 6 Cores 2 TCs
-      iterate_mp o.merge(
-        num_wl: 6,
-        skip2: true,
-        skip4: true,
-        p0threadID: 0,
-        p1threadID: 0,
-        p2threadID: 0,
-        p3threadID: 1,
-        p4threadID: 1,
-        p5threadID: 1
       )
 
       # 8 Cores 2 TCs

@@ -82,7 +82,6 @@ $mpworkloads = {
   sjg_gob: %w[sjeng gobmk],
   sjg_h264: %w[sjeng h264ref],
   hmm_sjg: %w[hmmer sjg],
-  bz2_h264: %w[bzip2 hmmer] 
 
   # Float workloads
   # milc_milc: %w[milc milc],
@@ -365,7 +364,7 @@ def sav_script( options = {} )
     script.puts("   --p0period=#{tl0} \\")
     script.puts("   --p1period=#{tl1} \\")
 
-    script.puts("    >! #{result_dir}/stdout_#{filename}.out")
+    script.puts("    > #{result_dir}/stdout_#{filename}.out")
     script_abspath = script.path
     script.close
 

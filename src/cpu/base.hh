@@ -113,7 +113,6 @@ class BaseCPU : public MemObject
     // therefore no setCpuId() method is provided
     int _cpuId;
 
-
     /** instruction side request id that must be placed in all requests */
     MasterID _instMasterId;
 

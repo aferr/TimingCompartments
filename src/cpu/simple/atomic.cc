@@ -110,6 +110,7 @@ AtomicSimpleCPU::AtomicSimpleCPU(AtomicSimpleCPUParams *p)
       fastmem(p->fastmem)
 {
     _status = Idle;
+    tcid = p->tcid;
 }
 
 
@@ -546,7 +547,7 @@ AtomicSimpleCPU::tick()
 void
 AtomicSimpleCPU::printAddr(Addr a)
 {
-    dcachePort.printAddr(a);
+    dcachePort.printAddr(a, tcid);
 }
 
 
