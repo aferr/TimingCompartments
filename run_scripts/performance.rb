@@ -58,6 +58,7 @@ module RunScripts
       iterate_mp o.merge(
         num_wl: 4,
         skip2: true,
+        numpids: 2,
         p0threadID: 0,
         p1threadID: 0,
         p2threadID: 1,
@@ -70,6 +71,7 @@ module RunScripts
         skip2: true,
         skip4: true,
         skip6: true,
+        numpids: 2,
         p0threadID: 0,
         p1threadID: 0,
         p2threadID: 0,
