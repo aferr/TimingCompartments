@@ -13,7 +13,8 @@ namespace DRAMSim
             CommandQueueTP(vector< vector<BankState> > &states,
                     ostream &dramsim_log_,unsigned tpTurnLength,
                     int num_pids, bool fixAddr_,
-                    bool diffPeriod_, int p0Period_, int p1Period_, int offset_);
+                    bool diffPeriod_, int p0Period_, int p1Period_, int offset_,
+                    bool partitioning=false);
             virtual void enqueue(BusPacket *newBusPacket);
             virtual bool hasRoomFor(unsigned numberToEnqueue, unsigned rank, 
                     unsigned bank, unsigned pid);
@@ -31,6 +32,8 @@ namespace DRAMSim
 #endif /*DEBUG_TP*/
 
             unsigned lastPID;
+            unsigned last_pid;
+            unsigned pid_last_pop;
             unsigned tpTurnLength;
             unsigned lastPopTime;
             bool fixAddr;
@@ -38,18 +41,25 @@ namespace DRAMSim
             int p0Period;
             int p1Period;
 			int offset;
+            bool partitioning;
 
             unsigned getCurrentPID();
             bool isBufferTime();
 
             virtual int normal_deadtime(int tlength){
-              //return tlength - (tlength - WORST_CASE_DELAY)/10;
-              return WORST_CASE_DELAY;
+              if(partitioning){
+                  return FIX_WORST_CASE_DELAY;
+              } else {
+                  return WORST_CASE_DELAY;
+              }
             }
 
             virtual int refresh_deadtime(int tlength){
-              //return tlength - (tlength - TP_BUFFER_TIME)/10;
-              return TP_BUFFER_TIME;
+              if(partitioning){
+                  return FIX_TP_BUFFER_TIME;
+              } else {
+                  return TP_BUFFER_TIME;
+              }
             }
     };
 }

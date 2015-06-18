@@ -117,7 +117,8 @@ $secure_opts = {
   rr_nc: true,
   waypart: true,
   split_mshr: true,
-  split_rport: true
+  split_rport: true,
+  bank_part: true,
 }
 
 #benchmarks
@@ -171,16 +172,8 @@ end
 def sav_script( options = {} ) 
 
     options = {
-        #TP Minimum: 
-        tl0: 44,
-        tl1: 44,
-        tl2: 44,
-        tl3: 44,
-        #FA Minimum:
-        # tl0: 18,
-        # tl1: 18,
-        # tl2: 18,
-        # tl3: 18,
+        tl0: 23,
+        tl1: 23,
         l3config: "shared",
         runmode: :qsub,
         maxinsts: $maxinsts,
@@ -202,8 +195,6 @@ def sav_script( options = {} )
     # turn length is 2**arg unless diffperiod is supplied, otherwise it is arg.
     tl0        = options[:tl0]
     tl1        = options[:tl1]
-    tl2        = options[:tl2]
-    tl3        = options[:tl3]
     # Results directory
     result_dir = options[:result_dir]
     # allows the turn lengths for p0-p3 to differ
@@ -289,6 +280,7 @@ def sav_script( options = {} )
     script.puts("    --nocwf \\") if options[:nocwf]
 
     #Protection Mechanisms
+    script.puts("    --bank_part \\")     if options[:bank_part]
     script.puts("    --fixaddr \\")       if scheme == "fa" || options[:addrpar]
     script.puts("    --rr_nc \\" )        if rr_nc
     script.puts("    --rr_l2l3 \\")       if options[:rr_l2l3]

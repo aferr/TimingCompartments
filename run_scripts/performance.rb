@@ -5,6 +5,22 @@ require_relative 'runscripts'
 include RunScripts
 
 module RunScripts
+    $test_opts = {
+        maxinsts: 10**5,
+        fastforward: 10,
+        num_wl: 4,
+        skip2: true,
+        skip6: true,
+        workloads: { 
+            hardstride_nothing: %w[hardstride nothing],
+            # nothing_hardstride: %w[nothing hardstride],
+            hardstride_hardstride: %w[hardstride hardstride],
+            # nothing_nothing: %w[nothing nothing]
+        },
+        debug: true,
+        runmode: :local
+
+    }
 
     def baseline
       iterate_mp(
@@ -17,6 +33,16 @@ module RunScripts
       iterate_mp $secure_opts.merge(
         num_wl: 8,
       )
+    end
+
+    def ncore_ntc_no_part
+        iterate_mp $secure_opts.merge(
+            num_wl: 8,
+            bank_part: false,
+            tl0: 44,
+            tl1: 44,
+            nametag: "no_part"
+        )
     end
 
     def breakdown

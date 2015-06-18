@@ -62,7 +62,8 @@ public:
             CSVWriter &csvOut_, ostream &dramsim_log_, 
             const string &outputFilename_, unsigned tpTurnLength, bool genTrace, 
             const string &traceFilename_, int num_pids, bool fixAddr,
-            bool diffPeriod, int p0Period, int p1Period, int offset);
+            bool diffPeriod, int p0Period, int p1Period, int offset,
+            bool partitioning);
 	virtual ~MemorySystem();
 	void update();
 	bool addTransaction(Transaction *trans);

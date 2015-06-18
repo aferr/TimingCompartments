@@ -163,6 +163,8 @@ def add_options():
                 help="reserve bandwidth when flushing.")
         parser.add_option("--context_sw_freq", type="int", default=1000,
                 help="Frequency of context switches in us.")
+        parser.add_option("--bank_part", action="store_true", default=False,
+                help = "use bank partitioning")
 
         (options, args) = parser.parse_args()
 
@@ -221,8 +223,9 @@ def setup_dramsim(options):
                             p1Period=options.p1period,
                             #Offset for DRAM turn length
                             offset=options.dramoffset,
+                            # use bank partitioning
+                            bank_part = options.bank_part,
                             #Infer split memory ports from split cache ports
-                            #TODO give this its own option or infer from scheme
                             split_ports = options.split_rport,
                             save_trace  = options.do_mem_trace,
                             trace_file  = options.mem_trace_file,

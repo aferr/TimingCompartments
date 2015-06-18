@@ -19,7 +19,8 @@ MemoryControllerTP::MemoryControllerTP(MemorySystem *parent,
         bool diffPeriod,
         int p0Period,
         int p1Period,
-        int offset) :
+        int offset,
+        bool partitioning) :
     MemoryController(
         parent,csvOut_,
         dramsim_log_,outputFilename_,
@@ -29,7 +30,9 @@ MemoryControllerTP::MemoryControllerTP(MemorySystem *parent,
         fixAddr)
 {
 
-    commandQueue = new CommandQueueTP(bankStates,dramsim_log_,tpTurnLength,num_pids_, fixAddr, diffPeriod, p0Period, p1Period, offset); 
+    commandQueue = new CommandQueueTP(bankStates,dramsim_log_,tpTurnLength,num_pids_,
+            fixAddr, diffPeriod, p0Period, p1Period, offset,
+            partitioning); 
 
     // reserve for each process
     transactionQueues = new vector<Transaction *>[num_pids];
