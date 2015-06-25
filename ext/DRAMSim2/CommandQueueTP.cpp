@@ -166,7 +166,6 @@ bool CommandQueueTP::normalPopClosePage(BusPacket **busPacket, bool
 
                 if (isIssuable(queue_last[i]))
                 {
-                    queue_last[i]->print();
                     if(queue_last[i]->busPacketType==ACTIVATE){
                         continue;
                     }
