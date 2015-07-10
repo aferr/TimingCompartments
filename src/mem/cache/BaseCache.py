@@ -75,3 +75,5 @@ class BaseCache(MemObject):
     context_sw_freq = Param.Addr(1000, "Context switch frequency in us")
     cw_first       = Param.Bool(True, "Use critical word first timing")
     reserve_flush  = Param.Bool(True, "Use reserve flush instead of blocking")
+    debug_mode = Param.Bool(False, "debug printouts")
+    cpu_tcid = Param.Int(-1, "TCID of owning cpu")

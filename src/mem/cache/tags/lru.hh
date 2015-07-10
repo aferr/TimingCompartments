@@ -268,6 +268,9 @@ public:
     virtual void cleanupRefs();
 
     virtual void flush( uint64_t tid );
+
+    virtual void print();
+
 };
 
 #endif // __MEM_CACHE_TAGS_LRU_HH__

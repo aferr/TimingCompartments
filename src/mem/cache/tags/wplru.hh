@@ -21,4 +21,5 @@ class WPLRU : public LRU{
 
     int blks_in_tc( int tcid );
     virtual int assoc_of_tc( int tcid );
+
 };

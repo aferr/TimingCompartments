@@ -110,20 +110,32 @@ class Cache : public BaseCache
     }
 
     virtual void flush( int tcid ){
-      tags->flush(tcid);
-      memSidePort->contextSwitch(tcid);
-      if( params->reserve_flush ){
-        if( getWriteBuffer(tcid)->havePending() ){
-          functionalDrainWritebacks(tcid);
-        }
-      } else {
-        if( getWriteBuffer(tcid)->havePending() ){
-          drainWritebacks(tcid);
-          setBlocked(Blocked_DrainingWritebacks);
-        }
-      }
-    }
+        if( params->cpu_tcid != tcid ) return;
 
+        if(params->debug_mode){
+            ccprintf( std::cout, "before flush\n" );
+            tags->print();
+        }
+
+        tags->flush(tcid);
+        memSidePort->contextSwitch(tcid);
+        if( params->reserve_flush ){
+            if( getWriteBuffer(tcid)->havePending() ){
+                functionalDrainWritebacks(tcid);
+            }
+        } else {
+            if( getWriteBuffer(tcid)->havePending() ){
+                drainWritebacks(tcid);
+                setBlocked(Blocked_DrainingWritebacks);
+            }
+        }
+
+        if(params->debug_mode){
+            ccprintf( std::cout, "after flush\n" );
+            tags->print();
+        }
+
+    }
 
     void drainWritebacks( int tcid ){
       for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){

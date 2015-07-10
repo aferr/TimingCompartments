@@ -6,7 +6,7 @@ include RunScripts
 
 module RunScripts
     $test_opts = {
-        maxinsts: 10**5,
+        maxinsts: 10**4,
         fastforward: 10,
         num_wl: 4,
         skip2: true,
@@ -134,12 +134,20 @@ module RunScripts
       [bw, rbw, iw25, iw05, iw75].product([10,50,100]).each do |o,period|
         iterate_mp o.merge(
             nametag: "flush#{period}ms_#{o[:wbtag]}",
-            context_sw_freq: period * 10**10,
+            context_sw_freq: period * 10**9,
             do_flush: true,
         )
       end
 
     end 
+
+    def flush_simple
+        iterate_mp $secure_opts.merge $test_opts.merge(
+            do_flush: true,
+            context_sw_freq: (1 * 10**8),
+            nametag: "flush"
+        )
+    end
 
 ##############################################################################
 # Coordination

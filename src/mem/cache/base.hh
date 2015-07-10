@@ -81,7 +81,7 @@ class BaseCache : public MemObject
   private:
 
     void flushInternal(){
-	    flush(0);
+	  flush(0);
       Tick time = curTick() + params->context_sw_freq;
       schedule( flushEvent, time);
     }
@@ -96,9 +96,11 @@ class BaseCache : public MemObject
     };
 
   public:
-      void insertContextSwitches(){
-        if (!flushEvent.scheduled()) schedule(flushEvent, params->context_sw_freq);
-      }
+    void insertContextSwitches(){
+        if (!flushEvent.scheduled()){
+            schedule(flushEvent, params->context_sw_freq);
+        }
+    }
 	  
     virtual void flush( int tcid ){}
     /**
@@ -121,8 +123,6 @@ class BaseCache : public MemObject
         Request_PF,
         NUM_REQUEST_CAUSES
     };
-
-
 
   protected:
     virtual MSHRQueue* getMSHRQueue( int threadID ){

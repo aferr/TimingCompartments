@@ -157,7 +157,7 @@ bool CommandQueueTP::normalPopClosePage(BusPacket **busPacket, bool
         vector<BusPacket *> &queue = getCommandQueue(nextRank, getCurrentPID());
         vector<BusPacket *> &queue_last = getCommandQueue(nextRank, last_pid);
 
-        if (partitioning && !((nextRank == refreshRank) && refreshWaiting) &&
+        if (false && !((nextRank == refreshRank) && refreshWaiting) &&
                 !queue_last.empty())
         {
             //search from beginning to find first issuable bus packet
@@ -187,7 +187,7 @@ bool CommandQueueTP::normalPopClosePage(BusPacket **busPacket, bool
             }
         }
         
-        if(!(partitioning && foundIssuable)){
+        if(!(false && foundIssuable)){
             if (!queue.empty() && !((nextRank == refreshRank) && refreshWaiting))
             {
 

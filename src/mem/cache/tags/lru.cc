@@ -73,11 +73,22 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
     warmupBound = numSets * assoc;
     
     init_sets();
+
 }
 
 CacheSet
 LRU::get_set( int setnum, uint64_t tid, Addr addr ){
     return sets[setnum];
+}
+
+
+void
+LRU::print(){
+    fprintf(stderr, "%i sets %i assoc\n", numSets, assoc);
+    for(int i=0; i<numSets; i++){
+        ccprintf(std::cout, "set %i\n", i);
+        sets[i].print();
+    }
 }
 
 
