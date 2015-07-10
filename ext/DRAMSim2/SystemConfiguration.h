@@ -122,7 +122,7 @@ extern unsigned NUM_DEVICES;
 //#define WORST_CASE_DELAY 62
 #define TP_BUFFER_TIME (WL+BL/2+tWR+tRP+tRCD+tRFC) //117
 // #define FIX_WORST_CASE_DELAY (tFAW-3*tRRD) max of this and below
-#define FIX_WORST_CASE_DELAY (WL + BL +tWTR) //18
+#define FIX_WORST_CASE_DELAY (WL + BL +tWTR) //22
 #define FIX_TP_BUFFER_TIME (tFAW-3*tRRD+tRFC) //
 
 extern unsigned JEDEC_DATA_BUS_BITS;

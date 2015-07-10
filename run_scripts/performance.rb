@@ -69,7 +69,8 @@ module RunScripts
       iterate_mp o.merge(
         nametag: "only_mc",
         schemes: %w[tp],
-        scheme: "tp"
+        scheme: "tp",
+        bank_part: true
       )
 
     end
@@ -77,7 +78,6 @@ module RunScripts
     def ncore_2tc
       o = $secure_opts.merge(
         nametag: "2tc",
-        runmode: :fake
       )
 
       # 4 Cores 2 TCs
