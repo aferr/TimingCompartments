@@ -23,22 +23,11 @@ $specint = [
 ]
 $schemes = %w[ none tp ]
 
-# Workloads
-def benchmarks_in wl
-  $mpworkloads[wl]
-end
-
 $mpworkloads = {
-
-  #synthetic workloads
-  # nothing_hardstride: %w[nothing hardstride],
-  # hardstride_nothing: %w[hardstride nothing],
-
   # integer workloads
   mcf_bz2: %w[ mcf bzip2 ],
-  # bz2_mcf: %w[ bzip2 mcf ],
-  # mcf_xln: %w[ mcf xalan ], TODO RERUN
-  # mcf_mcf: %w[ mcf mcf ], TODO RERUN
+  mcf_xln: %w[ mcf xalan ],
+  mcf_mcf: %w[ mcf mcf ],
   mcf_lib: %w[mcf libquantum],
   mcf_ast: %w[mcf astar],
   ast_mcf: %w[astar mcf],
@@ -52,21 +41,132 @@ $mpworkloads = {
   sjg_sgj: %w[ sjeng sjeng ],
   ast_h264: %w[ astar h264ref ],
   h264_hmm: %w[ h264ref hmmer ],
-  #ast_ast: %w[ astar astar],
+  ast_ast: %w[ astar astar],
 
-  # Float workloads
+  # # Float workloads
   # milc_milc: %w[milc milc],
   # namd_namd: %w[namd namd],
-  # deal_deal: %w[deal deal],
+  # deal_deal: %w[dealII dealII],
   # splx_splx: %w[soplex soplex],
   # pov_pov: %w[povray povray],
   # lbm_lbm: %w[lbm lbm],
   # spx_spx: %w[sphinx3 sphinx3]
-
 }
 
-$workload_names = $mpworkloads.keys.map { |k| k.to_s }
-$new_names = $workload_names
+
+$workloads_2core= {
+
+  #synthetic workloads
+  # nothing_hardstride: %w[nothing hardstride],
+  # hardstride_nothing: %w[hardstride nothing],
+
+  # integer workloads
+  mcf_bz2: (%w[ mcf bzip2 ] * 1),
+  mcf_xln: (%w[ mcf xalan ] * 1),
+  mcf_mcf: (%w[ mcf mcf ] * 1),
+  mcf_lib: (%w[mcf libquantum] * 1),
+  mcf_ast: (%w[mcf astar] * 1),
+  ast_mcf: (%w[astar mcf] * 1),
+  lib_mcf: (%w[libquantum mcf] * 1),
+  lib_lib: (%w[ libquantum libquantum] * 1),
+  lib_ast: (%w[ libquantum astar ] * 1),
+  mcf_h264:(%w[ mcf h264ref ] * 1),
+  lib_sjg: (%w[ libquantum sjeng ] * 1),
+  sjg_sgj: (%w[ sjeng sjeng ] * 1),
+  ast_h264:(%w[ astar h264ref ] * 1),
+  h264_hmm:(%w[ h264ref hmmer ] * 1),
+  ast_ast: (%w[ astar astar]  * 1),
+  bz2_h264: (%w[bzip2 h264ref] * 1),
+  lib_gob: (%w[libquantum gobmk] * 1),
+  sjg_h264: (%w[sjeng h264ref] * 1)
+}
+
+
+
+$workloads_4core= {
+
+  #synthetic workloads
+  # nothing_hardstride: %w[nothing hardstride],
+  # hardstride_nothing: %w[hardstride nothing],
+
+  # integer workloads
+  mcf_bz2: (%w[ mcf bzip2 ] * 2),
+  mcf_xln: (%w[ mcf xalan ] * 2),
+  mcf_mcf: (%w[ mcf mcf ] * 2),
+  mcf_lib: (%w[mcf libquantum] * 2),
+  mcf_ast: (%w[mcf astar] * 2),
+  ast_mcf: (%w[astar mcf] * 2),
+  lib_mcf: (%w[libquantum mcf] * 2),
+  lib_lib: (%w[ libquantum libquantum] * 2),
+  lib_ast: (%w[ libquantum astar ] * 2),
+  mcf_h264:(%w[ mcf h264ref ] * 2),
+  lib_sjg: (%w[ libquantum sjeng ] * 2),
+  sjg_sgj: (%w[ sjeng sjeng ] * 2),
+  ast_h264:(%w[ astar h264ref ] * 2),
+  h264_hmm:(%w[ h264ref hmmer ] * 2),
+  ast_ast: (%w[ astar astar]  * 2),
+
+  bz2_h264: (%w[bzip2 h264ref] * 2),
+  lib_gob: (%w[libquantum gobmk] * 2),
+  sjg_h264: (%w[sjeng h264ref] * 2)
+}
+
+$workloads_6core= {
+
+  #synthetic workloads
+  # nothing_hardstride: %w[nothing hardstride],
+  # hardstride_nothing: %w[hardstride nothing],
+
+  # integer workloads
+  mcf_bz2: (%w[ mcf bzip2 ] * 3),
+  mcf_xln: (%w[ mcf xalan ] * 3),
+  mcf_mcf: (%w[ mcf mcf ] * 3),
+  mcf_lib: (%w[mcf libquantum] * 3),
+  mcf_ast: (%w[mcf astar] * 3),
+  ast_mcf: (%w[astar mcf] * 3),
+  lib_mcf: (%w[libquantum mcf] * 3),
+  lib_lib: (%w[ libquantum libquantum] * 3),
+  lib_ast: (%w[ libquantum astar ] * 3),
+  mcf_h264:(%w[ mcf h264ref ] * 3),
+  lib_sjg: (%w[ libquantum sjeng ] * 3),
+  sjg_sgj: (%w[ sjeng sjeng ] * 3),
+  ast_h264:(%w[ astar h264ref ] * 3),
+  h264_hmm:(%w[ h264ref hmmer ] * 3),
+  ast_ast: (%w[ astar astar]  * 3),
+
+  bz2_h264: (%w[bzip2 h264ref] * 3),
+  lib_gob: (%w[libquantum gobmk] * 3),
+  sjg_h264: (%w[sjeng h264ref] * 3)
+}
+
+$workloads_8core= {
+
+  #synthetic workloads
+  # nothing_hardstride: %w[nothing hardstride],
+  # hardstride_nothing: %w[hardstride nothing],
+
+  # integer workloads
+  mcf_bz2: (%w[ mcf bzip2 ] * 4),
+  mcf_xln: (%w[ mcf xalan ] * 4),
+  mcf_mcf: (%w[ mcf mcf ] * 4),
+  mcf_lib: (%w[mcf libquantum] * 4),
+  mcf_ast: (%w[mcf astar] * 4),
+  ast_mcf: (%w[astar mcf] * 4),
+  lib_mcf: (%w[libquantum mcf] * 4),
+  lib_lib: (%w[ libquantum libquantum] * 4),
+  lib_ast: (%w[ libquantum astar ] * 4),
+  mcf_h264:(%w[ mcf h264ref ] * 4),
+  lib_sjg: (%w[ libquantum sjeng ] * 4),
+  sjg_sgj: (%w[ sjeng sjeng ] * 4),
+  ast_h264:(%w[ astar h264ref ] * 4),
+  h264_hmm:(%w[ h264ref hmmer ] * 4),
+  ast_ast: (%w[ astar astar]  * 4),
+
+  bz2_h264: (%w[bzip2 h264ref] * 4),
+  lib_gob: (%w[libquantum gobmk] * 4),
+  sjg_h264: (%w[sjeng h264ref] * 4)
+}
+
 
 #-------------------------------------------------------------------------------
 # Filenames
@@ -83,7 +183,7 @@ end
 
 def m5out_file( p={} )
     p = {dir: "m5out"}.merge p
-    "m5out/#{filename p}_stats.txt"
+    "#{p[:dir]}/#{filename p}_stats.txt"
 end
 
 def bench_swap_file( p={} )
@@ -162,6 +262,7 @@ def find_time(filename, opts = {} )
 end
 
 def find_time_cpu(filename, cpu, opts={})
+    (puts filename.red; return nil) unless File.exists? filename
     term_reg = /term_cpu\s*#{cpu}/
     multi_reg = /system.switch_cpus#{cpu}.cpi\s*(\d*\.\d*)/
     found_term = false
@@ -173,7 +274,7 @@ def find_time_cpu(filename, cpu, opts={})
             end
         end
     end
-    (puts filename.to_s.red; return nil) 
+    (puts filename.to_s.blue; return nil) 
 end
 
 def find_stat_cpu filename, regex, cpu, opts = {}
@@ -219,8 +320,11 @@ def stp( p={} )
     wl = p[:workload]
     single_reg = /system.switch_cpus.cpi\s*(\d*\.\d*)/
     single_times = ((p[:workloads][wl]).map do |b|
-        find_stat (single_m5out p.merge(bench: b)), single_reg
-    end * (p[:numcpus]/2)).flatten
+        find_stat (
+            single_m5out p.merge(bench: b, nametag: p[:num_cpus] == 8 ? "9MB" :
+                                        p[:num_cpus] == 6 ? "6MB" : nil)
+        ), single_reg
+    end).flatten
     s = p[:numcpus].times.map do |i|
         tisp = single_times[i]
         timp = find_time_cpu (m5out_file p), i
@@ -229,15 +333,18 @@ def stp( p={} )
     s.include?([]) ? 0 : s.reduce(:+)
 end
 
-# Average Normalized Turnaround Time
-def antt( p={} )
-  wl = p[:workload]
-  s = p[:numcpus].times.map do |i|
-    tisp = single_time p.merge(bench: benchmarks_in(wl)[i%2])
-    timp = find_time m5out_file(i%2 == 1 ? p.merge(workload: wl.to_s + 'r') : p)
-    (tisp.nil? || timp.nil?) ? [] : timp/tisp
-  end
-  s.include?([]) ? 0 : s.reduce(:+)
+def norm_ipc p={}
+    file = m5out_file p
+    base_file = m5out_file p.merge(scheme: "none", nametag: nil)
+    puts file.to_s.green
+    puts base_file.to_s.blue
+    s = p[:numcpus].times.map do |i|
+        reg = /system.switch_cpus#{i}.ipc\s*(\d*\.\d*)/
+        ipc = find_stat_cpu file, reg, i, p
+        base_ipc = find_stat_cpu base_file, reg, i, p
+        (ipc.nil? || base_ipc.nil?) ? [] : ipc/base_ipc
+    end
+    s.include?([]) ? 0 : s.reduce(:+)
 end
 
 def data_of p={}
@@ -250,7 +357,7 @@ end
 
 def stp_data_of(p={}) data_of(p){|o| stp o} end
 
-def antt_data_of(p={}) data_of(p){|o| antt o} end
+def norm_ipc_data_of(p={}) data_of(p){|o| norm_ipc o} end
 
 def latency_data_of(p={}) data_of(p){|o| get_m5out_stat(m5out_file o)} end
 
