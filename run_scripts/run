@@ -35,12 +35,13 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Performance
 #----------------------------------------------------------------------------
-single 
-breakdown
-baseline
-ncore_2tc
-ncore_ntc
-ncore_ntc_no_part
+# single 
+# breakdown
+# baseline
+# ncore_2tc
+# ncore_ntc
+# ncore_ntc_no_part
+flush_simple
 
 # flush_overhead
 # coordination

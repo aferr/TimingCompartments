@@ -101,7 +101,6 @@ BaseCache::CacheSlavePort::clearBlocked()
     if (mustSendRetry) {
         DPRINTF(CachePort, "Cache port %s sending retry\n", name());
         mustSendRetry = false;
-        // @TODO: need to find a better time (next bus cycle?)
         owner.schedule(sendRetryEvent, curTick() + 1);
     }
 }
@@ -744,6 +743,16 @@ BaseCache::regStats()
     mshr_no_allocate_misses
         .name(name() +".no_allocate_misses")
         .desc("Number of misses that were no-allocate")
+        ;
+
+    num_flushes
+        .name(name() + ".num_flushes")
+        .desc("Number of times it was flushed")
+        ;
+
+    flush_block_time
+        .name(name() + ".flush_block_time")
+        .desc("Time blocked due to flushing (L1 caches only)")
         ;
 
 }

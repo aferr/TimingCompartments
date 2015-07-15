@@ -71,5 +71,11 @@ else:
     system.physmem.port = system.membus.master
     CacheConfig.config_cache(options, system)
 
+# Set TCIDs of private caches
+for i in xrange(options.num_cpus):
+    system.cpu[i].icache.cpu_tcid = cpu_tcid(i)
+    system.cpu[i].dcache.cpu_tcid = cpu_tcid(i)
+    system.l2[i].cpu_tcid = cpu_tcid(i)
+
 root = Root(full_system = False, system = system)
 Simulation.run(options, root, system, FutureClass,options.numpids)

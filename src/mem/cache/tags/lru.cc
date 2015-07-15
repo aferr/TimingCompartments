@@ -73,11 +73,24 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
     warmupBound = numSets * assoc;
     
     init_sets();
+
 }
 
 CacheSet
 LRU::get_set( int setnum, uint64_t tid, Addr addr ){
     return sets[setnum];
+}
+
+
+void
+LRU::print(){
+    Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
+    ccprintf(std::cout, "%i sets %i assoc [%s]\n", numSets, assoc,
+            _cache->params->debug_name.c_str());
+    for(int i=0; i<numSets; i++){
+        ccprintf(std::cout, "set %i\n", i);
+        sets[i].print();
+    }
 }
 
 
@@ -227,30 +240,21 @@ LRU::invalidateBlk(BlkType *blk, uint64_t tid)
         blk->status = 0;
         blk->isTouched = false;
         blk->clearLoadLocks();
-
-        // should be evicted before valid blocks
-        //unsigned set = blk->set;
-        //sets[set].moveToTail(blk);
     }
 }
 
 void LRU::flush(uint64_t tid=0 ){
-  Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
-  int writebacks = 0;
-  int valid = 0;
-  int flushNumblocks = int(_cache->params->flushRatio * numBlocks);
-  for( int i=0; i < flushNumblocks; i++ ){
-    if( blks[i].isDirty() && blks[i].isValid() ){
-      _cache->allocateWriteBuffer(_cache->writebackBlk(&blks[i], tid),
-          curTick(), true);
-      writebacks++;
-    } else {
-      invalidateBlk( &blks[i], tid );
-      valid++;
+    Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
+    int flushNumblocks = int(_cache->params->flushRatio * numBlocks);
+    for( int i=0; i < flushNumblocks; i++ ){
+        if( blks[i].isDirty() && blks[i].isValid() ){
+            PacketPtr wb_pkt = _cache->writebackBlk(&blks[i], tid);
+            FlushCoord::fc()->writebacks(_cache->params->hierarchy_level)->
+                push_back(wb_pkt->getAddr());
+            _cache->allocateWriteBuffer(wb_pkt, curTick(), true);
+        } 
+        invalidateBlk( &blks[i], tid );
     }
-  }
-  // fprintf(stderr, "\x1B[34m%i of %i valid blocks were dirty\n\x1B[0m",
-  //     writebacks, valid);
 }
 
 void

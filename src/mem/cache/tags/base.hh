@@ -41,6 +41,7 @@
 
 #include "base/callback.hh"
 #include "base/statistics.hh"
+#include "base/printable.hh"
 
 // #define DEBUG_TP
 #define interesting 0x55fc40
@@ -113,6 +114,8 @@ class BaseTags
      */
 
   public:
+    virtual void print(){
+    }
 
     /**
      * Destructor.

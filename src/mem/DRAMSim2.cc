@@ -100,6 +100,8 @@ DRAMSim2::MemoryPort::recvTimingReq(PacketPtr pkt)
     /// @todo temporary hack to deal with memory corruption issue until
     /// 4-phase transactions are complete. Remove me later
     //cout << "Cycle: " << dramsim2->currentClockCycle << " Receive Timing Request" << endl;
+
+    
     this->removePendingDelete();
 
     DRAMSim2* dram = dynamic_cast<DRAMSim2*>(memory);
@@ -293,10 +295,15 @@ void DRAMSim2::write_complete(unsigned id, uint64_t address, uint64_t clock_cycl
 {
     uint64_t index = address << 1;
     index = index | 0x1;
+    if( FlushCoord::fc()->flush_blocked() ){
+        FlushCoord::fc()->finish_writeback( address, -1 );
+    }
+
     if (ongoingAccess.count(index)) {
         AccessMetaInfo meta = ongoingAccess.find(index)->second;
         PacketPtr pkt = meta.pkt;
         DRAMSim2::MemoryPort *my_port = (DRAMSim2::MemoryPort*)(meta.port);
+
 
         my_port->removePendingDelete();
 

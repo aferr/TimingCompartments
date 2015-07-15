@@ -220,10 +220,10 @@ def sav_script( options = {} )
     options[:otherbench] = options[:benchmarks] if options[:otherbench].nil?
 
     numcpus = options[:numcpus] = (
-      n = 0
-      until eval "options[:p#{n}].nil?"
-        n += 1
-      end; n
+        n = 0
+        until eval "options[:p#{n}].nil?"
+          n += 1
+        end; n
     )
 
     cacheSize  = options[:cacheSize] || lambda { |x|

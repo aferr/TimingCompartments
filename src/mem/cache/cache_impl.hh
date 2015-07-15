@@ -86,6 +86,16 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     tracePrinter = new TracePrinter( p->l3_trace_file, p );
 
     params = p;
+    
+    if(params->cpu_tcid == 0 || params->hierarchy_level == 3){
+        switch(params->hierarchy_level) {
+            case 0: FlushCoord::fc()->l1i = this; fprintf(stderr, "init %i\n", 0); break;
+            case 1: FlushCoord::fc()->l1d = this; fprintf(stderr, "init %i\n", 1); break;
+            case 2: FlushCoord::fc()->l2  = this; fprintf(stderr, "init %i\n", 2); break;
+            case 3: FlushCoord::fc()->l3  = this; fprintf(stderr, "init %i\n", 3); break;
+            default: assert(false);
+        }
+    }
 	
 }
 
@@ -254,7 +264,6 @@ Cache<TagStore>::squash(int threadNum)
 {
     bool unblock = false;
     BlockedCause cause = NUM_BLOCKED_CAUSES;
-    fprintf(stderr, "%s\n", "SQUASHED!!");
 
     if (noTargetMSHR && noTargetMSHR->threadNum == threadNum) {
         noTargetMSHR = NULL;
@@ -497,6 +506,13 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     PacketList writebacks;
 
     bool satisfied = access(pkt, blk, lat, writebacks);
+
+    if(flush_blocked()){
+        if(satisfied && (pkt->cmd == MemCmd::Writeback)){
+            FlushCoord::fc()->finish_writeback(pkt->getAddr(),
+                    params->hierarchy_level);
+        }
+    }
 
 #if 0
     /** @todo make the fast write alloc (wh64) work with coherence. */
@@ -1758,8 +1774,7 @@ template<class TagStore>
 void
 Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
 {
-	// if we have a response packet waiting we have to start with that
-    //TODO This should get a TID based on the bus turn
+
 #ifdef DEBUG_TP
     bool isInterestingTime = (curTick() > interesting_era_l) &&
       (curTick() < interesting_era_h);
@@ -1827,9 +1842,6 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
         scheduleSend(cache.nextMSHRReadyTime( ID ));
     }
 
-    if(cache.blocked && !cache.getWriteBuffer(ID)->havePending() ){
-      cache.clearBlocked(Blocked_DrainingWritebacks);
-    }
 }
 
 template<class TagStore>

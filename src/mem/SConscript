@@ -36,6 +36,8 @@ SimObject('RRBus.py')
 SimObject('CommMonitor.py')
 SimObject('MemObject.py')
 
+Source('flush_coordination.cc')
+Source('debug_flush.cc')
 Source('bridge.cc')
 Source('bus.cc')
 Source('rr_bus.cc')

@@ -63,6 +63,8 @@
 #include "mem/rr_bus.hh"
 #include "stdio.h"
 
+#define DEBUG_FLUSH 
+
 //Forward decleration
 class BasePrefetcher;
 
@@ -110,25 +112,26 @@ class Cache : public BaseCache
     }
 
     virtual void flush( int tcid ){
-      tags->flush(tcid);
-      memSidePort->contextSwitch(tcid);
-      if( params->reserve_flush ){
+        if( params->cpu_tcid != tcid && !params->use_way_part ) return;
+
+        num_flushes++;
+
+        tags->flush(tcid);
+        memSidePort->contextSwitch(tcid);
         if( getWriteBuffer(tcid)->havePending() ){
-          functionalDrainWritebacks(tcid);
+            FlushCoord::fc()->flush_call(this);
+            if( params->reserve_flush ) functionalDrainWritebacks(tcid);
+            else drainWritebacks(tcid);
         }
-      } else {
-        if( getWriteBuffer(tcid)->havePending() ){
-          drainWritebacks(tcid);
-          setBlocked(Blocked_DrainingWritebacks);
-        }
-      }
+
     }
 
-
     void drainWritebacks( int tcid ){
+
       for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
-        memSidePort->requestBus(Request_WB, nextCycle(), false);
+        memSidePort->requestBus(Request_WB, nextCycle(), false, tcid);
       }
+
     }
 
     void functionalDrainWritebacks( int tcid ){
