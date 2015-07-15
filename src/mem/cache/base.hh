@@ -466,6 +466,11 @@ class BaseCache : public MemObject
 
     Stats::Scalar mshr_no_allocate_misses;
 
+    Stats::Scalar num_flushes;
+
+    Tick last_flush_block_start;
+    Stats::Scalar flush_block_time;
+
     /**
      * @}
      */
@@ -476,6 +481,7 @@ class BaseCache : public MemObject
     virtual void regStats();
 
   public:
+    // For calculating flush_block_time
     typedef BaseCacheParams Params;
     const Params * params;
     BaseCache(const Params *p);

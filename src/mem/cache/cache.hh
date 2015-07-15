@@ -114,11 +114,7 @@ class Cache : public BaseCache
     virtual void flush( int tcid ){
         if( params->cpu_tcid != tcid && !params->use_way_part ) return;
 
-        if(params->debug_mode){
-            ccprintf( std::cout, "before flush [%s]\n",
-                   params->debug_name );
-            tags->print();
-        }
+        num_flushes++;
 
         tags->flush(tcid);
         memSidePort->contextSwitch(tcid);
@@ -126,13 +122,6 @@ class Cache : public BaseCache
             FlushCoord::fc()->flush_call(this);
             if( params->reserve_flush ) functionalDrainWritebacks(tcid);
             else drainWritebacks(tcid);
-        }
-
-        if(params->debug_mode){
-            ccprintf( std::cout, "after flush [%s]\n",
-                   params->debug_name );
-            FlushCoord::fc()->print_writebacks();
-            tags->print();
         }
 
     }

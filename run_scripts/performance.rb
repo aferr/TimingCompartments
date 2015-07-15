@@ -30,8 +30,8 @@ module RunScripts
     end
     
     def ncore_ntc
-      iterate_mp $secure_opts.merge(
-        num_wl: 8,
+      iterate_mp $secure_opts.merge $test_opts.merge(
+          num_wl: 8,
       )
     end
 

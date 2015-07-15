@@ -243,12 +243,12 @@ def setup_dramsim(options):
 # Cache Configuration 
 ###############################################################################
 def setup_cache(options):
-    options.l1d_size="1024B"
-    options.l1d_assoc=4
-    options.l1i_size="1024B"
-    options.l1i_assoc=4
-    options.l2_size="1024B"
-    options.l2_assoc=4
+    options.l1d_size="32kB"
+    options.l1d_assoc=2
+    options.l1i_size="32kB"
+    options.l1i_assoc=2
+    options.l2_size="256kB"
+    options.l2_assoc=8
                       
 
 ###############################################################################

@@ -61,9 +61,9 @@ class L3Shared( L3Config ):
     def __init__( self, options, system ):
         super( L3Shared, self ).__init__( options, system )
         L2maxWritebacks = 4096
-        system.l3 = L3Cache(size = '1024B', #options.l3_size, 
-                            latency = '5ns', #self.latencies[options.l3_size],
-                            assoc = 8, #self.assocs[options.l3_size],
+        system.l3 = L3Cache(size = options.l3_size, 
+                            latency = self.latencies[options.l3_size],
+                            assoc = self.assocs[options.l3_size],
                             block_size=options.cacheline_size,
                             use_set_part = options.use_set_part,
                             num_tcs = options.numpids,
@@ -72,9 +72,8 @@ class L3Shared( L3Config ):
                             split_rport = options.split_rport,
                             save_trace = options.do_cache_trace,
                             cw_first = not (options.nocwf),
-                            do_flush = True,
+                            do_flush = options.do_flush,
                             hierarchy_level = 3,
-                            debug_mode = True,
                             debug_name = "l3",
                             flushRatio = options.flushRatio,
                             context_sw_freq = options.context_sw_freq,
@@ -140,8 +139,7 @@ def config_l1( options, system ):
         if options.caches:
             icache = L1Cache(size = options.l1i_size,
                              assoc = options.l1i_assoc,
-                             do_flush = (i == 0),
-                             debug_mode = True,
+                             do_flush = options.do_flush,
                              debug_name = "l1i[%i]" % i,
                              hierarchy_level = 0,
                              flushRatio = options.flushRatio,
@@ -149,8 +147,7 @@ def config_l1( options, system ):
                              block_size=options.cacheline_size)
             dcache = L1Cache(size = options.l1d_size,
                              assoc = options.l1d_assoc,
-                             do_flush = (i == 0),
-                             debug_mode = True,
+                             do_flush = options.do_flush,
                              debug_name = "l1d[%i]" % i,
                              hierarchy_level = 1,
                              flushRatio = options.flushRatio,
@@ -177,8 +174,7 @@ def config_l2( options, system ):
                 save_trace = options.do_cache_trace,
                 l3_trace_file = options.l2tracefile,
                 block_size=options.cacheline_size,
-                do_flush = True,
-                debug_mode = True,
+                do_flush = options.do_flush,
                 hierarchy_level = 2,
                 debug_name = "l2[%i]" % i,
                 flushRatio = options.flushRatio,

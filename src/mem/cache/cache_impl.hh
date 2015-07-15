@@ -89,10 +89,10 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     
     if(params->cpu_tcid == 0 || params->hierarchy_level == 3){
         switch(params->hierarchy_level) {
-            case 0: FlushCoord::fc()->l1i = this; break;
-            case 1: FlushCoord::fc()->l1d = this; break;
-            case 2: FlushCoord::fc()->l2  = this; break;
-            case 3: FlushCoord::fc()->l3  = this; break;
+            case 0: FlushCoord::fc()->l1i = this; fprintf(stderr, "init %i\n", 0); break;
+            case 1: FlushCoord::fc()->l1d = this; fprintf(stderr, "init %i\n", 1); break;
+            case 2: FlushCoord::fc()->l2  = this; fprintf(stderr, "init %i\n", 2); break;
+            case 3: FlushCoord::fc()->l3  = this; fprintf(stderr, "init %i\n", 3); break;
             default: assert(false);
         }
     }
@@ -264,7 +264,6 @@ Cache<TagStore>::squash(int threadNum)
 {
     bool unblock = false;
     BlockedCause cause = NUM_BLOCKED_CAUSES;
-    fprintf(stderr, "%s\n", "SQUASHED!!");
 
     if (noTargetMSHR && noTargetMSHR->threadNum == threadNum) {
         noTargetMSHR = NULL;
@@ -1843,24 +1842,6 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
         scheduleSend(cache.nextMSHRReadyTime( ID ));
     }
 
-    /*
-    int flush_tcid = cache.flush_blocked_tcid;
-    if(cache.blocked && cache.is_flush_blocked && cache.params->debug_mode){
-        ccprintf(std::cout, "[%s] %llu write buffers\n %s", curTick(),
-                cache.params->debug_name,
-                cache.getWriteBuffer(flush_tcid)->print_allocated());
-    }
-
-    if(cache.blocked && cache.is_flush_blocked &&
-            !cache.getWriteBuffer(flush_tcid)->havePending() ){
-      if(cache.params->debug_mode){
-          ccprintf( std::cout, "[%s] clearing writeback lock at %llu\n",
-                  cache.params->debug_name, curTick() );
-      }
-      cache.is_flush_blocked = false;
-      cache.clearBlocked(Blocked_DrainingWritebacks);
-    }
-    */
 }
 
 template<class TagStore>
