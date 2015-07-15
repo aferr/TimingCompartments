@@ -63,6 +63,8 @@
 #include "mem/rr_bus.hh"
 #include "stdio.h"
 
+#define DEBUG_FLUSH 
+
 //Forward decleration
 class BasePrefetcher;
 
@@ -110,37 +112,37 @@ class Cache : public BaseCache
     }
 
     virtual void flush( int tcid ){
-        if( params->cpu_tcid != tcid ) return;
+        if( params->cpu_tcid != tcid && !params->use_way_part ) return;
 
         if(params->debug_mode){
-            ccprintf( std::cout, "before flush\n" );
+            ccprintf( std::cout, "before flush [%s]\n",
+                   params->debug_name );
             tags->print();
         }
 
         tags->flush(tcid);
         memSidePort->contextSwitch(tcid);
-        if( params->reserve_flush ){
-            if( getWriteBuffer(tcid)->havePending() ){
-                functionalDrainWritebacks(tcid);
-            }
-        } else {
-            if( getWriteBuffer(tcid)->havePending() ){
-                drainWritebacks(tcid);
-                setBlocked(Blocked_DrainingWritebacks);
-            }
+        if( getWriteBuffer(tcid)->havePending() ){
+            FlushCoord::fc()->flush_call(this);
+            if( params->reserve_flush ) functionalDrainWritebacks(tcid);
+            else drainWritebacks(tcid);
         }
 
         if(params->debug_mode){
-            ccprintf( std::cout, "after flush\n" );
+            ccprintf( std::cout, "after flush [%s]\n",
+                   params->debug_name );
+            FlushCoord::fc()->print_writebacks();
             tags->print();
         }
 
     }
 
     void drainWritebacks( int tcid ){
+
       for(int i=0; i< getWriteBuffer(tcid)->numReady(); i++){
-        memSidePort->requestBus(Request_WB, nextCycle(), false);
+        memSidePort->requestBus(Request_WB, nextCycle(), false, tcid);
       }
+
     }
 
     void functionalDrainWritebacks( int tcid ){

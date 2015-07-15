@@ -11,6 +11,7 @@ class WPLRU : public LRU{
     // Cache<WPLRU> *cache;
     // virtual void setCache(Cache<WPLRU> *_cache){ cache = _cache; }
     virtual void flush( uint64_t tcid );
+    virtual void print();
 
     protected:
     BlkType ***blks_by_tc;

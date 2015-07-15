@@ -45,6 +45,8 @@
 #include "debug/PacketQueue.hh"
 #include "mem/packet_queue.hh"
 
+extern bool is_flush;
+
 using namespace std;
 
 PacketQueue::PacketQueue(EventManager& _em, const std::string& _label, int _ID)

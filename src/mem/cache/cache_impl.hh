@@ -86,6 +86,16 @@ Cache<TagStore>::Cache(const Params *p, TagStore *tags)
     tracePrinter = new TracePrinter( p->l3_trace_file, p );
 
     params = p;
+    
+    if(params->cpu_tcid == 0 || params->hierarchy_level == 3){
+        switch(params->hierarchy_level) {
+            case 0: FlushCoord::fc()->l1i = this; break;
+            case 1: FlushCoord::fc()->l1d = this; break;
+            case 2: FlushCoord::fc()->l2  = this; break;
+            case 3: FlushCoord::fc()->l3  = this; break;
+            default: assert(false);
+        }
+    }
 	
 }
 
@@ -497,6 +507,13 @@ Cache<TagStore>::timingAccess(PacketPtr pkt)
     PacketList writebacks;
 
     bool satisfied = access(pkt, blk, lat, writebacks);
+
+    if(flush_blocked()){
+        if(satisfied && (pkt->cmd == MemCmd::Writeback)){
+            FlushCoord::fc()->finish_writeback(pkt->getAddr(),
+                    params->hierarchy_level);
+        }
+    }
 
 #if 0
     /** @todo make the fast write alloc (wh64) work with coherence. */
@@ -1758,8 +1775,7 @@ template<class TagStore>
 void
 Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
 {
-	// if we have a response packet waiting we have to start with that
-    //TODO This should get a TID based on the bus turn
+
 #ifdef DEBUG_TP
     bool isInterestingTime = (curTick() > interesting_era_l) &&
       (curTick() < interesting_era_h);
@@ -1827,9 +1843,24 @@ Cache<TagStore>::MemSidePacketQueue::sendDeferredPacket()
         scheduleSend(cache.nextMSHRReadyTime( ID ));
     }
 
-    if(cache.blocked && !cache.getWriteBuffer(ID)->havePending() ){
+    /*
+    int flush_tcid = cache.flush_blocked_tcid;
+    if(cache.blocked && cache.is_flush_blocked && cache.params->debug_mode){
+        ccprintf(std::cout, "[%s] %llu write buffers\n %s", curTick(),
+                cache.params->debug_name,
+                cache.getWriteBuffer(flush_tcid)->print_allocated());
+    }
+
+    if(cache.blocked && cache.is_flush_blocked &&
+            !cache.getWriteBuffer(flush_tcid)->havePending() ){
+      if(cache.params->debug_mode){
+          ccprintf( std::cout, "[%s] clearing writeback lock at %llu\n",
+                  cache.params->debug_name, curTick() );
+      }
+      cache.is_flush_blocked = false;
       cache.clearBlocked(Blocked_DrainingWritebacks);
     }
+    */
 }
 
 template<class TagStore>

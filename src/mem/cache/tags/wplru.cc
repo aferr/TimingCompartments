@@ -44,6 +44,20 @@ WPLRU::blks_in_tc( int tcid ){
 }
 
 void
+WPLRU::print(){
+    Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
+    ccprintf(std::cout, "%i sets %i assoc [%s]\n", numSets, assoc,
+            _cache->params->debug_name.c_str());
+    for(int i=0; i<num_tcs; i++){
+        ccprintf(std::cout, "tcid %i\n", i);
+        for(int j=0; j<numSets; j++){
+            ccprintf(std::cout, "set %i\n", j);
+            sets_w[i][j].print();
+        }
+    }
+}
+
+void
 WPLRU::init_sets(){
     sets_w = new CacheSet*[num_tcs];
     for( int i=0; i< num_tcs; i++ ){
@@ -86,15 +100,16 @@ WPLRU::init_sets(){
 
 void
 WPLRU::flush( uint64_t tcid = 0 ){
-  Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
-  for( int i=0; i < blks_in_tc(tcid); i++ ){
-    BlkType* b = blks_by_tc[tcid][i];
-    if( b->isDirty() && b->isValid() ){
-      _cache->allocateWriteBuffer( _cache->writebackBlk( b, tcid ),
-          curTick(), true );
-    } else {
-      invalidateBlk( b, tcid );
+    Cache<LRU> *_cache = dynamic_cast<Cache<LRU>*>(cache);
+    for( int i=0; i < blks_in_tc(tcid); i++ ){
+        BlkType* b = blks_by_tc[tcid][i];
+        if( b->isDirty() && b->isValid() ){
+          PacketPtr wb_pkt = _cache->writebackBlk(b, tcid);
+          FlushCoord::fc()->writebacks(_cache->params->hierarchy_level)->
+              push_back(wb_pkt->getAddr());
+          _cache->allocateWriteBuffer(wb_pkt, curTick(), true);
+        }
+        invalidateBlk( b, tcid );
     }
-  }
 }
 
