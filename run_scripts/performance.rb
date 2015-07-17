@@ -22,6 +22,28 @@ module RunScripts
 
     }
 
+    def single
+        iterate_mp(
+            scheme: "none",
+            workloads: (single_prog_wl 8)
+        )
+
+        iterate_mp(
+            scheme: "none",
+            workloads: (single_prog_wl 6)
+        )
+
+        iterate_mp(
+            scheme: "none",
+            workloads: (single_prog_wl 4)
+        )
+
+        iterate_mp(
+            scheme: "none",
+            workloads: (single_prog_wl 2)
+        )
+    end
+
     def baseline
       iterate_mp(
         scheme: "none",
@@ -30,7 +52,7 @@ module RunScripts
     end
     
     def ncore_ntc
-      iterate_mp $secure_opts.merge $test_opts.merge(
+      iterate_mp $secure_opts.merge(
           num_wl: 8,
       )
     end
@@ -131,11 +153,13 @@ module RunScripts
         }
       end
 
-      [bw, rbw, iw25, iw05, iw75].product([10,50,100]).each do |o,period|
+      #[bw, rbw, iw25, iw05, iw75].product([10,50,100]).each do |o,period|
+      [bw].product([1,10,50,100]).each do |o,period|
         iterate_mp o.merge(
             nametag: "flush#{period}ms_#{o[:wbtag]}",
             context_sw_freq: period * 10**9,
             do_flush: true,
+            num_wl: 2,
         )
       end
 
@@ -144,7 +168,7 @@ module RunScripts
     def flush_simple
         iterate_mp $secure_opts.merge $test_opts.merge(
             do_flush: true,
-            context_sw_freq: (1 * 10**8),
+            context_sw_freq: (1 * 10**9),
             nametag: "flush",
         )
     end

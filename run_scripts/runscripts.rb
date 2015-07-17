@@ -89,6 +89,12 @@ $mpworkloads = {
 
 }
 
+def single_prog_wl n
+    $specint.inject({}) do |hash, name|
+        hash[name] = [name] + (%w[nothing] * (n - 1)); hash
+    end
+end
+
 def workloads_of_size n, wl2=$mpworkloads
   wl2.keys.inject({}) do |hash, name|
     hash[name] = n.times.inject([]) { |wl, i| wl << wl2[name][i%2]; wl }
@@ -362,26 +368,26 @@ def sav_script( options = {} )
     [success,filename]
 end
 
-def single opts={}
-    o = {
-        cpu: "detailed",
-        schemes: %w[ none],
-        scheme: "none",
-        benchmarks: $specint,
-        threads: 1
-    }.merge opts
-
-    o[:benchmarks].each do |b|
-        [4,6,9].each do |c|
-            sav_script o.merge(
-                nametag: "#{c}mb",
-                p0: b,
-                cacheSize: c)
-        end
-        sav_script o.merge(p0: b)
-    end
-
-end
+# def single opts={}
+#     o = {
+#         cpu: "detailed",
+#         schemes: %w[ none],
+#         scheme: "none",
+#         benchmarks: $specint,
+#         threads: 1
+#     }.merge opts
+# 
+#     o[:benchmarks].each do |b|
+#         [4,6,9].each do |c|
+#             sav_script o.merge(
+#                 nametag: "#{c}mb",
+#                 p0: b,
+#                 cacheSize: c)
+#         end
+#         sav_script o.merge(p0: b)
+#     end
+# 
+# end
 
 
 def iterate_mp o={}
@@ -394,7 +400,7 @@ def iterate_mp o={}
   }.merge o
 
   2.upto(o[:num_wl]) do |n|
-    wls = workloads_of_size n, o[:workloads]
+    wls = (w = o[:workloads]).nil? ? (workloads_of_size n, w) : w
     wls.keys.each do |wl|
       p = o.merge(wl_name: wl)
       wls[wl].each_with_index do |benchmark,i|
