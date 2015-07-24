@@ -78,12 +78,14 @@ class MSHR;
  * A basic cache interface. Implements some common functions for speed.
  */
 
+extern bool has_reset;
+
 class BaseCache : public MemObject
 {
   private:
 
     void flushInternal(){
-	  flush(0);
+	  if(has_reset) flush(0);
       Tick time = curTick() + params->context_sw_freq;
       schedule( flushEvent, time);
     }

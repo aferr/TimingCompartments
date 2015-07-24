@@ -86,13 +86,16 @@ class DRAMSim2Wrapper : public AbstractMemory
         MemoryPort(const std::string& _name, DRAMSim2Wrapper* _memory, int numPids);
         void removePendingDelete()
         {
-            for (int x = 0; x < pendingDelete.size(); x++)
-                delete pendingDelete[x];
-            pendingDelete.clear();
+            /*
+            for (int x = 0; x < pendingDelete.size(); x++){
+                if(pendingDelete[x] !=NULL) delete pendingDelete[x];
+            }
+            */
+            // pendingDelete.clear();
         }
         void addPendingDelete(PacketPtr pkt)
         {
-            pendingDelete.push_back(pkt);
+            // pendingDelete.push_back(pkt);
         }
 
         virtual void schedTimingResp(PacketPtr pkt, Tick when, int threadID)

@@ -109,11 +109,19 @@ class L3Private( L3Config ):
                     size = options.l3_size,
                     latency = self.latencies[options.l3_size],
                     assoc = self.assocs[options.l3_size],
-                    block_size = options.cacheline_size,
+                    block_size=options.cacheline_size,
                     use_set_part = options.use_set_part,
-                    use_way_part = options.use_way_part,
+                    num_tcs = options.numpids,
+                    use_way_part = False ,
+                    split_mshrq = False,
+                    split_rport = False,
                     save_trace = options.do_cache_trace,
-                    cw_first = not (options.nocfw),
+                    cw_first = not (options.nocwf),
+                    do_flush = options.do_flush,
+                    hierarchy_level = 3,
+                    debug_name = ("l3[%i]" % i),
+                    flushRatio = options.flushRatio,
+                    context_sw_freq = options.context_sw_freq,
                     l3_trace_file = options.l3tracefile
                 )
                 for i in xrange( options.num_cpus )
