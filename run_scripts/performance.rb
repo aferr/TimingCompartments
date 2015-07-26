@@ -6,7 +6,7 @@ include RunScripts
 
 module RunScripts
     $test_opts = {
-        maxinsts: 10**4,
+        maxinsts: 10**5,
         fastforward: 10,
         num_wl: 4,
         skip2: true,
@@ -30,8 +30,8 @@ module RunScripts
     end
     
     def ncore_ntc
-      iterate_mp $secure_opts.merge(
-        num_wl: 8,
+      iterate_mp $secure_opts.merge $test_opts.merge(
+          num_wl: 8,
       )
     end
 
@@ -174,7 +174,7 @@ module RunScripts
         iterate_mp $secure_opts.merge $test_opts.merge(
             do_flush: true,
             context_sw_freq: (1 * 10**8),
-            nametag: "flush"
+            nametag: "flush",
         )
     end
 

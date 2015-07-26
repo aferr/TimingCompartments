@@ -71,17 +71,21 @@
 #include "sim/full_system.hh"
 #include "sim/sim_exit.hh"
 #include "sim/system.hh"
+#include "mem/flush_coordination.hh"
 
 class MSHR;
 /**
  * A basic cache interface. Implements some common functions for speed.
  */
+
+extern bool has_reset;
+
 class BaseCache : public MemObject
 {
   private:
 
     void flushInternal(){
-	  flush(0);
+	  if(has_reset) flush(0);
       Tick time = curTick() + params->context_sw_freq;
       schedule( flushEvent, time);
     }
@@ -124,13 +128,13 @@ class BaseCache : public MemObject
         NUM_REQUEST_CAUSES
     };
 
-  protected:
     virtual MSHRQueue* getMSHRQueue( int threadID ){
         return &mshrQueue;
     }
     virtual MSHRQueue* getWriteBuffer( int threadID ){
         return &writeBuffer;
     }
+  protected:
 	
 	// virtual bool isSplitMSHR() {return false;}
 	// 
@@ -294,6 +298,15 @@ class BaseCache : public MemObject
      * @sa #BlockedCause
      */
     uint8_t blocked;
+  public:
+    bool is_flush_blocked;
+    int flush_blocked_tcid;
+
+    static bool flush_blocked(){
+        return FlushCoord::fc()->l1i->is_flush_blocked ||
+            FlushCoord::fc()->l1d->is_flush_blocked;
+    }
+  protected:
 
     /** Increasing order number assigned to each incoming request. */
     uint64_t order;
@@ -455,6 +468,11 @@ class BaseCache : public MemObject
 
     Stats::Scalar mshr_no_allocate_misses;
 
+    Stats::Scalar num_flushes;
+
+    Tick last_flush_block_start;
+    Stats::Scalar flush_block_time;
+
     /**
      * @}
      */
@@ -465,6 +483,7 @@ class BaseCache : public MemObject
     virtual void regStats();
 
   public:
+    // For calculating flush_block_time
     typedef BaseCacheParams Params;
     const Params * params;
     BaseCache(const Params *p);
@@ -608,5 +627,6 @@ class BaseCache : public MemObject
     }
 
 };
+
 
 #endif //__BASE_CACHE_HH__

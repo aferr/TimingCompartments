@@ -39,6 +39,7 @@
 //#include "base/statistics.hh"
 #include "mem/DRAMSim2Wrapper.hh"
 #include "params/DRAMSim2.hh"
+#include "mem/flush_coordination.hh"
 
 /**********************************************************************/
 // the following parameters are claimed globally because they have to...

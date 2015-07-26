@@ -349,10 +349,9 @@ class System : public MemObject
   public:
     typedef SystemParams Params;
 
-  protected:
+  public:
     Params *_params;
 
-  public:
     System(Params *p);
     ~System();
 

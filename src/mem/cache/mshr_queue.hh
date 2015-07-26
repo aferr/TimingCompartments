@@ -78,9 +78,9 @@ class MSHRQueue
   public:
 
     std::string print_allocated(){
-      std::string s = "Allocated MSHRs:\n";
-      for(MSHR::Iterator it=allocatedList.begin();
-          it!=allocatedList.end(); ++it){
+      std::string s = "Ready MSHRs:\n";
+      for(MSHR::Iterator it=readyList.begin();
+          it!=readyList.end(); ++it){
         s += (*it)->to_string() + '\n';
       }
       return s;
