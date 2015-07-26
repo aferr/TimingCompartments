@@ -45,6 +45,35 @@ module RunScripts
         )
     end
 
+    def cache_sweep
+        #0.5MB / core
+        iterate_mp $scure_opts.merge(
+            num_wl: 4,
+            skip2: true,
+            cacheSize: 2
+        )
+        #1MB / Core
+        iterate_mp $scure_opts.merge(
+            num_wl: 4,
+            skip2: true,
+            cacheSize: 4,
+            nametag: "4MBLLC"
+        )
+        #1.5MB / Core
+        iterate_mp $scure_opts.merge(
+            num_wl: 4,
+            skip2: true,
+            cacheSize: 6,
+            nametag: "6MBLLC"
+        )
+        #2MB / core
+        iterate_mp $scure_opts.merge(
+            num_wl: 4,
+            skip2: true,
+            cacheSize: 9,
+            nametag: "9MBLLC"
+        )
+
     def breakdown
 
       o = {
