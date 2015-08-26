@@ -22,6 +22,28 @@ module RunScripts
 
     }
 
+    def single
+        iterate_mp(
+            scheme: "none",
+            workloads: (single_prog_wl 8)
+        )
+
+        iterate_mp(
+            scheme: "none",
+            workloads: (single_prog_wl 6)
+        )
+
+        iterate_mp(
+            scheme: "none",
+            workloads: (single_prog_wl 4)
+        )
+
+        iterate_mp(
+            scheme: "none",
+            workloads: (single_prog_wl 2)
+        )
+    end
+
     def baseline
       iterate_mp(
         scheme: "none",
@@ -30,14 +52,15 @@ module RunScripts
     end
     
     def ncore_ntc
-      iterate_mp $secure_opts.merge $test_opts.merge(
+      iterate_mp $secure_opts.merge(
           num_wl: 8,
       )
     end
 
     def ncore_ntc_no_part
         iterate_mp $secure_opts.merge(
-            num_wl: 8,
+            num_wl: 4,
+            skip2: true,
             bank_part: false,
             tl0: 44,
             tl1: 44,
@@ -46,33 +69,28 @@ module RunScripts
     end
 
     def cache_sweep
-        #0.5MB / core
-        iterate_mp $scure_opts.merge(
-            num_wl: 4,
-            skip2: true,
-            cacheSize: 2
-        )
         #1MB / Core
-        iterate_mp $scure_opts.merge(
+        iterate_mp $secure_opts.merge(
             num_wl: 4,
             skip2: true,
             cacheSize: 4,
             nametag: "4MBLLC"
         )
         #1.5MB / Core
-        iterate_mp $scure_opts.merge(
+        iterate_mp $secure_opts.merge(
             num_wl: 4,
             skip2: true,
             cacheSize: 6,
             nametag: "6MBLLC"
         )
         #2MB / core
-        iterate_mp $scure_opts.merge(
+        iterate_mp $secure_opts.merge(
             num_wl: 4,
             skip2: true,
             cacheSize: 9,
             nametag: "9MBLLC"
         )
+    end
 
     def breakdown
 
@@ -81,6 +99,7 @@ module RunScripts
         scheme: "none",
         addrpar: true,
         num_wl: 4,
+        skip2: true
       }
 
       iterate_mp o.merge(
@@ -98,7 +117,8 @@ module RunScripts
       iterate_mp o.merge(
         nametag: "only_mc",
         schemes: %w[tp],
-        scheme: "tp"
+        scheme: "tp",
+        bank_part: true
       )
 
     end
@@ -106,7 +126,6 @@ module RunScripts
     def ncore_2tc
       o = $secure_opts.merge(
         nametag: "2tc",
-        runmode: :fake
       )
 
       # 4 Cores 2 TCs
@@ -121,21 +140,21 @@ module RunScripts
       )
 
       # 8 Cores 2 TCs
-      iterate_mp o.merge(
-        num_wl: 8,
-        skip2: true,
-        skip4: true,
-        skip6: true,
-        numpids: 2,
-        p0threadID: 0,
-        p1threadID: 0,
-        p2threadID: 0,
-        p3threadID: 0,
-        p4threadID: 1,
-        p5threadID: 1,
-        p6threadID: 1,
-        p7threadID: 1
-      )
+      # iterate_mp o.merge(
+      #   num_wl: 8,
+      #   skip2: true,
+      #   skip4: true,
+      #   skip6: true,
+      #   numpids: 2,
+      #   p0threadID: 0,
+      #   p1threadID: 0,
+      #   p2threadID: 0,
+      #   p3threadID: 0,
+      #   p4threadID: 1,
+      #   p5threadID: 1,
+      #   p6threadID: 1,
+      #   p7threadID: 1
+      # )
 
     end
 
@@ -160,11 +179,14 @@ module RunScripts
         }
       end
 
-      [bw, rbw, iw25, iw05, iw75].product([10,50,100]).each do |o,period|
+      #[bw, rbw, iw25, iw05, iw75].product([10,50,100]).each do |o,period|
+      [bw].product([1,10,50,100]).each do |o,period|
         iterate_mp o.merge(
             nametag: "flush#{period}ms_#{o[:wbtag]}",
             context_sw_freq: period * 10**9,
             do_flush: true,
+            num_wl: 4,
+            skip2: true,
         )
       end
 
@@ -173,7 +195,7 @@ module RunScripts
     def flush_simple
         iterate_mp $secure_opts.merge $test_opts.merge(
             do_flush: true,
-            context_sw_freq: (1 * 10**8),
+            context_sw_freq: (1 * 10**9),
             nametag: "flush",
         )
     end

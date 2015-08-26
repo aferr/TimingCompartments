@@ -13,7 +13,9 @@ $scriptgen_dir = Dir.new(Dir.pwd+"/scriptgen")
 
 #Gem5 options
 $fastforward = 10**9
+#$fastforward = 10**5
 $maxinsts = 10**8
+#$maxinsts = 10**5
 $maxtick = 2*10**15 
 $cpus = %w[detailed] #timing is also available
 $cacheSizes = [0,1,2,4]
@@ -63,25 +65,18 @@ $mpworkloads = {
   mcf_mcf: %w[ mcf mcf ],
   mcf_lib: %w[mcf libquantum],
   mcf_ast: %w[mcf astar],
-  ast_mcf: %w[astar mcf],
-  lib_mcf: %w[libquantum mcf],
   lib_lib: %w[ libquantum libquantum],
   lib_ast: %w[ libquantum astar ],
   mcf_h264: %w[ mcf h264ref ],
   lib_sjg: %w[ libquantum sjeng ],
-  # xln_gcc: %w[ xalan gcc ],
-  # gcc_gob: %w[ gcc gobmk ],
   sjg_sgj: %w[ sjeng sjeng ],
   ast_h264: %w[ astar h264ref ],
   h264_hmm: %w[ h264ref hmmer ],
   ast_ast: %w[ astar astar],
- 
-  #New arbitrary 
   bz2_h264: %w[bzip2 h264ref],
   lib_gob: %w[libquantum gobmk],
   sjg_gob: %w[sjeng gobmk],
   sjg_h264: %w[sjeng h264ref],
-  hmm_sjg: %w[hmmer sjg],
 
   # Float workloads
   # milc_milc: %w[milc milc],
@@ -94,18 +89,16 @@ $mpworkloads = {
 
 }
 
+def single_prog_wl n
+    $specint.inject({}) do |hash, name|
+        hash[name] = [name] + (%w[nothing] * (n - 1)); hash
+    end
+end
+
 def workloads_of_size n, wl2=$mpworkloads
   wl2.keys.inject({}) do |hash, name|
     hash[name] = n.times.inject([]) { |wl, i| wl << wl2[name][i%2]; wl }
     hash
-  end
-end
-
-def rotated_workloads wls
-  wls.keys.inject({}) do |rwls,wl|
-    b = wls[wl]
-    rwls[(wl.to_s+'r').to_sym] = [b[1],b[0],b[2..b.size-1]].flatten
-    rwls
   end
 end
 
@@ -124,17 +117,17 @@ $secure_opts = {
 #benchmarks
 $specinvoke = { 
    #"perlbench"  => "'#{$specint_dir}/perlbench -I#{$specint_dir}/perldepends -I#{$specint_dir}/lib #{$specint_dir} pack.pl'",
-    "bzip2"      => "'#{$specint_dir}/bzip2 #{$specint_dir}/input.source 280'",
-    "gcc"        => "'#{$specint_dir}/gcc #{$specint_dir}/200.in -o results/200.s'",
-    "mcf"        => "'#{$specint_dir}/mcf #{$specint_dir}/inp.in'",
-    "gobmk"      => "'#{$specint_dir}/gobmk --quiet --mode gtp --gtp-input #{$specint_dir}/13x13.tst'",
-    "hmmer"      => "'#{$specint_dir}/hmmer #{$specint_dir}/nph3.hmm #{$specint_dir}/swiss41'",
-    "sjeng"      => "'#{$specint_dir}/sjeng #{$specint_dir}/ref.txt'",
-    "libquantum" => "'#{$specint_dir}/libquantum 1397 8'",
-    "h264ref"    => "'#{$specint_dir}/h264ref -d #{$specint_dir}/foreman_ref_encoder_baseline.cfg'",
+   "bzip2"      => "'#{$specint_dir}/bzip2 #{$specint_dir}/input.source 280'",
+   "gcc"        => "'#{$specint_dir}/gcc #{$specint_dir}/200.in -o results/200.s'",
+   "mcf"        => "'#{$specint_dir}/mcf #{$specint_dir}/inp.in'",
+   "gobmk"      => "'#{$specint_dir}/gobmk --quiet --mode gtp --gtp-input #{$specint_dir}/13x13.tst'",
+   "hmmer"      => "'#{$specint_dir}/hmmer #{$specint_dir}/nph3.hmm #{$specint_dir}/swiss41'",
+   "sjeng"      => "'#{$specint_dir}/sjeng #{$specint_dir}/ref.txt'",
+   "libquantum" => "'#{$specint_dir}/libquantum 1397 8'",
+   "h264ref"    => "'#{$specint_dir}/h264ref -d #{$specint_dir}/foreman_ref_encoder_baseline.cfg'",
    #"omnetpp"    => "'#{$specint_dir}/omnetpp #{$specint_dir}/omnetpp.ini'",
-    "astar"      => "'#{$specint_dir}/astar #{$specint_dir}/BigLakes2048.cfg'",
-    "xalan"      => "'#{$specint_dir}/Xalan -v #{$specint_dir}/t5.xml #{$specint_dir}/xalanc.xsl'"  
+   "astar"      => "'#{$specint_dir}/astar #{$specint_dir}/BigLakes2048.cfg'",
+   "xalan"      => "'#{$specint_dir}/Xalan -v #{$specint_dir}/t5.xml #{$specint_dir}/xalanc.xsl'"  
 }
 $specint = $specinvoke.keys.sort
 
@@ -242,6 +235,7 @@ def sav_script( options = {} )
     cacheSize  = options[:cacheSize] || lambda { |x|
         x >= 8 ? 9 :
         x >= 6 ? 6 :
+        x >= 4 ? 4 :
         2
     }.call(numcpus)
 
@@ -356,7 +350,7 @@ def sav_script( options = {} )
     script.puts("   --p0period=#{tl0} \\")
     script.puts("   --p1period=#{tl1} \\")
 
-    script.puts("    > #{result_dir}/stdout_#{filename}.out")
+    script.puts("    >! #{result_dir}/stdout_#{filename}.out")
     script_abspath = script.path
     script.close
 
@@ -374,33 +368,40 @@ def sav_script( options = {} )
     [success,filename]
 end
 
-def single opts={}
-    o = {
-        cpu: "detailed",
-        schemes: %w[ none],
-        scheme: "none",
-        benchmarks: $specint + $specfp,
-        threads: 1
-    }.merge opts
-
-    o[:benchmarks].each do |b|
-        sav_script o.merge(p0: b)
-    end
-
-end
+# def single opts={}
+#     o = {
+#         cpu: "detailed",
+#         schemes: %w[ none],
+#         scheme: "none",
+#         benchmarks: $specint,
+#         threads: 1
+#     }.merge opts
+# 
+#     o[:benchmarks].each do |b|
+#         [4,6,9].each do |c|
+#             sav_script o.merge(
+#                 nametag: "#{c}mb",
+#                 p0: b,
+#                 cacheSize: c)
+#         end
+#         sav_script o.merge(p0: b)
+#     end
+# 
+# end
 
 
 def iterate_mp o={}
   o = {
     num_wl: 2,
-    workloads: $mpworkloads,
     skip3: true,
     skip5: true,
     skip7: true
   }.merge o
 
   2.upto(o[:num_wl]) do |n|
-    wls = workloads_of_size n, o[:workloads]
+    wls = o[:workloads].nil? ?
+        (workloads_of_size n) :
+        o[:workloads]
     wls.keys.each do |wl|
       p = o.merge(wl_name: wl)
       wls[wl].each_with_index do |benchmark,i|

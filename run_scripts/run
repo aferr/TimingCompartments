@@ -10,7 +10,7 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Rerun
 #------------------------------------------------------------------------------
-# rerun
+rerun
 
 #------------------------------------------------------------------------------
 # Security
@@ -41,8 +41,9 @@ include RunScripts
 # ncore_2tc
 # ncore_ntc
 # ncore_ntc_no_part
-flush_simple
-
+# flush_overhead
+# cache_sweep
+# # 
 # flush_overhead
 # coordination
 # parameter_tests
