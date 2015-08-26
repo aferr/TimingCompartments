@@ -107,6 +107,9 @@ def add_options():
         parser.add_option("--membusresp_offset", type="int", default=0,
                 help="membus response layer offset")
 
+        parser.add_option("--assoc_fair", action="store_true", default=False,
+                help="use fair allocation of associativities for L3")
+
         for i in range(8):
             parser.add_option("--p{0}".format(i), type="string",
                     help="workload number n")

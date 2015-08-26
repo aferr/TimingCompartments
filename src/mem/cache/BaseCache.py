@@ -80,3 +80,4 @@ class BaseCache(MemObject):
     cpu_tcid = Param.Int(-1, "TCID of owning cpu")
     hierarchy_level = Param.Int(-1, "Cache hierarchy level for flushing")
     block_on_flush = Param.Bool(False, "for L1i/d to block for writebacks")
+    assoc_fair = Param.Bool(True, "use fair assoc division")

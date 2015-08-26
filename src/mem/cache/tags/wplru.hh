@@ -6,12 +6,14 @@ class WPLRU : public LRU{
 
     public:
     WPLRU( unsigned _numSets, unsigned _blkSize, unsigned _assoc,
-            unsigned _hit_latency, unsigned num_tcs );
+            unsigned _hit_latency, unsigned num_tcs, bool assoc_fair );
 
     // Cache<WPLRU> *cache;
     // virtual void setCache(Cache<WPLRU> *_cache){ cache = _cache; }
     virtual void flush( uint64_t tcid );
     virtual void print();
+
+    bool assoc_fair;
 
     protected:
     BlkType ***blks_by_tc;

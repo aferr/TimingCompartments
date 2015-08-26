@@ -39,6 +39,7 @@
 
 #include <string>
 
+#include "params/BaseCache.hh"
 #include "base/callback.hh"
 #include "base/statistics.hh"
 #include "base/printable.hh"
@@ -55,6 +56,8 @@ class BaseCache;
  */
 class BaseTags
 {
+  public: 
+      BaseCacheParams* cache_params;
   protected:
     /** Pointer to the parent cache. */
     BaseCache *cache;

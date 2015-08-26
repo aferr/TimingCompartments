@@ -73,6 +73,7 @@ class L3Shared( L3Config ):
                             save_trace = options.do_cache_trace,
                             cw_first = not (options.nocwf),
                             do_flush = options.do_flush,
+                            assoc_fair = options.assoc_fair,
                             hierarchy_level = 3,
                             debug_name = "l3",
                             flushRatio = options.flushRatio,

@@ -306,6 +306,9 @@ def sav_script( options = {} )
       end
     end
 
+    #Cache allocation
+    script.puts("   --assoc_fair \\") if options[:assoc_alloc].nil?
+
     #Security Policy
     options[:numpids] = options[:numcpus] if options[:numpids].nil?
     script.puts("    --numpids=#{options[:numpids]} \\")

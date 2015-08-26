@@ -92,6 +92,42 @@ module RunScripts
         )
     end
 
+    # NOT WORKING
+    def more_channels
+        #2 chan
+        iterate_mp $test_opts.merge(
+            num_wl: 4,
+            skip2: true,
+            schemes: %w[2chan],
+            scheme: "2chan"
+        )
+        iterate_mp $secure_opts.merge $test_opts.merge(
+            num_wl: 8,
+            skip2: true,
+            skip4: true,
+            skip6: true,
+            schemes: %w[tp_2chan],
+            scheme: "tp_2chan"
+        )
+        #4 chan
+        iterate_mp $test_opts.merge(
+            num_wl: 8,
+            skip2: true,
+            skip4: true,
+            skip6: true,
+            schemes: %w[4chan],
+            scheme: "4chan"
+        )
+        iterate_mp $secure_opts.merge $test_opts.merge(
+            num_wl: 8,
+            skip2: true,
+            skip4: true,
+            skip6: true,
+            schemes: %w[tp_4chan],
+            scheme: "tp_4chan"
+        )
+    end
+
     def breakdown
 
       o = {
@@ -123,6 +159,9 @@ module RunScripts
 
     end
 
+############################################################################## 
+# Resource Allocation
+############################################################################## 
     def ncore_2tc
       o = $secure_opts.merge(
         nametag: "2tc",
@@ -158,6 +197,21 @@ module RunScripts
 
     end
 
+    def resource_alloc
+        iterate_mp $secure_opts.merge(
+            num_wl: 4,
+            nametag: "resource_alloc",
+            assoc_alloc: true,
+            workloads: {
+                mcf_ast: %w[mcf astar mcf astar],
+                lib_ast: %w[libquantum astar libquantum astar],
+            }
+        )
+    end
+
+############################################################################## 
+# Flushing
+##############################################################################
     def flush_overhead
       #Blocking Writeback
       bw = $secure_opts.merge(

@@ -10,7 +10,7 @@ include RunScripts
 #------------------------------------------------------------------------------
 # Rerun
 #------------------------------------------------------------------------------
-rerun
+# rerun
 
 #------------------------------------------------------------------------------
 # Security
@@ -43,7 +43,5 @@ rerun
 # ncore_ntc_no_part
 # flush_overhead
 # cache_sweep
-# # 
-# flush_overhead
-# coordination
-# parameter_tests
+# more_channels
+resource_alloc

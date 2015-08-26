@@ -12,8 +12,10 @@ WPLRU::WPLRU( unsigned _numSets,
         unsigned _blkSize,
         unsigned _assoc,
         unsigned _hit_latency,
-        unsigned _num_tcs )
+        unsigned _num_tcs,
+        bool _assoc_fair )
     : LRU(_numSets, _blkSize, _assoc, _hit_latency ),
+      assoc_fair( _assoc_fair),
       num_tcs( _num_tcs )
 {
     init_sets();
@@ -31,11 +33,20 @@ WPLRU::get_set( int setnum, uint64_t tid, Addr addr ){
     return s;
 }
 
-int
-WPLRU::assoc_of_tc( int tcid ){
-    int a = assoc / num_tcs;
-    if(tcid < (assoc%num_tcs)) a++;
-    return a;
+int WPLRU::assoc_of_tc( int tcid ){
+    if(assoc_fair){
+        int a = assoc / num_tcs;
+        if(tcid < (assoc%num_tcs)) a++;
+        return a;
+    } else {
+        switch(tcid){
+            case 0:  return 6;
+            case 1:  return 2;
+            case 2:  return 6;
+            case 3:  return 2;
+            default: return 2;
+        }
+    }
 }
 
 int
