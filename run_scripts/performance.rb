@@ -209,6 +209,47 @@ module RunScripts
         )
     end
 
+    def turn_length_sweep
+        [23, 33, 43, 53].each do |tl|
+            iterate_mp $secure_opts.merge(
+                num_wl: 2,
+                nametag: "tl_sweep_#{tl}",
+                tl0: tl
+            )
+        end
+    end
+
+    def mem_alloc
+        o = $secure_opts.merge(
+            num_wl: 2,
+            nametag: "mem_alloc"
+        )
+        # h264_hmm 1 / 13
+        iterate_mp o.merge(
+            workloads: { h264_hmm: %w[h264ref hmmer] },
+            tl0: 23,
+            tl1: 35
+        )
+        # ast_h264 1 / 8
+        iterate_mp o.merge(
+            workloads: { ast_h264: %w[astar h264ref] },
+            tl0: 23,
+            tl1: 30
+        )
+        # sjg_h264 8 / 1
+        iterate_mp o.merge(
+            workloads: { sjg_h264: %w[sjeng h264ref] },
+            tl0: 30,
+            tl1: 23
+        )
+        # mcf_ast 4000 /1
+        iterate_mp o.merge(
+            workloads: { mcf_ast: %w[mcf astar] },
+            tl0: 200,
+            tl1: 23
+        )
+    end
+
 ############################################################################## 
 # Flushing
 ##############################################################################
