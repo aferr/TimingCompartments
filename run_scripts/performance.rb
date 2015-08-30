@@ -254,7 +254,7 @@ module RunScripts
             num_wl: 2,
             nametag: "allocated",
             do_allocation: true
-        ).merge($test_opts)
+        )
     end
 
 
