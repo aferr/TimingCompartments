@@ -60,22 +60,22 @@ $p0periods = [64,96,128,192,256]
 #Multiprogram Workloads
 $mpworkloads = {
   # integer workloads
-  mcf_bz2: %w[ mcf bzip2 ],
-  mcf_xln: %w[ mcf xalan ],
+  # mcf_bz2: %w[ mcf bzip2 ],
+  # mcf_xln: %w[ mcf xalan ],
   mcf_mcf: %w[ mcf mcf ],
   mcf_lib: %w[mcf libquantum],
   mcf_ast: %w[mcf astar],
   lib_lib: %w[ libquantum libquantum],
   lib_ast: %w[ libquantum astar ],
-  mcf_h264: %w[ mcf h264ref ],
-  lib_sjg: %w[ libquantum sjeng ],
+  # mcf_h264: %w[ mcf h264ref ],
+  # lib_sjg: %w[ libquantum sjeng ],
   sjg_sgj: %w[ sjeng sjeng ],
   ast_h264: %w[ astar h264ref ],
   h264_hmm: %w[ h264ref hmmer ],
   ast_ast: %w[ astar astar],
-  bz2_h264: %w[bzip2 h264ref],
-  lib_gob: %w[libquantum gobmk],
-  sjg_gob: %w[sjeng gobmk],
+  # bz2_h264: %w[bzip2 h264ref],
+  # lib_gob: %w[libquantum gobmk],
+  # sjg_gob: %w[sjeng gobmk],
   sjg_h264: %w[sjeng h264ref],
 
   # Float workloads
@@ -307,15 +307,15 @@ def sav_script( options = {} )
     end
 
     #Cache allocation
-    script.puts("   --assoc_fair \\") if options[:assoc_alloc].nil?
-    script.puts("   --ways0 #{options[:ways0]} \\") unless options[:ways0].nil?
-    script.puts("   --ways1 #{options[:ways1]} \\") unless options[:ways1].nil?
-    script.puts("   --ways2 #{options[:ways2]} \\") unless options[:ways2].nil?
-    script.puts("   --ways3 #{options[:ways3]} \\") unless options[:ways3].nil?
-    script.puts("   --ways4 #{options[:ways4]} \\") unless options[:ways4].nil?
-    script.puts("   --ways5 #{options[:ways5]} \\") unless options[:ways5].nil?
-    script.puts("   --ways6 #{options[:ways6]} \\") unless options[:ways6].nil?
-    script.puts("   --ways7 #{options[:ways7]} \\") unless options[:ways7].nil?
+    script.puts("    --assoc_fair \\") if options[:assoc_alloc].nil?
+    script.puts("    --ways0 #{options[:ways0]} \\") unless options[:ways0].nil?
+    script.puts("    --ways1 #{options[:ways1]} \\") unless options[:ways1].nil?
+    script.puts("    --ways2 #{options[:ways2]} \\") unless options[:ways2].nil?
+    script.puts("    --ways3 #{options[:ways3]} \\") unless options[:ways3].nil?
+    script.puts("    --ways4 #{options[:ways4]} \\") unless options[:ways4].nil?
+    script.puts("    --ways5 #{options[:ways5]} \\") unless options[:ways5].nil?
+    script.puts("    --ways6 #{options[:ways6]} \\") unless options[:ways6].nil?
+    script.puts("    --ways7 #{options[:ways7]} \\") unless options[:ways7].nil?
 
     #Security Policy
     options[:numpids] = options[:numcpus] if options[:numpids].nil?
@@ -415,6 +415,9 @@ def iterate_mp o={}
         o[:workloads]
     wls.keys.each do |wl|
       p = o.merge(wl_name: wl)
+      if o[:do_allocation] && n == 2
+          p = p.merge($allocation_2_core[wl])
+      end
       wls[wl].each_with_index do |benchmark,i|
         p = p.merge( "p#{i}".to_sym => benchmark )
       end

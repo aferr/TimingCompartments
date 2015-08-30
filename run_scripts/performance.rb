@@ -8,15 +8,15 @@ module RunScripts
     $test_opts = {
         maxinsts: 10**5,
         fastforward: 10,
-        num_wl: 4,
-        skip2: true,
+        #num_wl: 4,
+        #skip2: true,
         skip6: true,
-        workloads: { 
-            hardstride_nothing: %w[hardstride nothing],
-            # nothing_hardstride: %w[nothing hardstride],
-            hardstride_hardstride: %w[hardstride hardstride],
-            # nothing_nothing: %w[nothing nothing]
-        },
+        # workloads: { 
+        #     hardstride_nothing: %w[hardstride nothing],
+        #     # nothing_hardstride: %w[nothing hardstride],
+        #     hardstride_hardstride: %w[hardstride hardstride],
+        #     # nothing_nothing: %w[nothing nothing]
+        # },
         debug: true,
         runmode: :local
 
@@ -197,58 +197,66 @@ module RunScripts
 
     end
 
-    def resource_alloc
-        iterate_mp $secure_opts.merge(
-            num_wl: 4,
-            nametag: "resource_alloc",
+    $allocation_2_core = {
+        ast_ast: {},
+        h264_hmm: {
             assoc_alloc: true,
-            workloads: {
-                mcf_ast: %w[mcf astar mcf astar],
-                lib_ast: %w[libquantum astar libquantum astar],
-            }
-        )
-    end
-
-    def turn_length_sweep
-        [23, 33, 43, 53].each do |tl|
-            iterate_mp $secure_opts.merge(
-                num_wl: 2,
-                nametag: "tl_sweep_#{tl}",
-                tl0: tl
-            )
-        end
-    end
-
-    def mem_alloc
-        o = $secure_opts.merge(
-            num_wl: 2,
-            nametag: "mem_alloc"
-        )
-        # h264_hmm 1 / 13
-        iterate_mp o.merge(
-            workloads: { h264_hmm: %w[h264ref hmmer] },
-            tl0: 23,
+            ways0: 4,
+            ways1: 12,
+            tl0: 25,
             tl1: 35
-        )
-        # ast_h264 1 / 8
-        iterate_mp o.merge(
-            workloads: { ast_h264: %w[astar h264ref] },
+        },
+        ast_h264: {
+            assoc_alloc: true,
+            ways0: 2,
+            ways1: 14,
             tl0: 23,
             tl1: 30
-        )
-        # sjg_h264 8 / 1
-        iterate_mp o.merge(
-            workloads: { sjg_h264: %w[sjeng h264ref] },
+        },
+        sjg_h264: {
+            assoc_alloc: true,
+            ways0: 6,
+            ways1: 10,
             tl0: 30,
             tl1: 23
-        )
-        # mcf_ast 4000 /1
-        iterate_mp o.merge(
-            workloads: { mcf_ast: %w[mcf astar] },
+        },
+        sjg_sgj: {},
+        mcf_ast: {
+            assoc_alloc: true,
+            ways0: 14,
+            ways1: 2,
             tl0: 200,
             tl1: 23
-        )
+        },
+        lib_ast: {
+            assoc_alloc: true,
+            ways0: 14,
+            ways1: 2,
+            tl0: 200,
+            tl1: 23
+        },
+        mcf_mcf: {},
+        mcf_lib: {
+            assoc_alloc: true,
+            ways0: 12,
+            ways1: 4,
+            tl0: 43,
+            tl1: 43,
+        },
+        lib_lib: {
+            tl0: 43,
+            tl1: 43
+        },
+    }
+
+    def resource_alloc
+        iterate_mp $secure_opts.merge(
+            num_wl: 2,
+            nametag: "allocated",
+            do_allocation: true
+        ).merge($test_opts)
     end
+
 
 ############################################################################## 
 # Flushing
