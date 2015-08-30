@@ -78,6 +78,14 @@ class L3Shared( L3Config ):
                             debug_name = "l3",
                             flushRatio = options.flushRatio,
                             context_sw_freq = options.context_sw_freq,
+                            ways0 = options.ways0,
+                            ways1 = options.ways1,
+                            ways2 = options.ways2,
+                            ways3 = options.ways3,
+                            ways4 = options.ways4,
+                            ways5 = options.ways5,
+                            ways6 = options.ways6,
+                            ways7 = options.ways7,
                             l3_trace_file = options.l3tracefile)
 
         system.tol3bus = ( 

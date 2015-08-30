@@ -46,6 +46,7 @@ BaseTags::setCache(BaseCache *_cache)
 {
     cache = _cache;
     objName = cache->name();
+    init_sets();
 }
 
 void

@@ -18,7 +18,7 @@ WPLRU::WPLRU( unsigned _numSets,
       assoc_fair( _assoc_fair),
       num_tcs( _num_tcs )
 {
-    init_sets();
+    // init_sets();
 }
 
 CacheSet
@@ -40,11 +40,15 @@ int WPLRU::assoc_of_tc( int tcid ){
         return a;
     } else {
         switch(tcid){
-            case 0:  return 6;
-            case 1:  return 2;
-            case 2:  return 6;
-            case 3:  return 2;
-            default: return 2;
+            case 0:  return cache->params->ways0;
+            case 1:  return cache->params->ways1;
+            case 2:  return cache->params->ways2;
+            case 3:  return cache->params->ways3;
+            case 4:  return cache->params->ways4;
+            case 5:  return cache->params->ways5;
+            case 6:  return cache->params->ways6;
+            case 7:  return cache->params->ways7;
+            default: return cache->params->ways0;
         }
     }
 }
@@ -70,6 +74,7 @@ WPLRU::print(){
 
 void
 WPLRU::init_sets(){
+    fprintf(stderr, "init sets\n");
     sets_w = new CacheSet*[num_tcs];
     for( int i=0; i< num_tcs; i++ ){
       sets_w[i] = new CacheSet[numSets];

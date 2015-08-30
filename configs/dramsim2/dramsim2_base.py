@@ -159,6 +159,23 @@ def add_options():
         parser.add_option("--nocwf", action="store_true", default=False,
                 help="Enable to turn off critical word first timing")
 
+        parser.add_option("--ways0", type="int", default=1,
+                help="Number of ways for tcid0")
+        parser.add_option("--ways1", type="int", default=1,
+                help="Number of ways for tcid0")
+        parser.add_option("--ways2", type="int", default=1,
+                help="Number of ways for tcid0")
+        parser.add_option("--ways3", type="int", default=1,
+                help="Number of ways for tcid0")
+        parser.add_option("--ways4", type="int", default=1,
+                help="Number of ways for tcid0")
+        parser.add_option("--ways5", type="int", default=1,
+                help="Number of ways for tcid0")
+        parser.add_option("--ways6", type="int", default=1,
+                help="Number of ways for tcid0")
+        parser.add_option("--ways7", type="int", default=1,
+                help="Number of ways for tcid0")
+
         parser.add_option("--do_flush", action="store_true", default=False,
                 help="Flush the cache occasionally to model context switching.")
         parser.add_option("--flushRatio", type="float", default=1,

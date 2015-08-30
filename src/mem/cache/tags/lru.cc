@@ -72,7 +72,7 @@ LRU::LRU(unsigned _numSets, unsigned _blkSize, unsigned _assoc,
     /** @todo Make warmup percentage a parameter. */
     warmupBound = numSets * assoc;
     
-    init_sets();
+    // init_sets();
 
 }
 
