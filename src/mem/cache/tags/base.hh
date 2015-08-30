@@ -160,6 +160,8 @@ class BaseTags
     virtual void clearLocks() {}
 
     virtual void flush(int tcid) {}
+
+    virtual void init_sets(){}
 };
 
 class BaseTagsCallback : public Callback

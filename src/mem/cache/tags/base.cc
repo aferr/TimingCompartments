@@ -44,8 +44,10 @@ using namespace std;
 void
 BaseTags::setCache(BaseCache *_cache)
 {
+    fprintf(stderr, "setting cache\n");
     cache = _cache;
     objName = cache->name();
+    init_sets();
 }
 
 void

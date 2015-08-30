@@ -308,6 +308,14 @@ def sav_script( options = {} )
 
     #Cache allocation
     script.puts("   --assoc_fair \\") if options[:assoc_alloc].nil?
+    script.puts("   --ways0 #{options[:ways0]} \\") unless options[:ways0].nil?
+    script.puts("   --ways1 #{options[:ways1]} \\") unless options[:ways1].nil?
+    script.puts("   --ways2 #{options[:ways2]} \\") unless options[:ways2].nil?
+    script.puts("   --ways3 #{options[:ways3]} \\") unless options[:ways3].nil?
+    script.puts("   --ways4 #{options[:ways4]} \\") unless options[:ways4].nil?
+    script.puts("   --ways5 #{options[:ways5]} \\") unless options[:ways5].nil?
+    script.puts("   --ways6 #{options[:ways6]} \\") unless options[:ways6].nil?
+    script.puts("   --ways7 #{options[:ways7]} \\") unless options[:ways7].nil?
 
     #Security Policy
     options[:numpids] = options[:numcpus] if options[:numpids].nil?
@@ -353,7 +361,7 @@ def sav_script( options = {} )
     script.puts("   --p0period=#{tl0} \\")
     script.puts("   --p1period=#{tl1} \\")
 
-    script.puts("    >! #{result_dir}/stdout_#{filename}.out")
+    script.puts("    > #{result_dir}/stdout_#{filename}.out")
     script_abspath = script.path
     script.close
 
