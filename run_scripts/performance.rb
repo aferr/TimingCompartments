@@ -175,7 +175,9 @@ module RunScripts
         p0threadID: 0,
         p1threadID: 0,
         p2threadID: 1,
-        p3threadID: 1
+        p3threadID: 1,
+        tl0: 30,
+        tl1: 30
       )
 
       # 8 Cores 2 TCs

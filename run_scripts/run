@@ -38,10 +38,12 @@ include RunScripts
 # single 
 # breakdown
 # baseline
-# ncore_2tc
+ncore_2tc
 # ncore_ntc
 # ncore_ntc_no_part
 # flush_overhead
 # cache_sweep
 # more_channels
-resource_alloc
+# resource_alloc
+# mem_alloc
+# turn_length_sweep
