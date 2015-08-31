@@ -1,4 +1,5 @@
 #include "CommandQueueTP.h"
+#include "assert.h"
 
 using namespace DRAMSim;
 
@@ -6,14 +7,24 @@ CommandQueueTP::CommandQueueTP(vector< vector<BankState> > &states,
         ostream &dramsim_log_, unsigned tpTurnLength_,
         int num_pids_, bool fixAddr_,
         bool diffPeriod_, int p0Period_, int p1Period_, int offset_,
+        TPConfig* tp_config,
         bool partitioning_):
     CommandQueue(states,dramsim_log_,num_pids_)
 {
     fixAddr = fixAddr_;
     tpTurnLength = tpTurnLength_;
     diffPeriod = diffPeriod_;
-    p0Period = p0Period_;
-    p1Period = p1Period_;
+    tl[0] = tp_config->tl0;
+    tl[1] = tp_config->tl1;
+    tl[2] = tp_config->tl2;
+    tl[3] = tp_config->tl3;
+    tl[4] = tp_config->tl4;
+    tl[5] = tp_config->tl5;
+    tl[6] = tp_config->tl6;
+    tl[7] = tp_config->tl7;
+    for(int i=0; i<num_pids_; i++){
+        fprintf(stderr, "tl%i %i\n", i, tl[i]);
+    }
 	offset = offset_;
     partitioning = partitioning_;
 #ifdef DEBUG_TP
@@ -254,37 +265,52 @@ void CommandQueueTP::print()
 
 unsigned CommandQueueTP::getCurrentPID(){
   unsigned ccc_ = currentClockCycle - offset;
-  unsigned schedule_time = ccc_ % (p0Period + (num_pids-1) * p1Period);
-  if( schedule_time < p0Period ) return 0;
-  return (schedule_time - p0Period) / p1Period + 1;
+  int schedule_length = 0;
+  for(int i=0; i < num_pids; i++) schedule_length += tl[i];
+  unsigned schedule_time = ccc_ % schedule_length;
+
+  int test_time = 0;
+  for(int i=0; i < num_pids; i++){
+      test_time += tl[i];
+      if(schedule_time < test_time) return i;
+  }
+  assert(false);
+  return 0;
 }
 
 bool CommandQueueTP::isBufferTime(){
   unsigned ccc_ = currentClockCycle - offset;
   unsigned current_tc = getCurrentPID();
-  unsigned schedule_length = p0Period + p1Period * (num_pids - 1);
+  unsigned schedule_length = 0;
+  for(int i=0; i < num_pids; i++) schedule_length += tl[i];
   unsigned schedule_start = ccc_ - ( ccc_ % schedule_length );
 
-  unsigned turn_start = current_tc == 0 ?
-    schedule_start :
-    schedule_start + p0Period + p1Period * (current_tc-1);
-  unsigned turn_end = current_tc == 0 ?
-    turn_start + p0Period :
-    turn_start + p1Period;
+  unsigned turn_start = schedule_start;
+  for(int i=0; i<current_tc; i++) turn_start += tl[i];
+  unsigned turn_end = turn_start + tl[current_tc];
 
   // Time between refreshes to ANY rank.
   unsigned refresh_period = REFRESH_PERIOD/NUM_RANKS/tCK;
   unsigned next_refresh = ccc_ + refresh_period - (ccc_ % refresh_period);
  
-  unsigned tlength = current_tc == 0 ? p0Period : p1Period;
+  unsigned tlength = tl[current_tc];
 
-  //TODO It returns a bool you tool
   unsigned deadtime = (turn_start <= next_refresh && next_refresh < turn_end) ?
     refresh_deadtime( tlength ) :
     normal_deadtime( tlength );
 
-  return ccc_ >= (turn_end - deadtime);
+#ifdef DEBUG_TP
+  printf("-------------------------------------------------------\n");
+  printf("clock cycle: %lu\n", currentClockCycle);
+  printf("current tc:  %i\n", current_tc);
+  printf("turn start:  %u\n", turn_start);
+  printf("turn end:    %u\n", turn_end);
+  printf("deadtime:    %u\n", deadtime);
+  if( ccc_ >= (turn_end - deadtime)) printf("its deadtime\n");
+  printf("-------------------------------------------------------\n\n\n");
+#endif // DEBUG_TP
 
+  return ccc_ >= (turn_end - deadtime);
 }
 
 #ifdef DEBUG_TP

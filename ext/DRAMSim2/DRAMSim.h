@@ -62,7 +62,7 @@ namespace DRAMSim
     MultiChannelMemorySystem *getMemorySystemInstance(const string &dev, 
             const string &sys, unsigned tpTurnLength, bool genTrance,
             const string &pwd, const string &trc, unsigned megsOfMemory, 
-            std::string *visfilename=NULL);
+            std::string *visfilename=NULL, TPConfig* tp_config);
 }
 
 #endif

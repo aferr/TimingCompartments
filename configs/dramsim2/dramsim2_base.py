@@ -176,6 +176,23 @@ def add_options():
         parser.add_option("--ways7", type="int", default=1,
                 help="Number of ways for tcid0")
 
+        parser.add_option("--tl0", type="int", default=1,
+                help="turn length for tci")
+        parser.add_option("--tl1", type="int", default=1,
+                help="turn length for tci")
+        parser.add_option("--tl2", type="int", default=1,
+                help="turn length for tci")
+        parser.add_option("--tl3", type="int", default=1,
+                help="turn length for tci")
+        parser.add_option("--tl4", type="int", default=1,
+                help="turn length for tci")
+        parser.add_option("--tl5", type="int", default=1,
+                help="turn length for tci")
+        parser.add_option("--tl6", type="int", default=1,
+                help="turn length for tci")
+        parser.add_option("--tl7", type="int", default=1,
+                help="turn length for tci")
+
         parser.add_option("--do_flush", action="store_true", default=False,
                 help="Flush the cache occasionally to model context switching.")
         parser.add_option("--flushRatio", type="float", default=1,
@@ -243,6 +260,14 @@ def setup_dramsim(options):
                             p0Period=options.p0period,
                             #Period for thread 1
                             p1Period=options.p1period,
+                            tl0=options.tl0,
+                            tl1=options.tl1,
+                            tl2=options.tl2,
+                            tl3=options.tl3,
+                            tl4=options.tl4,
+                            tl5=options.tl5,
+                            tl6=options.tl6,
+                            tl7=options.tl7,
                             #Offset for DRAM turn length
                             offset=options.dramoffset,
                             # use bank partitioning

@@ -1,7 +1,11 @@
 #include "CommandQueue.h"
 
+#ifndef TPCONFIG
+#define TPCONFIG
+#include "TPConfig.h"
+#endif
+
 #define BLOCK_TIME 12
-// #define DEBUG_TP
 
 using namespace std;
 
@@ -14,6 +18,7 @@ namespace DRAMSim
                     ostream &dramsim_log_,unsigned tpTurnLength,
                     int num_pids, bool fixAddr_,
                     bool diffPeriod_, int p0Period_, int p1Period_, int offset_,
+                    TPConfig* tp_config,
                     bool partitioning=false);
             virtual void enqueue(BusPacket *newBusPacket);
             virtual bool hasRoomFor(unsigned numberToEnqueue, unsigned rank, 
@@ -38,6 +43,7 @@ namespace DRAMSim
             unsigned lastPopTime;
             bool fixAddr;
             bool diffPeriod;
+            int tl[8];
             int p0Period;
             int p1Period;
 			int offset;

@@ -45,6 +45,7 @@
 #include "base/random.hh"
 #include "mem/DRAMSim2Wrapper.hh"
 
+
 using namespace std;
 
 DRAMSim2Wrapper::DRAMSim2Wrapper(const Params* p) :
