@@ -278,6 +278,7 @@ def sav_script( options = {} )
     #Protection Mechanisms
     script.puts("    --bank_part \\")     if options[:bank_part]
     script.puts("    --fixaddr \\")       if scheme == "fa" || options[:addrpar]
+    script.puts("    --relax_dtime \\")   if options[:relax_dtime]
     script.puts("    --rr_nc \\" )        if rr_nc
     script.puts("    --rr_l2l3 \\")       if options[:rr_l2l3]
     script.puts("    --rr_mem \\")        if options[:rr_mem]

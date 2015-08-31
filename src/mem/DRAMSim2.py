@@ -30,3 +30,4 @@ class DRAMSim2(DRAMSim2Wrapper):
     tl5 = Param.Int(23, "turn length for thread0")
     tl6 = Param.Int(23, "turn length for thread0")
     tl7 = Param.Int(23, "turn length for thread0")
+    relax_dtime = Param.Bool(False, "relax dead time")

@@ -48,13 +48,20 @@ namespace DRAMSim
             int p1Period;
 			int offset;
             bool partitioning;
+            bool relax_dtime;
 
             unsigned getCurrentPID();
-            bool isBufferTime();
+            bool isBufferTime(BusPacketType t);
 
-            virtual int normal_deadtime(int tlength){
+            virtual int normal_deadtime(int tlength, BusPacketType type){
               if(partitioning){
-                  return FIX_WORST_CASE_DELAY;
+                  if(type==WRITE || type==WRITE_P && relax_dtime){
+                      return FIX_WORST_CASE_DELAY_WRITE;
+                  }
+                  else if(type==READ || type==READ_P && relax_dtime){
+                      return FIX_WORST_CASE_DELAY_READ;
+                  }
+                  else return FIX_WORST_CASE_DELAY;
               } else {
                   return WORST_CASE_DELAY;
               }

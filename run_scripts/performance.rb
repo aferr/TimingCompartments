@@ -466,7 +466,26 @@ module RunScripts
             skip6: true,
             skip2: true,
             nametag: "allocated",
-            do_allocation: true
+            do_allocation: true,
+        )
+    end
+
+    def resource_alloc_relaxed
+        iterate_mp $secure_opts.merge(
+            num_wl: 8,
+            skip6: true,
+            skip2: true,
+            nametag: "allocated_relaxed",
+            do_allocation: true,
+            relax_dtime: true
+        )
+    end
+
+    def relaxed_two_core
+        iterate_mp $secure_opts.merge(
+            num_wl: 2,
+            nametag: "relaxed",
+            relax_dtime: true
         )
     end
 

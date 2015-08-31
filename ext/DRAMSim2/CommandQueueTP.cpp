@@ -22,6 +22,8 @@ CommandQueueTP::CommandQueueTP(vector< vector<BankState> > &states,
     tl[5] = tp_config->tl5;
     tl[6] = tp_config->tl6;
     tl[7] = tp_config->tl7;
+    relax_dtime = tp_config->relax_dtime;
+    if(relax_dtime) fprintf(stderr, "relax dtime\n");
     for(int i=0; i<num_pids_; i++){
         fprintf(stderr, "tl%i %i\n", i, tl[i]);
     }
@@ -209,7 +211,19 @@ bool CommandQueueTP::normalPopClosePage(BusPacket **busPacket, bool
                     if (isIssuable(queue[i]))
                     {
                         if(queue[i]->busPacketType==ACTIVATE){
-                            if(isBufferTime()) continue;
+                            // Search Queue for matching packet. If not found,
+                            // the type given is activate which will use a 
+                            // conservative dead time
+                            BusPacketType type =  ACTIVATE;
+                            for(int j=0; j<queue.size(); j++){
+                                if(queue[j]->physicalAddress == queue[i]->physicalAddress &&
+                                        queue[j]->busPacketType!= ACTIVATE){
+                                    queue[j]->print();
+                                    type = queue[j]->busPacketType;
+                                    break;
+                                }
+                            }
+                            if(isBufferTime(type)) continue;
                         }
 
                         //check to make sure we aren't removing a read/write that 
@@ -278,7 +292,7 @@ unsigned CommandQueueTP::getCurrentPID(){
   return 0;
 }
 
-bool CommandQueueTP::isBufferTime(){
+bool CommandQueueTP::isBufferTime(BusPacketType type){
   unsigned ccc_ = currentClockCycle - offset;
   unsigned current_tc = getCurrentPID();
   unsigned schedule_length = 0;
@@ -297,7 +311,7 @@ bool CommandQueueTP::isBufferTime(){
 
   unsigned deadtime = (turn_start <= next_refresh && next_refresh < turn_end) ?
     refresh_deadtime( tlength ) :
-    normal_deadtime( tlength );
+    normal_deadtime( tlength, type );
 
 #ifdef DEBUG_TP
   printf("-------------------------------------------------------\n");

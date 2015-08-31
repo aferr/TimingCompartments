@@ -39,7 +39,7 @@ include RunScripts
 # single 
 # breakdown
 # baseline
-ncore_2tc
+# ncore_2tc
 # ncore_ntc
 # ncore_ntc_no_part
 # flush_overhead
@@ -48,3 +48,5 @@ ncore_2tc
 # resource_alloc
 # mem_alloc
 # turn_length_sweep
+relaxed_two_core
+resourece_alloc_relaxed
