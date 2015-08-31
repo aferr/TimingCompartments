@@ -423,8 +423,10 @@ def iterate_mp o={}
         o[:workloads]
     wls.keys.each do |wl|
       p = o.merge(wl_name: wl)
-      if o[:do_allocation] && n == 2
-          p = p.merge($allocation_2_core[wl])
+      if o[:do_allocation]
+          p = p.merge($allocation_2_core[wl]) if n == 2
+          p = p.merge($allocation_4_core[wl]) if n == 4
+          p = p.merge($allocation_8_core[wl]) if n == 8
       end
       wls[wl].each_with_index do |benchmark,i|
         p = p.merge( "p#{i}".to_sym => benchmark )
