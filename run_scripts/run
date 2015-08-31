@@ -45,4 +45,6 @@ include RunScripts
 # flush_overhead
 # cache_sweep
 # more_channels
-resource_alloc
+# resource_alloc
+relaxed_two_core
+resourece_alloc_relaxed

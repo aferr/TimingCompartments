@@ -10,4 +10,5 @@ class TPConfig {
     int tl6;
     int tl7;
     int offset;
+    bool relax_dtime;
 };
