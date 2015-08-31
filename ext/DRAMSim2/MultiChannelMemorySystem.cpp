@@ -54,6 +54,7 @@ MultiChannelMemorySystem::MultiChannelMemorySystem(const string &deviceIniFilena
         int num_pids,
         bool fixAddr,
         bool diffPeriod, int p0Period, int p1Period, int offset,
+        TPConfig* tp_config,
         bool partitioning):
     megsOfMemory(megsOfMemory_), 
     deviceIniFilename(deviceIniFilename_),
@@ -122,6 +123,7 @@ MultiChannelMemorySystem::MultiChannelMemorySystem(const string &deviceIniFilena
         MemorySystem *channel = new MemorySystem(i, megsOfMemory/NUM_CHANS, 
                 (*csvOut), dramsim_log, outputFilename, tpTurnLength_, genTrace,
                 traceFilename, num_pids, fixAddr, diffPeriod, p0Period, p1Period, offset,
+                tp_config,
                 partitioning);
         channels.push_back(channel);
     }

@@ -107,4 +107,22 @@ module RunScripts
         )
     end
 
+    def test_turn_lengths
+        iterate_mp $test_opts.merge $secure_opts.merge(
+            num_wl: 8,
+            skip2: true,
+            skip4: true,
+            skip6: true,
+            tl0: 42,
+            tl1: 43,
+            tl2: 44,
+            tl3: 45,
+            tl4: 46,
+            tl5: 47,
+            tl6: 48,
+            tl7: 49,
+            workloads: { hard: %w[hardstride]*8 }
+        )
+    end
+
 end

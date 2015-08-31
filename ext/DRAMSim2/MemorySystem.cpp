@@ -56,7 +56,7 @@ MemorySystem::MemorySystem(unsigned id, unsigned int megsOfMemory,
         CSVWriter &csvOut_, ostream &dramsim_log_, 
         const string &outputFilename_, unsigned tpTurnLength, bool genTrace, 
         const string &traceFilename_, int num_pids, bool fixAddr,
-        bool diffPeriod, int p0Period, int p1Period, int offset,
+        bool diffPeriod, int p0Period, int p1Period, int offset, TPConfig* tpconfig,
         bool partitioning) :
 		dramsim_log(dramsim_log_),
 		ReturnReadData(NULL),
@@ -136,27 +136,12 @@ MemorySystem::MemorySystem(unsigned id, unsigned int megsOfMemory,
 
 
     use_TP = false;
-	if(timingProtection == FixedTiming){
-        memoryController = 
-            new MemoryControllerFT(this, csvOut, dramsim_log, 
-                    outputFilename, genTrace, traceFilename, num_pids, fixAddr);
-    } else if(timingProtection == TimingPartitioning){
+    if(timingProtection == TimingPartitioning){
 		use_TP = true;
-        memoryController = 
-            new MemoryControllerTP(this, csvOut, dramsim_log, 
-                    outputFilename, tpTurnLength, genTrace, traceFilename, num_pids, fixAddr, diffPeriod, p0Period, p1Period, offset, partitioning);
-    } else if(timingProtection == FixedAddress){
-    	memoryController = 
-            new MemoryControllerFA(this, csvOut, dramsim_log, 
-                    outputFilename, tpTurnLength, genTrace, traceFilename, num_pids, fixAddr, diffPeriod, p0Period, p1Period, offset);
-	} else if(timingProtection == FR_FCFS){
-    	memoryController = 
-            new MemoryControllerFR(this, csvOut, dramsim_log, 
-                    outputFilename, genTrace, traceFilename, num_pids, fixAddr);
-	} else if(timingProtection == TimingPartitioningD){
-        memoryController = 
-            new MemoryControllerTPD(this, csvOut, dramsim_log, 
-                    outputFilename, tpTurnLength, genTrace, traceFilename, num_pids, fixAddr, diffPeriod, p0Period, p1Period, offset);
+        memoryController = new MemoryControllerTP(this, csvOut, dramsim_log, 
+                    outputFilename, tpTurnLength, genTrace, traceFilename,
+                    num_pids, fixAddr, diffPeriod, p0Period, p1Period, offset,
+                    tpconfig, partitioning);
 	} else {
         memoryController = 
             new MemoryController(this, csvOut, dramsim_log, 

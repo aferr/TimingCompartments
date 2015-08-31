@@ -167,6 +167,12 @@ def sav_script( options = {} )
     options = {
         tl0: 23,
         tl1: 23,
+        tl2: 23,
+        tl3: 23,
+        tl4: 23,
+        tl5: 23,
+        tl6: 23,
+        tl7: 23,
         l3config: "shared",
         runmode: :qsub,
         maxinsts: $maxinsts,
@@ -184,10 +190,6 @@ def sav_script( options = {} )
     p1         = options[:p1]
     p2         = options[:p2]
     p3         = options[:p3]
-    # turn length for p0-p3. Assumed equal unless diffperiod is supplied. The 
-    # turn length is 2**arg unless diffperiod is supplied, otherwise it is arg.
-    tl0        = options[:tl0]
-    tl1        = options[:tl1]
     # Results directory
     result_dir = options[:result_dir]
     # allows the turn lengths for p0-p3 to differ
@@ -346,7 +348,7 @@ def sav_script( options = {} )
     #script.puts("    --tpturnlength=#{tl0} \\") unless tl0==0 || diffperiod
     script.puts("    --devicecfg="+
                 "./ext/DRAMSim2/ini/#{$device} \\")
-    if tl0== 0
+    if options[:tl0]== 0
         script.puts("    --systemcfg=./ext/DRAMSim2/system_ft.ini \\")
     else
         script.puts("    --systemcfg=./ext/DRAMSim2/system_#{scheme}.ini \\")
@@ -358,8 +360,14 @@ def sav_script( options = {} )
     end
 
     script.puts("   --diffperiod \\")
-    script.puts("   --p0period=#{tl0} \\")
-    script.puts("   --p1period=#{tl1} \\")
+    script.puts("   --tl0=#{options[:tl0]} \\") unless options[:tl0].nil?
+    script.puts("   --tl1=#{options[:tl1]} \\") unless options[:tl1].nil?
+    script.puts("   --tl2=#{options[:tl2]} \\") unless options[:tl2].nil?
+    script.puts("   --tl3=#{options[:tl3]} \\") unless options[:tl3].nil?
+    script.puts("   --tl4=#{options[:tl4]} \\") unless options[:tl4].nil?
+    script.puts("   --tl5=#{options[:tl5]} \\") unless options[:tl5].nil?
+    script.puts("   --tl6=#{options[:tl6]} \\") unless options[:tl6].nil?
+    script.puts("   --tl7=#{options[:tl7]} \\") unless options[:tl7].nil?
 
     script.puts("    > #{result_dir}/stdout_#{filename}.out")
     script_abspath = script.path

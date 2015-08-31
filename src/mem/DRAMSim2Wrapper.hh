@@ -55,6 +55,10 @@
 #include "params/DRAMSim2Wrapper.hh"
 
 #include "MultiChannelMemorySystem.h"
+#ifndef TPCONFIG
+#define TPCONFIG
+#include "TPConfig.h"
+#endif
 
 /**
  * The simple memory is a basic single-ported memory controller with

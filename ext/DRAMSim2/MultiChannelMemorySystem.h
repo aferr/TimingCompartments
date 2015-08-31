@@ -35,6 +35,10 @@
 #include "ClockDomain.h"
 #include "CSVWriter.h"
 
+#ifndef TPCONFIG
+#define TPCONFIG
+#include "TPConfig.h"
+#endif
 
 namespace DRAMSim {
 
@@ -49,6 +53,7 @@ namespace DRAMSim {
                     const IniReader::OverrideMap *paramOverrides=NULL,
                     int num_pids=2, bool fixAddr=false,
                     bool diffPeriod=false, int p0Period=64, int p1Period=64, int offset=0,
+                    TPConfig *tp_config = (new TPConfig()),
                     bool partitioning=false);
             virtual ~MultiChannelMemorySystem();
             bool addTransaction(Transaction *trans);

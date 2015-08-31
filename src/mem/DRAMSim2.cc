@@ -70,9 +70,20 @@ DRAMSim2::DRAMSim2(const Params *p) : DRAMSim2Wrapper(p)
     std::cout << "system file: " << p->systemConfigFile << std::endl;
     std::cout << "output file: " << p->outputFile << std::endl;
     //dramsim2 = new DRAMSim::MultiChannelMemorySystem(p->deviceConfigFile, p->systemConfigFile, p->cwd, p->traceFile, memoryCapacity, "./results/output", NULL, NULL);
+    TPConfig* tp_config = new TPConfig();
+    tp_config->tl0 = p->tl0;
+    tp_config->tl1 = p->tl1;
+    tp_config->tl2 = p->tl2;
+    tp_config->tl3 = p->tl3;
+    tp_config->tl4 = p->tl4;
+    tp_config->tl5 = p->tl5;
+    tp_config->tl6 = p->tl6;
+    tp_config->tl7 = p->tl7;
     dramsim2 = new DRAMSim::MultiChannelMemorySystem(p->deviceConfigFile, 
-            p->systemConfigFile, atoi((p->tpTurnLength).c_str()), p->genTrace, p->cwd, p->traceFile, 
-            memoryCapacity, p->outputFile, NULL, NULL, p->numPids, p->fixAddr, p->diffPeriod, p->p0Period, p->p1Period, p->offset, p->bank_part);
+            p->systemConfigFile, atoi((p->tpTurnLength).c_str()), p->genTrace,
+            p->cwd, p->traceFile, memoryCapacity, p->outputFile, NULL, NULL,
+            p->numPids, p->fixAddr, p->diffPeriod, p->p0Period, p->p1Period,
+            p->offset, tp_config, p->bank_part);
     // intentionally set CPU:Memory clock ratio as 1, we do the synchronization later
     dramsim2->setCPUClockSpeed(0);
     num_pids = p->numPids;

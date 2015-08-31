@@ -41,14 +41,17 @@
 #include "SimulatorObject.h"
 #include "SystemConfiguration.h"
 #include "MemoryController.h"
-#include "MemoryControllerFT.h"
-#include "MemoryControllerTPD.h"
-#include "MemoryControllerFR.h"
+#include "MemoryControllerTP.h"
 #include "Rank.h"
 #include "Transaction.h"
 #include "Callback.h"
 #include "CSVWriter.h"
 #include <deque>
+
+#ifndef TPCONFIG
+#define TPCONFIG
+#include "TPConfig.h"
+#endif
 
 namespace DRAMSim
 {
@@ -63,7 +66,7 @@ public:
             const string &outputFilename_, unsigned tpTurnLength, bool genTrace, 
             const string &traceFilename_, int num_pids, bool fixAddr,
             bool diffPeriod, int p0Period, int p1Period, int offset,
-            bool partitioning);
+            TPConfig* tpconfig, bool partitioning);
 	virtual ~MemorySystem();
 	void update();
 	bool addTransaction(Transaction *trans);
