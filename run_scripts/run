@@ -46,5 +46,7 @@ include RunScripts
 # cache_sweep
 # more_channels
 # resource_alloc
+# mem_alloc
+# turn_length_sweep
 relaxed_two_core
 resourece_alloc_relaxed
