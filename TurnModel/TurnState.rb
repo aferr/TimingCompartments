@@ -5,11 +5,16 @@ class State
             name: "nothing", 
 
             # input parameters
-            access_time: 12,
-            min_turn: 23,
-            # target bandwidths
+            k: 12,
+            min_turn: 18,
+
+            # enqueue rate in accesses per cycle
             b_0: 1,
             b_1: 1,
+
+            # cpi in memory cycles per instruction
+            base_cpi_0: 1,
+            base_cpi_1: 1,
 
             # accesses per turn
             a_0: 1,
@@ -21,24 +26,43 @@ class State
 
         # step variables
         @deltas = (-3..3).to_a
+
+        # calc energy now so printing is accurate
+        energy
     end
+
+
+    # the equation to be maximized
+    def energy
+        @o[:tl_0] = @o[:k] * (@o[:a_0] - 1) + @o[:min_turn]
+        @o[:tl_1] = @o[:k] * (@o[:a_1] - 1) + @o[:min_turn]
+        @o[:s] = @o[:tl_0] + @o[:tl_1]
+
+        @o[:cpi_lat_0] = @o[:base_cpi_0] +
+            @o[:base_cpi_0] * @o[:b_0] * 0.5 *
+            (@o[:s] - @o[:tl_0] + @o[:min_turn])**2 / @o[:s]
+        @o[:cpi_lat_1] = @o[:base_cpi_1] +
+            @o[:base_cpi_1] * @o[:b_1] * 0.5 *
+            (@o[:s] - @o[:tl_1] + @o[:min_turn])**2 / @o[:s]
+
+        @o[:cpi_bw_0] = @o[:base_cpi_0] * @o[:k] * @o[:b_0] * @o[:s] / @o[:a_0]
+        @o[:cpi_bw_1] = @o[:base_cpi_1] * @o[:k] * @o[:b_1] * @o[:s] / @o[:a_1]
+
+        @o[:cpi_0] = [@o[:cpi_lat_0],@o[:cpi_bw_0]].max
+        @o[:cpi_1] = [@o[:cpi_lat_1],@o[:cpi_bw_1]].max
+
+        (@o[:base_cpi_0]/@o[:cpi_0] + @o[:base_cpi_1]/@o[:cpi_1])
+        # @o[:cpi_0] + @o[:cpi_1]
+    end
+    
+    def to_s() @o.to_s end
 
     # randomly generate a state
     def self.shuffle o
         State.new o.merge(
-            a_0: (5000.times.to_a).sample,
-            a_1: (5000.times.to_a).sample
+            a_0: (200.times.to_a).sample,
+            a_1: (200.times.to_a).sample
         )
-    end
-
-    # the equation to be minimized
-    def energy
-        @o[:tl_0] = @o[:access_time] * (@o[:a_0] - 1) + @o[:min_turn]
-        @o[:tl_1] = @o[:access_time] * (@o[:a_1] - 1) + @o[:min_turn]
-        @o[:s] = @o[:tl_0] + @o[:tl_1]
-        @o[:e_0] = @o[:b_0] - @o[:a_0] / @o[:s].to_f
-        @o[:e_1] = @o[:b_1] - @o[:a_1] / @o[:s].to_f
-        @o[:e_0]**2 + @o[:e_1]**2
     end
 
     # randomly generate a neighboring state
@@ -49,6 +73,5 @@ class State
         State.new @o.merge(var => val)
     end
 
-    def to_s() @o.to_s end
 
 end
