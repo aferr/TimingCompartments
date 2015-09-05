@@ -159,6 +159,24 @@ module RunScripts
 
     end
 
+    def only_mc_relaxed
+     o = {
+        schemes: %w[none],
+        scheme: "none",
+        addrpar: true,
+        num_wl: 4,
+        skip2: true
+      }
+
+      iterate_mp o.merge(
+        nametag: "only_mc_relaxed",
+        schemes: %w[tp],
+        scheme: "tp",
+        bank_part: true,
+        relax_dtime: true
+      )
+    end
+
 ############################################################################## 
 # Resource Allocation
 ############################################################################## 
@@ -197,6 +215,22 @@ module RunScripts
       #   p7threadID: 1
       # )
 
+    end
+
+    def relaxed_2tc
+      iterate_mp $secure_opts.merge(
+        num_wl: 4,
+        skip2: true,
+        numpids: 2,
+        p0threadID: 0,
+        p1threadID: 0,
+        p2threadID: 1,
+        p3threadID: 1,
+        tl0: 30,
+        tl1: 30,
+        nametag: "2tc_relaxed",
+        relax_dtime: true
+      )
     end
 
     $allocation_2_core = {
@@ -474,7 +508,6 @@ module RunScripts
         iterate_mp $secure_opts.merge(
             num_wl: 8,
             skip6: true,
-            skip2: true,
             nametag: "allocated_relaxed",
             do_allocation: true,
             relax_dtime: true
