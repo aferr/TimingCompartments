@@ -370,7 +370,7 @@ def sav_script( options = {} )
     script.puts("   --tl6=#{options[:tl6]} \\") unless options[:tl6].nil?
     script.puts("   --tl7=#{options[:tl7]} \\") unless options[:tl7].nil?
 
-    script.puts("    > #{result_dir}/stdout_#{filename}.out")
+    script.puts("    >! #{result_dir}/stdout_#{filename}.out")
     script_abspath = script.path
     script.close
 
