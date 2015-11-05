@@ -532,6 +532,13 @@ bool CommandQueue::normalPopClosePage(BusPacket **busPacket, bool & sendingREF)
 
                         *busPacket = queue[i];
                         queue.erase(queue.begin()+i);
+
+                        if((*busPacket)->busPacketType==ACTIVATE){
+                            (*incr_stat)(stats->pop_delay,0,
+                                    (currentClockCycle - last_pop),NULL);
+                            last_pop = currentClockCycle;
+                        }
+
                         foundIssuable = true;
                         break;
                     }

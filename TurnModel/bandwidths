@@ -67,8 +67,9 @@ sjg: 1.2e-2
 # Stats from turn length study (Gem5)
 #############################################################################
 libquantum
-turn length: cpi
+turn length: cpi (cpu cycles)
 23: 2.318
 33: 1.571
 43: 1.457261
 53: 1.463177 
+

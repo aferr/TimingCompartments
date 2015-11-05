@@ -162,3 +162,22 @@ DRAMSim2WrapperParams::create()
 {
     return new DRAMSim2Wrapper(this);
 }
+
+void
+DRAMSim2Wrapper::regStats()
+{
+    AbstractMemory::regStats();
+
+    using namespace Stats;
+
+    pop_delay
+        .name(name() + ".pop_delay")
+        .desc( "cycles between pops")
+        .init(1)
+        ;
+    num_pops
+        .name(name() + ".num_pops")
+        .desc("total number of pops")
+        .init(1)
+        ;
+}

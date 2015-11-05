@@ -60,6 +60,11 @@
 #include "TPConfig.h"
 #endif
 
+#ifndef CMDQSTATS
+#include "CommandQueueStats.h"
+#define CMDQSTATS
+#endif
+
 /**
  * The simple memory is a basic single-ported memory controller with
  * an infinite throughput and a fixed latency, potentially with a
@@ -72,6 +77,9 @@ class DRAMSim2Wrapper : public AbstractMemory
 {
 
   public:
+
+    Stats::Vector pop_delay;
+    Stats::Vector num_pops;
 
     void updateDRAMSim2(){
             while ( (double)dramsim2->currentClockCycle
@@ -168,6 +176,8 @@ class DRAMSim2Wrapper : public AbstractMemory
     {
         return dynamic_cast<const Params *>(_params);
     }
+
+    void regStats();
 
   protected:
 

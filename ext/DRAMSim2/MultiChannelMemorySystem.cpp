@@ -516,12 +516,18 @@ void MultiChannelMemorySystem::printStats(bool finalStats) {
 void MultiChannelMemorySystem::RegisterCallbacks( 
         TransactionCompleteCB *readDone,
         TransactionCompleteCB *writeDone,
-        void (*reportPower)(double bgpower, double burstpower, double refreshpower, double actprepower))
+        void (*reportPower)(double bgpower, double burstpower, double refreshpower, double actprepower),
+        StatIncrCB* incr_stat
+        )
 {
     for (size_t i=0; i<NUM_CHANS; i++)
     {
-        channels[i]->RegisterCallbacks(readDone, writeDone, reportPower); 
+        channels[i]->RegisterCallbacks(readDone, writeDone, reportPower, incr_stat); 
     }
+}
+
+void MultiChannelMemorySystem::RegisterStats(CommandQueueStats *stats){
+    for(size_t i=0; i<NUM_CHANS; i++) channels[i]->RegisterStats(stats); 
 }
 namespace DRAMSim {
     MultiChannelMemorySystem *getMemorySystemInstance(const string &dev, 
