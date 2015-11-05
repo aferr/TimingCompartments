@@ -48,7 +48,8 @@ include RunScripts
 # resource_alloc
 # mem_alloc
 # turn_length_sweep
-relaxed_two_core
-resource_alloc_relaxed
-only_mc_relaxed
-relaxed_2tc
+# relaxed_two_core
+# resource_alloc_relaxed
+# only_mc_relaxed
+# relaxed_2tc
+ncore_ntc_rb_part

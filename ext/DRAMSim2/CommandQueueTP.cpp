@@ -23,6 +23,7 @@ CommandQueueTP::CommandQueueTP(vector< vector<BankState> > &states,
     tl[6] = tp_config->tl6;
     tl[7] = tp_config->tl7;
     relax_dtime = tp_config->relax_dtime;
+    rank_bank_part = tp_config->rank_bank_part;
 	offset = offset_;
     partitioning = partitioning_;
 #ifdef DEBUG_TP

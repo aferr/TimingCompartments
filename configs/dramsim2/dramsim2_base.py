@@ -204,6 +204,8 @@ def add_options():
 
         parser.add_option("--bank_part", action="store_true", default=False,
                 help = "use bank partitioning")
+        parser.add_option("--rank_bank_part", action="store_true", default=False,
+                help = "use bank partitioning")
         parser.add_option("--relax_dtime", action="store_true", default=False,
                 help = "use relaxed dead time")
 
@@ -274,6 +276,7 @@ def setup_dramsim(options):
                             offset=options.dramoffset,
                             # use bank partitioning
                             bank_part = options.bank_part,
+                            rank_bank_part = options.rank_bank_part,
                             relax_dtime = options.relax_dtime,
                             #Infer split memory ports from split cache ports
                             split_ports = options.split_rport,

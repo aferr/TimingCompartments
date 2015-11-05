@@ -11,4 +11,5 @@ class TPConfig {
     int tl7;
     int offset;
     bool relax_dtime;
+    bool rank_bank_part;
 };

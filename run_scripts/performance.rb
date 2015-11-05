@@ -57,6 +57,26 @@ module RunScripts
       )
     end
 
+    $rank_bank_part = {
+        tl0: 9,
+        tl1: 9,
+        tl2: 9,
+        tl3: 9,
+        tl4: 9,
+        tl5: 9,
+        tl6: 9,
+        tl7: 9,
+        bank_part: false,
+        rank_bank_part: true
+    }
+
+    def ncore_ntc_rb_part
+      iterate_mp $secure_opts.merge $rank_bank_part.merge(
+          num_wl: 8,
+          nametag: "rb_part",
+      )
+    end
+
     def ncore_ntc_no_part
         iterate_mp $secure_opts.merge(
             num_wl: 4,
@@ -89,6 +109,30 @@ module RunScripts
             skip2: true,
             cacheSize: 9,
             nametag: "9MBLLC"
+        )
+    end
+
+    def cache_sweep_rb_part
+        #1MB / Core
+        iterate_mp $secure_opts.merge $rank_bank_part.merge(
+            num_wl: 4,
+            skip2: true,
+            cacheSize: 4,
+            nametag: "4MBLLC_rb_part"
+        )
+        #1.5MB / Core
+        iterate_mp $secure_opts.merge $rank_bank_part.merge(
+            num_wl: 4,
+            skip2: true,
+            cacheSize: 6,
+            nametag: "6MBLLC_rb_part"
+        )
+        #2MB / core
+        iterate_mp $secure_opts.merge $rank_bank_part.merge(
+            num_wl: 4,
+            skip2: true,
+            cacheSize: 9,
+            nametag: "9MBLLC_rb_part"
         )
     end
 
@@ -159,6 +203,15 @@ module RunScripts
 
     end
 
+    def only_mc_rbpart
+      iterate_mp o.merge $rank_bank_part.merge(
+        nametag: "only_mc_rb_part",
+        schemes: %w[tp],
+        scheme: "tp",
+        bank_part: true
+      )
+    end
+
     def only_mc_relaxed
      o = {
         schemes: %w[none],
@@ -198,22 +251,27 @@ module RunScripts
         tl1: 30
       )
 
-      # 8 Cores 2 TCs
-      # iterate_mp o.merge(
-      #   num_wl: 8,
-      #   skip2: true,
-      #   skip4: true,
-      #   skip6: true,
-      #   numpids: 2,
-      #   p0threadID: 0,
-      #   p1threadID: 0,
-      #   p2threadID: 0,
-      #   p3threadID: 0,
-      #   p4threadID: 1,
-      #   p5threadID: 1,
-      #   p6threadID: 1,
-      #   p7threadID: 1
-      # )
+    end
+    
+    def ncore_2tc_rb_part
+      o = $secure_opts.merge(
+        nametag: "2tc_rb_part",
+        bank_part: false,
+        rank_bank_part: true
+      )
+
+      # 4 Cores 2 TCs
+      iterate_mp o.merge(
+        num_wl: 4,
+        skip2: true,
+        numpids: 2,
+        p0threadID: 0,
+        p1threadID: 0,
+        p2threadID: 1,
+        p3threadID: 1,
+        tl0: 16,
+        tl1: 16 
+      )
 
     end
 

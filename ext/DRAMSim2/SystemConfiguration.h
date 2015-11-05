@@ -126,6 +126,7 @@ extern unsigned NUM_DEVICES;
 #define FIX_WORST_CASE_DELAY_READ (12)
 #define FIX_WORST_CASE_DELAY_WRITE (18)
 #define FIX_TP_BUFFER_TIME (tFAW-3*tRRD+tRFC) //
+#define RANK_BANK_WORST_CASE (8)
 
 extern unsigned JEDEC_DATA_BUS_BITS;
 

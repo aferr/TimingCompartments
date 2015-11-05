@@ -80,6 +80,7 @@ DRAMSim2::DRAMSim2(const Params *p) : DRAMSim2Wrapper(p)
     tp_config->tl6 = p->tl6;
     tp_config->tl7 = p->tl7;
     tp_config->relax_dtime = p->relax_dtime;
+    tp_config->rank_bank_part = p->rank_bank_part;
     dramsim2 = new DRAMSim::MultiChannelMemorySystem(p->deviceConfigFile, 
             p->systemConfigFile, atoi((p->tpTurnLength).c_str()), p->genTrace,
             p->cwd, p->traceFile, memoryCapacity, p->outputFile, NULL, NULL,

@@ -276,18 +276,19 @@ def sav_script( options = {} )
     script.puts("    --nocwf \\") if options[:nocwf]
 
     #Protection Mechanisms
-    script.puts("    --bank_part \\")     if options[:bank_part]
-    script.puts("    --fixaddr \\")       if scheme == "fa" || options[:addrpar]
-    script.puts("    --relax_dtime \\")   if options[:relax_dtime]
-    script.puts("    --rr_nc \\" )        if rr_nc
-    script.puts("    --rr_l2l3 \\")       if options[:rr_l2l3]
-    script.puts("    --rr_mem \\")        if options[:rr_mem]
-    script.puts("    --use_set_part \\" ) if use_set_part
-    script.puts("    --use_way_part \\")  if use_way_part
-    script.puts("    --split_mshr \\")    if options[:split_mshr]
-    script.puts("    --split_rport \\")   if options[:split_rport]
-    script.puts("    --do_flush \\")      if options[:do_flush]
-    script.puts("    --reserve_flush \\") if options[:reserve_flush]
+    script.puts("    --bank_part \\")      if options[:bank_part]
+    script.puts("    --rank_bank_part \\") if options[:rank_bank_part]
+    script.puts("    --fixaddr \\")        if scheme == "fa" || options[:addrpar]
+    script.puts("    --relax_dtime \\")    if options[:relax_dtime]
+    script.puts("    --rr_nc \\" )         if rr_nc
+    script.puts("    --rr_l2l3 \\")        if options[:rr_l2l3]
+    script.puts("    --rr_mem \\")         if options[:rr_mem]
+    script.puts("    --use_set_part \\" )  if use_set_part
+    script.puts("    --use_way_part \\")   if use_way_part
+    script.puts("    --split_mshr \\")     if options[:split_mshr]
+    script.puts("    --split_rport \\")    if options[:split_rport]
+    script.puts("    --do_flush \\")       if options[:do_flush]
+    script.puts("    --reserve_flush \\")  if options[:reserve_flush]
     script.puts("    --flushRatio=#{options[:flushRatio]} \\") unless options[:flushRatio].nil?
     cswf = options[:context_sw_freq]
     script.puts("    --context_sw_freq=#{cswf}\\" ) unless cswf.nil?
